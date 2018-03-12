@@ -93,6 +93,7 @@ util-linux 2.31.1-1
 valgrind 3.13.0-6
 vi 1:070224-2
 vim 8.0.1415-2
+wget 1.19.2-1
 which 2.21-2
 wpa_supplicant 1:2.6-11
 xbindkeys 1.8.6-2
