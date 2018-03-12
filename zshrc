@@ -14,7 +14,7 @@ HISTSIZE=1000
 SAVEHIST=50000
 setopt appendhistory extendedglob notify
 unsetopt autocd beep nomatch
-# bindkey -v
+bindkey -v
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/justin/.zshrc'
@@ -25,3 +25,5 @@ compinit
 
 source ~/.config/powerlevel9k/powerlevel9k.zsh-theme
 POWERLEVEL9K_MODE='awesome-patched'
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs)
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs history time)

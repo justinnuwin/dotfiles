@@ -7,11 +7,31 @@
                             
 " Plug
 call plug#begin('~/.vim/plugins')
-Plug 'vim-airline/vim-airline' 
-Plug 'vim-airline/vim-airline-themes'
+Plug 'vim-syntastic/syntastic'
+Plug 'valloric/YouCompleteMe'
+Plug 'scrooloose/nerdtree' | Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'tpope/vim-fugitive'
+Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 call plug#end()
 
+
+" Syntastic Settings
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 1
+
+" Nerd Tree Settings
+map <C-o> :NERDTreeToggle<CR>
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+" Vim Airline Settings
 let g:airline_powerline_fonts = 1
+
 
 " Don't try to be vi compatible
 set nocompatible

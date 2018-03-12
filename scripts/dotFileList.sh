@@ -1,0 +1,11 @@
+declare -a dotFile=("bashrc"
+                    "justinShell"
+                    "vimrc"
+                    "Xresources"
+                    "zshrc"
+                    "config/compton/config"
+                    "config/gtk-3.0/gtk.css"
+                    "config/i3/config"
+                    "config/polybar/config"
+                    "config/termite/config"
+)

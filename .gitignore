@@ -6,19 +6,4 @@
 #   |___/         |___/                      
 #
 
-*
-!.bashrc
-!.gitignore
-!.justinShell
-!.vimrc
-!.Xresources
-!.zshrc
-!packagelist
-
-.config/
-.config/**
-!.config/compton/config
-!.config/gtk-3.0/gtk.css
-!.config/i3/config
-!.config/polybar/config
-!.config/termite/config
+backup/
