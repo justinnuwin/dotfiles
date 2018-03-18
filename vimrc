@@ -26,6 +26,9 @@ let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 1
 
+" YCM Settings
+let g:ycm_global_ycm_extra_conf = "~/.ycm_extra_conf.py"
+
 " Nerd Tree Settings
 map <C-o> :NERDTreeToggle<CR>
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif

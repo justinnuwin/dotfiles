@@ -24,6 +24,6 @@ compinit
 # End of lines added by compinstall
 
 source ~/.config/powerlevel9k/powerlevel9k.zsh-theme
-POWERLEVEL9K_MODE='awesome-patched'
+POWERLEVEL9K_MODE='nerdfont-complete'
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs history time)

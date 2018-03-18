@@ -6,7 +6,7 @@
 #                                   
 
 [options]
-font = Hack 12
+font = Knack Nerd Font 12
 allow_bold = true
 clickable_url = true
 dynamic_title = true
