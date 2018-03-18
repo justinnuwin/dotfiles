@@ -278,7 +278,7 @@
     label-charging-background  = ${colors.background-alt}
     label-charging-padding     = 1
 
-    label-dixcharging-foreground  = ${colors.background}
+    label-discharging-foreground  = ${colors.background}
     label-discharging-background  = ${colors.background-alt}
     label-discharging-padding     = 1
 
