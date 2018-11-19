@@ -5,4 +5,7 @@ for i in ${!dotFile[@]}; do
     cp "${HOME}/.${dotFile[i]}" "../${dotFile[i]}"
 done
 
-sudo pacman -Qe > ../packagelist
+# Changed to Qqe so pacman can read via
+# pacman -S --needed - < ../packagelist
+sudo pacman -Qqe > ../packagelist
+
