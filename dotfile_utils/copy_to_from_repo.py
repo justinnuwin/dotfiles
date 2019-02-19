@@ -12,7 +12,7 @@ def friendly_path(path):
         return path[1:]
 
 
-def copy_to_repo(repo_path=".."):
+def copy_to_repo(repo_path="."):
     if repo_path[-1] != '/':
         repo_path += '/'
     home = os.path.expanduser('~') + '/'
@@ -20,7 +20,7 @@ def copy_to_repo(repo_path=".."):
         copy_parents(home + path, repo_path + friendly_path(path))
 
 
-def copy_to_local(repo_path=".."):
+def copy_to_local(repo_path="."):
     if repo_path[-1] != '/':
         repo_path += '/'
     home = os.path.expanduser('~') + '/'
