@@ -1,10 +1,11 @@
+from os.path import abspath
 from configparser import ConfigParser
 
 
-DOTFILES_LIST_PATH = './dotfiles.cfg'
+DOTFILES_LIST_PATH = abspath('dotfiles.cfg')
+print(DOTFILES_LIST_PATH)
 parser = ConfigParser()
 parser.read(DOTFILES_LIST_PATH)
-
 
 def get_paths():
     path_list = parser['Dotfiles']['paths']
