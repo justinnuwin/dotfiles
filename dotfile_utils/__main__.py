@@ -11,7 +11,7 @@ def usage():
     print("\tpython3 -mdotfile_utils backup \t# Make a backup of registered dotfiles to backup location")
     print("\tpython3 -mdotfile_utils restore\t# Restore dotfiles in backup location to local filesystem")
     print("\tpython3 -mdotfile_utils sync local\t# Copy repo dotfiles to the local filesystem")
-    print("\tpython3 -mdotfile_utils sync repo \t# Copy dotfiles from lcoal filesystem to the repo")
+    print("\tpython3 -mdotfile_utils sync repo \t# Copy dotfiles from the local filesystem to the repo")
 
 if __name__ == "__main__":
     if "--help" in sys.argv or "-h" in sys.argv or "help" in sys.argv:
