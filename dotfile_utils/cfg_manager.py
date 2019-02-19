@@ -3,7 +3,6 @@ from configparser import ConfigParser
 
 
 DOTFILES_LIST_PATH = abspath('dotfiles.cfg')
-print(DOTFILES_LIST_PATH)
 parser = ConfigParser()
 parser.read(DOTFILES_LIST_PATH)
 
