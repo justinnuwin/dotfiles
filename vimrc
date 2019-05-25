@@ -82,6 +82,12 @@ set softtabstop=4
 set expandtab
 set noshiftround
 
+" Folding
+" Use zR to make all folds go away
+set foldmethod=indent
+set foldlevel=1
+set foldclose=all
+
 " Cursor motion
 set scrolloff=3
 set backspace=indent,eol,start
