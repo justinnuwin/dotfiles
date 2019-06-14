@@ -63,9 +63,6 @@ set number
 " Show file stats
 set ruler
 
-" Blink cursor on error instead of beeping (grr)
-set visualbell
-
 " Encoding
 set encoding=utf-8
 
@@ -159,34 +156,3 @@ set t_kb=^?
 fixdel
 inoremap <Char-0x07F> <BS>
 nnoremap <Char-0x07F> <BS>
-
-" Precise moves without mouse
-let LABEL = ["a","b","c",
-\"d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s",
-\"t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I",
-\"J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y",
-\"Z","1","2","3","4","5","6","7","8","9","0"]
-function! GoTo(range)
-    normal! Hmt
-    for i in range(0,a:range)
-        exe 'normal! Wr' . g:LABEL[i%len(g:LABEL)]
-    endfor
-    normal! 'tzt
-    echo "Index?"
-    redraw
-    let label=nr2char(getchar())
-    normal! u'tzt
-    for i in range(0,a:range)
-        exe 'normal! Wr' . (1+i/len(g:LABEL))
-    endfor
-    normal! 'tzt
-    echo "Number?"
-    redraw
-    let offset=getchar()
-    let offset=(49 <= offset && offset <= 57) ? offset-48 : 1
-    normal! u'tzt
-    let index=index(g:LABEL,label)
-    exe 'normal! ' . ((offset-1)*len(g:LABEL)+index+1) . 'W'
-endfu
-nnoremap <TAB> :call GoTo(248)<CR>
-
