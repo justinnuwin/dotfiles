@@ -16,6 +16,7 @@ SAVEHIST=50000
 setopt appendhistory extendedglob notify
 unsetopt autocd beep nomatch
 bindkey -v
+bindkey '^R' history-incremental-search-backward
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/justin/.zshrc'
