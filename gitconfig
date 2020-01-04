@@ -1,0 +1,10 @@
+[user]
+	email = justinnuwin@gmail.com
+	name = Justin Nguyen
+	signingkey = F3B0B7D4D0F53655EC949C145F6A76951D920355
+[gpg]
+	program = gpg2
+[gpgv]
+	program = gpgv2
+[commit]
+	gpgsign = true
