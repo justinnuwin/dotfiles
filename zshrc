@@ -7,7 +7,7 @@
 
 export LANG="en_US.UTF-8"
 export TERM="xterm-256color"
-source ~/.justinShell
+source ~/.dotfiles/justinShell
 
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.zsh_history
