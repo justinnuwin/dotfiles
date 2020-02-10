@@ -12,6 +12,7 @@ alias la='ls -al --color=always'
 alias ll='ls -alhs --color=always'
 alias grep='grep --color=always'
 alias vi='vim'
+export GPG_TTY=$(tty)
 
 if [ $(uname) = "Darwin" ]
 then
