@@ -54,6 +54,11 @@ filetype plugin indent on
 " TODO: Pick a leader key
 " let mapleader = ","
 
+" Spelling
+set spell spelllang=en_us
+setlocal spell spelllang=en_us
+set nospell
+
 " Security
 set modelines=0
 
