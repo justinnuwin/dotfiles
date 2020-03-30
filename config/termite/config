@@ -17,11 +17,11 @@ scroll_on_keystroke = true
 scrollback_lines = -1
 search_wrap = true
 hyperlinks = false
-browser = chromium
 cursor_blink = off
 cursor_shape = block
 scrollbar = off
 padding = 10
+browser = xdg-open 
 
 [colors]
 # Base16 Tomorrow Night
