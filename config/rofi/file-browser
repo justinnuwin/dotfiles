@@ -1,0 +1,6 @@
+cmd     "xdg-open"
+oc-cmd  "ranger;icon:utilities-terminal"
+oc-cmd  "thunar;icon:thunar"
+oc-cmd  "vim;icon:gvim"
+oc-cmd  "evince;icon:evince"
+oc-cmd  "firefox;icon:firefox"
