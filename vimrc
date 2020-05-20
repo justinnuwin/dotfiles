@@ -15,13 +15,15 @@ Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 call plug#end()
 
+" Leader key
+let mapleader = ","
 
 " Syntastic Settings
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 let g:syntastic_mode_map = { 'mode': 'passive', 'active_filetypes': [],'passive_filetypes': [] }
-nnoremap <C-w>E :SyntasticCheck<CR> :SyntasticToggleMode<CR>
+nnoremap <leader>e :SyntasticCheck<CR> :SyntasticToggleMode<CR>
 
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
@@ -41,9 +43,6 @@ let g:airline_powerline_fonts = 1
 
 " Don't try to be vi compatible
 set nocompatible
-
-" Leader key is ,
-let mapleader = ","
 
 " Ask to save rather than error on unsaved changes
 set confirm
