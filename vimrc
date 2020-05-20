@@ -60,7 +60,8 @@ setlocal spell spelllang=en_us
 set nospell
 
 " Security
-set modelines=0
+set modeline
+set modelines=2
 
 " Show line numbers
 set number
@@ -75,7 +76,7 @@ set encoding=utf-8
 set wrap
 set linebreak
 set nolist
-set textwidth=0
+set textwidth=120
 set wrapmargin=0
 set formatoptions=tcqrn1
 set tabstop=4

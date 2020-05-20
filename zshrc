@@ -8,6 +8,7 @@
 export LANG="en_US.UTF-8"
 export TERM="xterm-256color"
 source ~/.dotfiles/justinShell
+export GPG_TTY=$(tty)
 
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.zsh_history
@@ -27,5 +28,7 @@ compinit
 
 source ~/.dotfiles/powerlevel9k/powerlevel9k.zsh-theme
 POWERLEVEL9K_MODE='nerdfont-complete'
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs)
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(ssh dir vcs)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs history time)
+
+
