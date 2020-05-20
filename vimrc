@@ -4,7 +4,7 @@
 "   \ V /| | | | | | | | | (__ 
 "  (_)_/ |_|_| |_| |_|_|  \___|
 "
-                            
+
 " Plug
 call plug#begin('~/.vim/plugins')
 Plug 'vim-syntastic/syntastic'
@@ -39,9 +39,14 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 " Vim Airline Settings
 let g:airline_powerline_fonts = 1
 
-
 " Don't try to be vi compatible
 set nocompatible
+
+" Leader key is ,
+let mapleader = ","
+
+" Ask to save rather than error on unsaved changes
+set confirm
 
 " Helps force plugins to load correctly when it is turned back on below
 filetype off
@@ -52,13 +57,11 @@ syntax on
 " For plugins to load correctly
 filetype plugin indent on
 
-" TODO: Pick a leader key
-" let mapleader = ","
-
 " Spelling
 set spell spelllang=en_us
 setlocal spell spelllang=en_us
 set nospell
+map <leader>s :setlocal spell! spell?<CR>
 
 " Security
 set modeline
@@ -89,7 +92,7 @@ set noshiftround
 " Folding
 " Use zR to make all folds go away
 set foldmethod=indent
-set foldlevel=1
+set foldlevel=3
 set foldclose=all
 
 " Cursor motion
@@ -97,9 +100,9 @@ set scrolloff=3
 set backspace=indent,eol,start
 set matchpairs+=<:> " use % to jump between pairs
 runtime! macros/matchit.vim
-set mouse=a
+set mouse=a 
 
-" Move up/down editor lines
+" Move up/down display lines for wrapped text
 nnoremap j gj
 nnoremap k gk
 
@@ -122,6 +125,10 @@ set cursorline
 " Visual Autocomplete for command menu
 set wildmenu
 
+" Don't beep
+set visualbell
+set t_vb=
+
 " Searching
 nnoremap / /\v
 vnoremap / /\v
@@ -130,23 +137,15 @@ set incsearch
 set ignorecase
 set smartcase
 set showmatch
-map <leader><space> :let @/=''<cr> " clear search
-
-" Remap help key.
-inoremap <F1> <ESC>:set invfullscreen<CR>a
-nnoremap <F1> :set invfullscreen<CR>
-vnoremap <F1> :set invfullscreen<CR>
-
-" Textmate holdouts
+map <leader><space> :noh<CR>
 
 " Formatting
 map <leader>q gqip
 
 " Visualize tabs and newlines
-set listchars=tab:▸\ ,eol:¬
-" Uncomment this to enable by default:
-" set list " To enable by default
-" Or use your leader key + l to toggle on/off
+" Old   tab:▸\ ,eol:¬
+set showbreak=↪
+set listchars=tab:→\ ,eol:↲,space:·,nbsp:␣,trail:·,extends:›,precedes:‹
 map <leader>l :set list!<CR> " Toggle tabs and EOL
 
 " Color scheme (terminal)
@@ -154,9 +153,6 @@ set t_Co=256
 set background=dark
 let g:solarized_termcolors=256
 let g:solarized_termtrans=1
-" put https://raw.github.com/altercation/vim-colors-solarized/master/colors/solarized.vim
-" in ~/.vim/colors/ and uncomment:
-" colorscheme solarized
 
 " Correctly map the backspace key to what you expect
 set t_kb=^?
