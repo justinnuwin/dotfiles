@@ -5,44 +5,42 @@
 "  (_)_/ |_|_| |_| |_|_|  \___|
 "
 
-" Plug
-call plug#begin('~/.vim/plugins')
-Plug 'vim-syntastic/syntastic'
-Plug 'valloric/YouCompleteMe'
-Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
-Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'tpope/vim-fugitive'
-Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
-call plug#end()
+" Plugins enabled by default
+if 1
+    " Plug
+    call plug#begin('~/.vim/plugins')
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+    Plug 'Xuyuanp/nerdtree-git-plugin'
+    Plug 'tpope/vim-fugitive'
+    Plug 'lervag/vimtex'
+    " Plug 'sirver/ultisnips'
+    Plug 'justinmk/vim-sneak'
+    Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
+    call plug#end()
+
+    " Nerd Tree Settings
+    map <C-o> :NERDTreeToggle<CR>
+    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+    " Vim Airline Settings
+    let g:airline_powerline_fonts = 1
+
+    " VimTex Settings
+    let g:tex_flavor='latex'
+    " let g:vimtex_view_method='skim'
+    let g:vimtex_quickfix_mode=0
+    set conceallevel=1
+    let g:tex_conceal='abdmg'
+
+    " UltiSnips Settings
+    let g:UltiSnipsExpandTrigger = '<c-tab>'
+    let g:UltiSnipsJumpForwardTrigger = '<c-tab>'
+    let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+endif
 
 " Leader key
 let mapleader = ","
-
-" Syntastic Settings
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-let g:syntastic_mode_map = { 'mode': 'passive', 'active_filetypes': [],'passive_filetypes': [] }
-nnoremap <leader>e :SyntasticCheck<CR> :SyntasticToggleMode<CR>
-
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-
-" YCM Settings
-let g:ycm_global_ycm_extra_conf = "~/.ycm_extra_conf.py"
-let g:ycm_autoclose_preview_window_after_completion = 1
-
-" Nerd Tree Settings
-map <C-o> :NERDTreeToggle<CR>
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-
-" Vim Airline Settings
-let g:airline_powerline_fonts = 1
-
-" Don't try to be vi compatible
-set nocompatible
 
 " Ask to save rather than error on unsaved changes
 set confirm
@@ -145,7 +143,7 @@ map <leader>q gqip
 " Old   tab:▸\ ,eol:¬
 set showbreak=↪
 set listchars=tab:→\ ,eol:↲,space:·,nbsp:␣,trail:·,extends:›,precedes:‹
-map <leader>l :set list!<CR> " Toggle tabs and EOL
+map <leader>L :set list!<CR> " Toggle tabs and EOL
 
 " Color scheme (terminal)
 set t_Co=256
