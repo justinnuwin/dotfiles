@@ -8,7 +8,8 @@
 
 alias rm='rm -i'
 
-if [ $(uname) = "Darwin" ] && [ $(which ls | grep gnu) ]; then
+if [ $(uname) = "Darwin" ] && [ ! -d /usr/local/opt/coreutils ]
+then
     enable_color='-G'
 else
     enable_color='--color=always'
@@ -21,7 +22,7 @@ alias grep='grep --color=always'
 alias vi='vim'
 export GPG_TTY=$(tty)
 
-if [ $(uname) = "Darwin" ]
+if [ $(uname) = "Darwin" ] && [ -d /usr/local/opt/coreutils ]
 then
     # brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt grep
 
@@ -52,6 +53,7 @@ then
     alias pip3='pip'
 fi
 
-if [ -f $HOME/.localshell ]; then
+if [ -f $HOME/.localshell ]
+then
     source $HOME/.localshell
 fi
