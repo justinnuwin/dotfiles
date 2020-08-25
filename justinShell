@@ -7,9 +7,16 @@
 # 
 
 alias rm='rm -i'
-alias ls='ls --color=always'
-alias la='ls -al --color=always'
-alias ll='ls -alhs --color=always'
+
+if [ $(uname) = "Darwin" ]; then
+    enable_color='-G'
+else
+    enable_color='--color=always'
+fi
+
+alias ls='ls $enable_color'
+alias la='ls -al $enable_color'
+alias ll='ls -alhs $enable_color'
 alias grep='grep --color=always'
 alias vi='vim'
 export GPG_TTY=$(tty)
@@ -44,3 +51,5 @@ then
     alias python3='python'
     alias pip3='pip'
 fi
+
+source $HOME/.localshell
