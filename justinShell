@@ -8,7 +8,7 @@
 
 alias rm='rm -i'
 
-if [ $(uname) = "Darwin" ]; then
+if [ $(uname) = "Darwin" ] && [ $(which ls | grep gnu) ]; then
     enable_color='-G'
 else
     enable_color='--color=always'
@@ -52,4 +52,6 @@ then
     alias pip3='pip'
 fi
 
-source $HOME/.localshell
+if [ -f $HOME/.localshell ]; then
+    source $HOME/.localshell
+fi
