@@ -19,6 +19,21 @@ if 1
     Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
     call plug#end()
 
+    " coc.nvim Settings
+    " set cmdheight=2
+    set updatetime=300
+    set shortmess+=c
+    inoremap <silent><expr> <TAB>
+        \ pumvisible() ? "\<C-n>" :
+        \ <SID>check_back_space() ? "\<TAB>" :
+        \ coc#refresh()
+    inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+    function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~# '\s'
+    endfunction
+
     " Nerd Tree Settings
     map <C-o> :NERDTreeToggle<CR>
     autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
