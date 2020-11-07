@@ -51,6 +51,10 @@ then
     PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH"
     alias python3='python'
     alias pip3='pip'
+
+    # brew install go
+    export GOROOT="/usr/local/opt/golang/libexec"
+    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
 fi
 
 if [ -f $HOME/.localshell ]
