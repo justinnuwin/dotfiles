@@ -17,6 +17,7 @@ if 1
     " Plug 'sirver/ultisnips'
     Plug 'justinmk/vim-sneak'
     Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
+    Plug 'kshenoy/vim-signature'
     call plug#end()
 
     " coc.nvim Settings
