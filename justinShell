@@ -61,3 +61,6 @@ if [ -f $HOME/.localshell ]
 then
     source $HOME/.localshell
 fi
+
+# Add ~/.local/bin to path for many pip or other local applications
+PATH="$PATH:$HOME/.local/bin"
