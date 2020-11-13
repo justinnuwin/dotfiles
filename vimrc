@@ -5,8 +5,9 @@
 "  (_)_/ |_|_| |_| |_|_|  \___|
 "
 
-" Plugins enabled by default
-if 1
+let usePlugins = 1
+
+if usePlugins
     " Plug
     call plug#begin('~/.vim/plugins')
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -18,6 +19,8 @@ if 1
     Plug 'justinmk/vim-sneak'
     Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
     Plug 'kshenoy/vim-signature'
+    Plug 'zhou13/vim-easyescape'
+    Plug 'nathanaelkane/vim-indent-guides'
     call plug#end()
 
     " coc.nvim Settings
@@ -41,6 +44,9 @@ if 1
 
     " Vim Airline Settings
     let g:airline_powerline_fonts = 1
+    if has("gui_running")
+        set guifont=Hack:h12
+    endif
 
     " VimTex Settings
     let g:tex_flavor='latex'
@@ -53,6 +59,23 @@ if 1
     let g:UltiSnipsExpandTrigger = '<c-tab>'
     let g:UltiSnipsJumpForwardTrigger = '<c-tab>'
     let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+
+    " Easy Escape Settings
+    let g:easyescape_chars = { "j": 1, "k": 1 }
+    let g:easyescape_timeout = 100
+    cnoremap jk <ESC>
+
+    " Vim Indent Guide Settings (default toggle is <leader>ig)
+    let g:indent_guides_enable_on_vim_startup = 1
+    " let g:indent_guides_start_level = 2
+    let g:indent_guides_guide_size = 1
+    let g:indent_guides_auto_colors = 0
+    autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=235
+    autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=236
+else
+    " Bind jk to escape because it's too damn far away!
+    " Note that Ctrl-i also works
+    imap jk <Esc>
 endif
 
 " Leader key
@@ -172,3 +195,10 @@ set t_kb=^?
 fixdel
 inoremap <Char-0x07F> <BS>
 nnoremap <Char-0x07F> <BS>
+
+" Don't delete leading whitespace on empty line on <CR> or exiting Insert mode
+" TODO: This shouldn't be ignored by easy escape, probably do a PR for Indent
+" Guides to not be soley based off of existing whitespace characters
+inoremap <CR> <CR>x<BS>
+nnoremap o ox<BS>
+nnoremap O Ox<BS>
