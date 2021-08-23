@@ -17,10 +17,12 @@ if usePlugins
     Plug 'lervag/vimtex'
     " Plug 'sirver/ultisnips'
     Plug 'justinmk/vim-sneak'
+    Plug 'unblevable/quick-scope' 
     Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
     Plug 'kshenoy/vim-signature'
     Plug 'zhou13/vim-easyescape'
     Plug 'nathanaelkane/vim-indent-guides'
+    Plug 'airblade/vim-gitgutter'
     call plug#end()
 
     " coc.nvim Settings
@@ -59,6 +61,12 @@ if usePlugins
     let g:UltiSnipsExpandTrigger = '<c-tab>'
     let g:UltiSnipsJumpForwardTrigger = '<c-tab>'
     let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+    
+    " Vim-Sneak Settings
+    let g:sneak#s_next = 1
+    
+    " Quickscope Settings
+    let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
     " Easy Escape Settings
     let g:easyescape_chars = { "j": 1, "k": 1 }
