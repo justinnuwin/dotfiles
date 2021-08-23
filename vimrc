@@ -11,6 +11,7 @@ if usePlugins
     " Plug
     call plug#begin('~/.vim/plugins')
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    Plug 'vim-syntastic/syntastic'
     Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
     Plug 'Xuyuanp/nerdtree-git-plugin'
     Plug 'tpope/vim-fugitive'
@@ -23,9 +24,14 @@ if usePlugins
     Plug 'zhou13/vim-easyescape'
     Plug 'nathanaelkane/vim-indent-guides'
     Plug 'airblade/vim-gitgutter'
+    Plug 'ctrlpvim/ctrlp.vim'
+    Plug 'tpope/vim-obsession'
+    Plug 'tpope/vim-commentary'
+    Plug 'vim-utils/vim-man'
+    Plug 'vim-utils/vim-troll-stopper'
     call plug#end()
 
-    " coc.nvim Settings
+    " CoC Settings
     " set cmdheight=2
     set updatetime=300
     set shortmess+=c
@@ -39,6 +45,11 @@ if usePlugins
         let col = col('.') - 1
         return !col || getline('.')[col - 1]  =~# '\s'
     endfunction
+    
+    " Syntastic Settings
+    let g:syntastic_check_on_open = 1
+    let g:syntastic_check_on_wq = 0
+    map <C-S> :SyntasticToggleMode<CR>
 
     " Nerd Tree Settings
     map <C-o> :NERDTreeToggle<CR>
@@ -46,9 +57,6 @@ if usePlugins
 
     " Vim Airline Settings
     let g:airline_powerline_fonts = 1
-    if has("gui_running")
-        set guifont=Hack:h12
-    endif
 
     " VimTex Settings
     let g:tex_flavor='latex'
@@ -80,9 +88,11 @@ if usePlugins
     let g:indent_guides_auto_colors = 0
     autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=235
     autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=236
+    
+    " CtrlP Settings
+    let g:ctrlp_map = '<c-p>'
 else
     " Bind jk to escape because it's too damn far away!
-    " Note that Ctrl-i also works
     imap jk <Esc>
 endif
 
@@ -169,7 +179,7 @@ set cursorline
 " Visual Autocomplete for command menu
 set wildmenu
 
-" Don't beep
+" Don't beep or flash
 set visualbell
 set t_vb=
 
