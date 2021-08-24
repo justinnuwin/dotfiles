@@ -35,7 +35,8 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-source $HOME/.dotfiles/powerlevel10k/powerlevel10k.zsh-theme
+# Powerlevel10k theme
+source $HOME/.dotfiles/zsh_plugins/powerlevel10k/powerlevel10k.zsh-theme
 POWERLEVEL9K_MODE=nerdfont-complete
 POWERLEVEL9K_ICON_PADDING=moderate
 POWERLEVEL9K_LEGACY_ICON_SPACING=true
@@ -75,3 +76,16 @@ POWERLEVEL9K_TRANSIENT_PROMPT=same-dir
 POWERLEVEL9K_INSTANT_PROMPT=verbose
 ZLE_RPROMPT_INDENT=0    # Fix extra space after right prompt
 
+# Zsh Autocomplete
+zstyle ':autocomplete:*' min-input 3
+zstyle ':autocomplete:*' min-delay -1   # Only show the autocomplete menu when prompted (with tab). Use Ctrl-Space to open the big menu
+zstyle ':autocomplete:*' list-lines 8
+zstyle ':autocomplete:*' widget-style menu-complete
+source $HOME/.dotfiles/zsh_plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+
+# A little bit of Linus madness every day
+linus_rants_path=$HOME/.dotfiles/zsh_plugins/linus-rants/linus-rants.plugin.zsh
+if [ -d $linus_rants_path ]
+then
+    source $linus_rants_path
+fi
