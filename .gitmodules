@@ -7,3 +7,6 @@
 [submodule "linus-rants"]
 	path = zsh_plugins/linus-rants
 	url = https://github.com/bhayward93/Linus-rants-ZSH.git
+[submodule "tpm"]
+	path = tmux_plugins/tpm
+	url = https://github.com/tmux-plugins/tpm
