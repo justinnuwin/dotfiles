@@ -11,7 +11,7 @@ if usePlugins
     " Plug
     call plug#begin('~/.vim/plugins')
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
-    Plug 'vim-syntastic/syntastic'
+    " Plug 'vim-syntastic/syntastic'
     Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
     Plug 'Xuyuanp/nerdtree-git-plugin'
     Plug 'tpope/vim-fugitive'
@@ -62,7 +62,7 @@ if usePlugins
     let g:tex_flavor='latex'
     " let g:vimtex_view_method='skim'
     let g:vimtex_quickfix_mode=0
-    set conceallevel=1
+    autocmd Filetype tex setlocal conceallevel=1
     let g:tex_conceal='abdmg'
 
     " UltiSnips Settings
@@ -220,3 +220,6 @@ nnoremap <Char-0x07F> <BS>
 inoremap <CR> <CR>x<BS>
 nnoremap o ox<BS>
 nnoremap O Ox<BS>
+
+" Set conceal level to 2 for JSON since there are quote EVERYWHERE
+autocmd Filetype json setlocal conceallevel=2
