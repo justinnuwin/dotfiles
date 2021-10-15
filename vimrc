@@ -5,6 +5,9 @@
 "  (_)_/ |_|_| |_| |_|_|  \___|
 "
 
+" Leader key
+let mapleader = ","
+
 let usePlugins = 1
 
 if usePlugins
@@ -24,11 +27,11 @@ if usePlugins
     Plug 'zhou13/vim-easyescape'
     Plug 'nathanaelkane/vim-indent-guides'
     Plug 'airblade/vim-gitgutter'
-    Plug 'ctrlpvim/ctrlp.vim'
     Plug 'tpope/vim-obsession'
     Plug 'tpope/vim-commentary'
     Plug 'vim-utils/vim-man'
     Plug 'vim-utils/vim-troll-stopper'
+    Plug 'preservim/tagbar'
     call plug#end()
 
     " CoC Settings
@@ -52,7 +55,7 @@ if usePlugins
     map <C-S> :SyntasticToggleMode<CR>
 
     " Nerd Tree Settings
-    map <C-o> :NERDTreeToggle<CR>
+    map <leader>o :NERDTreeToggle<CR>
     autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
     " Vim Airline Settings
@@ -89,15 +92,12 @@ if usePlugins
     autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=235
     autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=236
     
-    " CtrlP Settings
-    let g:ctrlp_map = '<c-p>'
+    " Tagbar Settings
+    nnoremap <leader>f :TagbarToggle<CR>
 else
     " Bind jk to escape because it's too damn far away!
     imap jk <Esc>
 endif
-
-" Leader key
-let mapleader = ","
 
 " Ask to save rather than error on unsaved changes
 set confirm
@@ -223,3 +223,10 @@ nnoremap O Ox<BS>
 
 " Set conceal level to 2 for JSON since there are quote EVERYWHERE
 autocmd Filetype json setlocal conceallevel=2
+
+" Color characters at column 81
+highlight ColorColumn ctermbg=gray
+call matchadd('ColorColumn', '\%81v', 100)"
+
+" Search for ctags in the current file, working directory, and up
+set tags=./tags;,tags;

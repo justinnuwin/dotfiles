@@ -21,7 +21,9 @@ alias ll='ls -alhs $enable_color'
 alias grep='grep --color=always'
 alias vi='vim'
 alias gvis='git log --graph --oneline --color'
-alias gitvis='git log --graph --full-history --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"'
+alias gvisualize='git log --graph --full-history --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"'
+alias groot='git rev-parse --show-toplevel'
+alias cdgroot='cd $(groot)'
 export GPG_TTY=$(tty)
 
 if [ $(uname) = "Darwin" ] && [ -d /usr/local/opt/coreutils ]

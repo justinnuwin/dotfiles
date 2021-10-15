@@ -80,17 +80,6 @@ then
     ZLE_RPROMPT_INDENT=0    # Fix extra space after right prompt
 fi
 
-# Zsh Autocomplete
-zsh_autocomplete_path=$HOME/.dotfiles/zsh_plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-if [ -f $zsh_autocomplete_path ]
-then
-    zstyle ':autocomplete:*' min-input 3
-    zstyle ':autocomplete:*' min-delay -1   # Only show the autocomplete menu when prompted (with tab). Use Ctrl-Space to open the big menu
-    zstyle ':autocomplete:*' list-lines 8
-    zstyle ':autocomplete:*' widget-style menu-complete
-    source $zsh_autocomplete_path
-fi
-
 # A little bit of Linus madness every day
 linus_rants_path=$HOME/.dotfiles/zsh_plugins/linus-rants/linus-rants.plugin.zsh
 if [ -f $linus_rants_path ]
