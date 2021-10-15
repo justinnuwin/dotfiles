@@ -1,0 +1,27 @@
+Create marker           m <marker_letter>
+Goto marker             ' <marker_letter>
+
+Show yank registers     :reg
+Paste a register        c-r <register>
+Paste to vim command line               c-r "
+
+Show tag stack          :tags
+Jump to tag             c-], g]
+Get matching tags       :ts[elect] [tag_name]
+Get matching tags in preview            :pts[elect] [tag_name]
+Next matching tag       :tn
+Prev matching tag       :tp
+Preview tag             c-w }
+^Close preview          c-wz
+Open tag in hsplit      c-w c-]
+Pop tag stack           c-t
+
+Forward in jump list    c-o
+Backward in jump list   c-i
+
+Open current file in new tab            :tabnew %
+Move pane into new tab  c-w T
+Rotate splits           c-r, c-R
+Vertical to horizontal split            c-w t c-w K
+Horizontal to vertical split            c-w t c-w H
+Move pane               c-w <HJKL>
