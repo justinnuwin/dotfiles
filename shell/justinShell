@@ -1,3 +1,4 @@
+#!/bin/bash
 #      _           _   _       ____  _          _ _ 
 #     (_)_   _ ___| |_(_)_ __ / ___|| |__   ___| | |
 #     | | | | / __| __| | '_ \\___ \| '_ \ / _ \ | |
@@ -6,28 +7,47 @@
 #   |__/                                            
 # 
 
-alias rm='rm -i'
+local dotfiles="$HOME/.dotfiles"
 
-if [ $(uname) = "Darwin" ] && [ ! -d /usr/local/opt/coreutils ]
-then
-    enable_color='-G'
+# Source utility functions
+source "$dotfiles/shell/path_utils.sh"
+source "$dotfiles/shell/bazel_utils.sh"
+
+if [[ "$(uname)" = "Darwin" ]] && [[ ! -d /usr/local/opt/coreutils ]]; then
+    enable_color="-G"
 else
-    enable_color='--color=always'
+    enable_color="--color=always"
 fi
 
-alias ls='ls $enable_color'
-alias la='ls -al $enable_color'
-alias ll='ls -alhs $enable_color'
-alias grep='grep --color=always'
-alias vi='vim'
-alias gvis='git log --graph --oneline --color'
-alias gvisualize='git log --graph --full-history --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"'
-alias groot='git rev-parse --show-toplevel'
-alias cdgroot='cd $(groot)'
+alias rm="rm -i"
+alias ls="ls $enable_color"
+alias la="ls -al $enable_color"
+alias ll="ls -alhs $enable_color"
+alias grep="grep --color=always"
+alias vi="vim"
+alias gvis="git log --graph --oneline --color"
+alias gvisualize="git log --graph --full-history --all --color --pretty=format:'%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s'"
+alias gl="git log --oneline"
+alias groot="git rev-parse --show-toplevel"
+alias gs="git status"
+alias grst="git reset"
+alias grsthrd="git reset --hard"
+alias grb="git rebase"
+alias gwt="git worktree"
+alias gdiff="git diff"
+alias gsw="git switch"
+alias cdgroot="cd \$(groot)"
+alias pushdgroot="pushd \$(groot)"
+# TODO: Figure out why these have to be functions for completions to work instead of aliases
+btest() {
+    bazel test "$@"
+}
+bbuild() {
+    bazel build "$@"
+}
 export GPG_TTY=$(tty)
 
-if [ $(uname) = "Darwin" ] && [ -d /usr/local/opt/coreutils ]
-then
+if [[ "$(uname)" = "Darwin" ]] && [[ -d /usr/local/opt/coreutils ]]; then
     # brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt grep
 
     PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
@@ -53,18 +73,23 @@ then
 
     # brew install python3
     PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH"
-    alias python3='python'
-    alias pip3='pip'
+    alias python3="python"
+    alias pip3="pip"
 
     # brew install go
     export GOROOT="/usr/local/opt/golang/libexec"
     export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
 fi
 
-if [ -f $HOME/.localshell ]
-then
+# TODO: zsh-fzf-plugin could also install fzf. Should support that
+if [[ -f "$HOME/.vim/plugins/fzf/bin/fzf" ]]; then
+    export PATH="$HOME/.vim/plugins/fzf/bin:$PATH"
+    source "$HOME/.dotfiles/shell/fzf_aliases.sh"
+fi
+
+if [[ -f "$HOME/.localshell" ]]; then
     source $HOME/.localshell
 fi
 
 # Add ~/.local/bin to path for many pip or other local applications
-PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"

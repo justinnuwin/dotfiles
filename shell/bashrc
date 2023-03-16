@@ -9,4 +9,4 @@
 [[ $- != *i* ]] && return
 
 PS1='[\u@\h \W]\$ '
-source ~/.dotfiles/justinShell
+source ~/.dotfiles/shell/justinShell

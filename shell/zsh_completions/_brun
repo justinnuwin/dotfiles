@@ -1,0 +1,16 @@
+#compdef brun btest bbuild
+
+local targets
+zle -R "Collecting bazel targets..."
+targets=$(get_bazel_targets)
+if [ $? -gt 0 ]; then
+    # TODO: The zle -U messages should be -M so they don't end up as user input. This is
+    # required if using fzf-tab plugin which redraws the prompt when completion fails
+    zle -U "Not in a bazel workspace"
+    return 1
+elif [ $(echo $targets | wc -l) -gt 4000 ]; then
+    zle -U "Too many completions, try again in subpackage"
+    return 1
+else
+    _alternative "target:Bazel targets:($targets)"
+fi

@@ -1,0 +1,2 @@
+#!/bin/bash
+git ls-tree --full-tree --name-only -r HEAD <pathspec ..> | grep --color=never --extended-regexp --invert-match <pattern ..> | ctags --quiet=yes --sort=yes --links=no -L -

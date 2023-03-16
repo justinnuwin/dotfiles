@@ -1,12 +1,15 @@
 [submodule "powerlevel10k"]
 	path = zsh_plugins/powerlevel10k
 	url = https://github.com/romkatv/powerlevel10k.git
-[submodule "zsh-autocomplete"]
-	path = zsh_plugins/zsh-autocomplete
-	url = https://github.com/marlonrichert/zsh-autocomplete.git
 [submodule "linus-rants"]
 	path = zsh_plugins/linus-rants
 	url = https://github.com/bhayward93/Linus-rants-ZSH.git
 [submodule "tpm"]
 	path = tmux_plugins/tpm
 	url = https://github.com/tmux-plugins/tpm
+[submodule "fzf-zsh-plugin"]
+	path = zsh_plugins/fzf-zsh-plugin
+	url = git@github.com:unixorn/fzf-zsh-plugin.git
+[submodule "fzf-tab"]
+	path = zsh_plugins/fzf-tab
+	url = https://github.com/Aloxaf/fzf-tab
