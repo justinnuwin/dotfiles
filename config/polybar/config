@@ -45,7 +45,7 @@
 ; bars                                      ;
 ;--------------------------------------------
 [bar/base]
-    monitor = eDP1
+    monitor = DP-2
     width = 100%
     height = 28 
     offset-x = 0
@@ -67,8 +67,8 @@
     module-margin-left = 2
     module-margin-right = 2
 
-    font-0 = "Hack Nerd Font:size=12;3"
-    font-1 = "Noto Sans Symbols2:size=16;6"
+    font-0 = "Hack Nerd Font:size=10;3"
+    font-1 = "Noto Sans Symbols2:size=14;6"
     modules-left = i3
     modules-center = xwindow 
     modules-right = pulseaudio wlan battery temperature date

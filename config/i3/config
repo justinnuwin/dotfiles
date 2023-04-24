@@ -161,7 +161,7 @@ bindsym $mod+r mode "resize"
 
 # Autostart
 exec_always --no-startup-id ~/.config/polybar/launch.sh
-exec_always --no-startup-id feh --no-fehbg --bg-scale ~/Pictures/arch-wallpaper/spaceshuttle_atlantis.jpg
+exec_always --no-startup-id ~/.config/fehbg.sh
 for_window [class = "^.*"] border pixel 0
 exec_always --no-startup-id compton
 

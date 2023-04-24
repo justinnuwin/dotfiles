@@ -6,25 +6,14 @@
 #                                      |___/              
 #
 
-# Monitor Brightness Key Bindings
-"xbacklight -inc 10"
-    XF86MonBrightnessUp
-
-"xbacklight -dec 10"
-    XF86MonBrightnessDown
-
-# Pulse Audio Key Bindings
-# `$ pactl list sinks short` to find audio sink
-# These keybinds default to the internal speakers:
-#   - 0: alsa_output.pci-0000_00_1b.0.analog-stereo
-"pactl set-sink-mute 0 toggle"
-    XF86AudioMute
-
-"pactl set-sink-mute 0 false ; pactl set-sink-volume 0 +1%"
+# Increase volume
+"pactl set-sink-mute 0 0; pactl set-sink-volume 0 +5%"
     XF86AudioRaiseVolume
 
-"pactl set-sink-mute 0 false ; pactl set-sink-volume 0 -1%"
+# Lower volume
+"pactl set-sink-mute 0 0; pactl set-sink-volume 0 -5%"
     XF86AudioLowerVolume
 
-"xfce4-screenshooter"
-    Print
+# Mute volume
+"pactl set-sink-mute 0 toggle"
+    XF86AudioMute
