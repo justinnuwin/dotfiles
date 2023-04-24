@@ -8,4 +8,3 @@
 #
 
 xbindkeys
-light-locker --lock-on-suspend --lock-on-lid
