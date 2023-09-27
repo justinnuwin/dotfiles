@@ -36,6 +36,7 @@ alias grb="git rebase"
 alias gwt="git worktree"
 alias gdiff="git diff"
 alias gsw="git switch"
+alias gcurb="git branch --show-current"
 alias cdgroot="cd \$(groot)"
 alias pushdgroot="pushd \$(groot)"
 # TODO: Figure out why these have to be functions for completions to work instead of aliases

@@ -59,7 +59,7 @@ get_build_file_using_src_file() {
         if (( $?  > 0 )); then
             break
         fi
-        grep -q "\"$src_file\"" "$current_path/BUILD"
+        grep -q -E "\".*/{0,1}$src_file\"" "$current_path/BUILD"
         if (( $? == 0 )); then
             echo "$current_path/BUILD"
             return 0
