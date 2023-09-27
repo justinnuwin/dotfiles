@@ -8,3 +8,11 @@
 	program = gpgv2
 [commit]
 	gpgsign = true
+[core]
+    editor = vim
+[merge]
+    editor = vimdiff
+[mergetool]
+    keepBackup = false
+[color]
+    grep = always

@@ -8,6 +8,16 @@
 " Leader key
 let mapleader = ","
 
+let dotfilesDirectory = expand('~/.dotfiles')
+if isdirectory(dotfilesDirectory)
+    execute 'source' dotfilesDirectory . '/vim/bazel_utils.vim'
+    nmap <leader>[ :call OpenBazelBuildDef()<CR>
+    nmap <leader><C-W>[ :call OpenSplitBazelBuildDef()<CR>
+    execute 'source' dotfilesDirectory . '/vim/cpp_utils.vim'
+    nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
+    nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
+endif
+
 let pluginDirectory = expand('~/.vim/plugins/')
 if isdirectory(pluginDirectory)
     " Vim Plug
@@ -54,7 +64,6 @@ if isdirectory(pluginDirectory)
     let g:vimtex_quickfix_mode=0
     autocmd Filetype tex setlocal conceallevel=1
     let g:tex_conceal='abdmg'
-
 
     " Snip-style Macros
     " Plug 'sirver/ultisnips'
@@ -115,22 +124,16 @@ if isdirectory(pluginDirectory)
     let g:fzf_preview_window = ['right,50%,<70(up,40%)']
     nnoremap <C-/> :Files ../../../<CR>
     nnoremap <leader>/ :GFiles <CR>
+    " Rg requires ripgrep to be installed
+    nnoremap <leader>g :Rg <CR>
+    nnoremap <leader>b :execute 'Files ' . GetBazelBinPath() <CR>
+    nnoremap <leader>B :execute 'Files ' . GetBazelOutPath() <CR>
     nnoremap <BS> <C-H>
 
     call plug#end()
 else
     " Bind jk to escape because it's too damn far away!
     imap jk <Esc>
-endif
-
-let dotfilesDirectory = expand('~/.dotfiles')
-if isdirectory(dotfilesDirectory)
-    execute 'source' dotfilesDirectory . '/vim/bazel_utils.vim'
-    nmap <leader>[ :call OpenBazelBuildDef()<CR>
-    nmap <leader><C-W>[ :call OpenSplitBazelBuildDef()<CR>
-    execute 'source' dotfilesDirectory . '/vim/cpp_utils.vim'
-    nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
-    nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
 endif
 
 " Ask to save rather than error on unsaved changes
@@ -171,9 +174,9 @@ set nolist
 set textwidth=120
 set wrapmargin=0
 set formatoptions=tcqrn1
-set tabstop=4
-set shiftwidth=4
-set softtabstop=4
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
 set expandtab
 set noshiftround
 
@@ -242,12 +245,6 @@ set background=dark
 let g:solarized_termcolors=256
 let g:solarized_termtrans=1
 
-" Correctly map the backspace key to what you expect
-set t_kb=^?
-fixdel
-inoremap <Char-0x07F> <BS>
-nnoremap <Char-0x07F> <BS>
-
 " Don't delete leading whitespace on empty line on <CR> or exiting Insert mode
 " TODO: This shouldn't be ignored by easy escape, probably do a PR for Indent
 " Guides to not be soley based off of existing whitespace characters
@@ -271,3 +268,12 @@ nnoremap # #n
 
 " Set syntax highlighting for .inc files to C++
 autocmd BufEnter *.inc :setlocal filetype=cpp
+
+" Unmap C-W C-C or C-W q which closes a pane if we try to not switch panes after invoking C-W
+nnoremap <C-W><C-C> <ESC>
+nnoremap <C-W>q <ESC>
+
+" Higher-contrast colors for diffs
+highlight DiffAdd    cterm=bold ctermfg=lightyellow ctermbg=darkgreen gui=none guifg=fg guibg=bg
+highlight DiffDelete cterm=bold ctermfg=lightyellow ctermbg=darkred gui=none guifg=fg guibg=bg
+highlight DiffChange cterm=bold ctermfg=lightyellow ctermbg=darkblue gui=none guifg=fg guibg=bg

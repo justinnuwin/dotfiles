@@ -38,3 +38,21 @@ function! OpenSplitBazelBuildDef()
     execute 'edit' buildFile
     call search(l:filename)
 endfunction
+
+" Get the bazel-bin (previous output path) of the current workspace
+function! GetBazelBinPath()
+    let l:workspaceDir = systemlist('source ~/.dotfiles/shell/path_utils.sh; traverse_up ' . getcwd() . ' WORKSPACE')
+    if v:shell_error != 0
+        throw "Could not find Bazel WORKSPACE from cwd: " . getcwd()
+    endif
+    return l:workspaceDir[0] . '/bazel-bin'
+endfunction
+
+" Get the bazel-out path of the current workspace
+function! GetBazelOutPath()
+    let l:workspaceDir = systemlist('source ~/.dotfiles/shell/path_utils.sh; traverse_up ' . getcwd() . ' WORKSPACE')
+    if v:shell_error != 0
+        throw "Could not find Bazel WORKSPACE from cwd: " . getcwd()
+    endif
+    return l:workspaceDir[0] . '/bazel-out'
+endfunction
