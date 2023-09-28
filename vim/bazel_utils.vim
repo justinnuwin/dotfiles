@@ -45,7 +45,11 @@ function! GetBazelBinPath()
     if v:shell_error != 0
         throw "Could not find Bazel WORKSPACE from cwd: " . getcwd()
     endif
-    return l:workspaceDir[0] . '/bazel-bin'
+    let l:bazelBinPath = l:workspaceDir[0] . '/bazel-bin'
+    if !isdirectory(l:bazelBinPath)
+        throw "bazel-bin output link does not exist at: " . l:workspaceDir[0]
+    endif
+    return l:bazelBinPath
 endfunction
 
 " Get the bazel-out path of the current workspace
@@ -54,5 +58,9 @@ function! GetBazelOutPath()
     if v:shell_error != 0
         throw "Could not find Bazel WORKSPACE from cwd: " . getcwd()
     endif
-    return l:workspaceDir[0] . '/bazel-out'
+    let l:bazelOutPath = l:workspaceDir[0] . '/bazel-out'
+    if !isdirectory(l:bazelOutPath)
+        throw "bazel-out output link does not exist at: " . l:workspaceDir[0]
+    endif
+    return l:bazelOutPath
 endfunction
