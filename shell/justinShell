@@ -34,6 +34,26 @@ alias grst="git reset"
 alias grsthrd="git reset --hard"
 alias grb="git rebase"
 alias gwt="git worktree"
+# Remove the current worktree and its check-ed out branch
+git_remove_worktree_delete_local_branch() {
+    if [[ ! -f "$(groot)/.git" ]]; then
+        echo "Not in a git worktree" 2>&1
+        return 1
+    fi
+    local worktree="$(groot)"
+    local branch="$(gcurb)"
+    cd "$(dirname "$(git rev-parse --git-common-dir)")"
+    git worktree remove $worktree
+    if [[ $? > 0 ]]; then
+        cd $worktree
+        return 1
+    fi
+    echo "Removed worktree $worktree"
+    git branch -D $branch
+    cd "$(dirname $worktree)"
+    return 0
+}
+alias gwtrmb="git_remove_worktree_delete_local_branch"
 alias gdiff="git diff"
 alias gsw="git switch"
 alias gcurb="git branch --show-current"
