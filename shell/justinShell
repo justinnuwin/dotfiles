@@ -33,7 +33,9 @@ alias gs="git status"
 alias gcurb="git branch --show-current"
 alias grst="git reset"
 alias grsthrd="git reset --hard"
-alias grsthrdocurb="git reset --hard origin/$(git branch --show-current)"
+grsthrdocurb() {
+  git reset --hard origin/$(git branch --show-current)
+}
 alias grb="git rebase"
 alias gwt="git worktree"
 # Remove the current worktree and its check-ed out branch
