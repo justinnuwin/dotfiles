@@ -30,8 +30,10 @@ alias gvisualize="git log --graph --full-history --all --color --pretty=format:'
 alias gl="git log --oneline"
 alias groot="git rev-parse --show-toplevel"
 alias gs="git status"
+alias gcurb="git branch --show-current"
 alias grst="git reset"
 alias grsthrd="git reset --hard"
+alias grsthrdocurb="git reset --hard origin/$(git branch --show-current)"
 alias grb="git rebase"
 alias gwt="git worktree"
 # Remove the current worktree and its check-ed out branch
@@ -49,14 +51,15 @@ git_remove_worktree_delete_local_branch() {
         return 1
     fi
     echo "Removed worktree $worktree"
-    git branch -D $branch
+    if [[ $branch != "" ]]; then
+        git branch -D $branch
+    fi
     cd "$(dirname $worktree)"
     return 0
 }
 alias gwtrmb="git_remove_worktree_delete_local_branch"
 alias gdiff="git diff"
 alias gsw="git switch"
-alias gcurb="git branch --show-current"
 alias cdgroot="cd \$(groot)"
 alias pushdgroot="pushd \$(groot)"
 # TODO: Figure out why these have to be functions for completions to work instead of aliases

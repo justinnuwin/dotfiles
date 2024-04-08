@@ -89,7 +89,7 @@ if isdirectory(pluginDirectory)
     " Less janky exiting insert mode (rather than Ctrl-C or hand-rolled jk)
     Plug 'zhou13/vim-easyescape'
     let g:easyescape_chars = { "j": 1, "k": 1 }
-    let g:easyescape_timeout = 100
+    let g:easyescape_timeout = 200
     cnoremap jk <ESC>
 
     " Indentation Highlighting
@@ -128,6 +128,7 @@ if isdirectory(pluginDirectory)
     nnoremap <leader>g :Rg <CR>
     nnoremap <leader>b :execute 'Files ' . GetBazelBinPath() <CR>
     nnoremap <leader>B :execute 'Files ' . GetBazelOutPath() <CR>
+    nnoremap <leader>l :Buffers <CR>
     nnoremap <BS> <C-H>
 
     call plug#end()

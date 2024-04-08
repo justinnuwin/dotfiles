@@ -114,11 +114,6 @@ fzf_git_branch() {
     | fzf_cmd "$1" "$fzf_opt" "$num_branches" \
     | sed "s/.* //"
 }
-alias fzgbr=fzf_git_branch
-
-# Fuzzy git branch
-# Args: Forward to git branch
-alias gbr="git branch \$@ \$(fzgbr)"
 
 # Fuzzy git checkout branches
 # Arg 1: See select_fzf_tmux
@@ -127,8 +122,6 @@ fzf_git_checkout() {
     branch=$(fzgbr $1) \
     && git checkout $(echo "$branch" | sed "s/.* //" | sed "s#remotes/[^/]*/##")
 }
-alias gco=fzf_git_checkout
-alias gcob=gco
 
 # Fuzzy git checkout files
 # Arg 1: See select_fzf_tmux
@@ -150,7 +143,6 @@ fzf_git_checkout_file() {
     | xargs git checkout 
     popd > /dev/null
 }
-alias gcof=fzf_git_checkout_file
 
 
 
