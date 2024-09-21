@@ -278,3 +278,6 @@ nnoremap <C-W>q <ESC>
 highlight DiffAdd    cterm=bold ctermfg=lightyellow ctermbg=darkgreen gui=none guifg=fg guibg=bg
 highlight DiffDelete cterm=bold ctermfg=lightyellow ctermbg=darkred gui=none guifg=fg guibg=bg
 highlight DiffChange cterm=bold ctermfg=lightyellow ctermbg=darkblue gui=none guifg=fg guibg=bg
+
+" Shortcut to enter paste mode
+nnoremap <leader>p :set paste!<CR>

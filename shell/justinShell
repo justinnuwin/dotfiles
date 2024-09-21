@@ -28,6 +28,8 @@ alias vi="vim"
 alias gvis="git log --graph --oneline --color"
 alias gvisualize="git log --graph --full-history --all --color --pretty=format:'%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s'"
 alias gl="git log --oneline"
+alias gls="git log --oneline --name-status"
+alias glstat="git log --oneline --stat"
 alias groot="git rev-parse --show-toplevel"
 alias gs="git status"
 alias gcurb="git branch --show-current"
@@ -119,3 +121,6 @@ fi
 
 # Add ~/.local/bin to path for many pip or other local applications
 export PATH="$PATH:$HOME/.local/bin"
+
+# Add git-mv-changes to PATH
+export PATH="$PATH:$HOME/.dotfiles/shell/git-mv-changes"

@@ -13,3 +13,6 @@
 [submodule "fzf-tab"]
 	path = shell/zsh_plugins/fzf-tab
 	url = https://github.com/Aloxaf/fzf-tab.git
+[submodule "shell/git-mv-changes"]
+	path = shell/git-mv-changes
+	url = git@github.com:justinnuwin/git-mv-changes.git
