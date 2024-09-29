@@ -46,7 +46,7 @@ if isdirectory(pluginDirectory)
     map <C-S> :SyntasticToggleMode<CR>
 
     " File Tree
-    Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+    Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
     Plug 'Xuyuanp/nerdtree-git-plugin'
     map <leader>o :NERDTreeToggle<CR>
     autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
@@ -82,6 +82,14 @@ if isdirectory(pluginDirectory)
     " Vim Bar Theme
     Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
     let g:airline_powerline_fonts = 1
+    let g:airline_extensions = ['branch', 'coc', 'tagbar']
+    let g:airline_skip_empty_sections = 1
+    let g:airline_section_y = [] " Disable default ffenc section
+    let g:airline#extensions#branch#displayed_head_limit = 20
+    let g:airline#extensions#branch#format = 2
+    let g:airline#extensions#tagbar#flags = 'f'
+    let g:airline#extensions#tagbar#searchmethod = 'nearest-stl'
+    let g:airline_stl_path_style = 'short'
 
     " Display Marks
     Plug 'kshenoy/vim-signature'
