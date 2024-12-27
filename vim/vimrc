@@ -71,6 +71,9 @@ set shiftwidth=2
 set softtabstop=2
 set expandtab
 set noshiftround
+autocmd Filetype bzl setlocal tabstop=4
+autocmd Filetype bzl setlocal shiftwidth=4
+autocmd Filetype bzl setlocal softtabstop=4
 
 # Folding
 # Use zR to make all folds go away
@@ -160,6 +163,10 @@ nnoremap # #n
 
 # Set syntax highlighting for .inc files to C++
 autocmd BufEnter *.inc :setlocal filetype=cpp
+
+# Set syntax highlighting for .mako files to mako template
+# Syntax highlighting file can be found here https://www.vim.org/scripts/script.php?script_id=1858
+autocmd BufEnter *.mako :setlocal filetype=mako
 
 # Unmap C-W C-C or C-W q which closes a pane if we try to not switch panes after invoking C-W
 nnoremap <C-W><C-C> <ESC>

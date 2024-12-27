@@ -1,3 +1,10 @@
 {
-    "suggest.noselect": true
+    "suggest.noselect": true,
+    "clangd.arguments": [
+        "--log=verbose",
+        "--clang-tidy",
+        "--enable-config"
+    ],
+    "diagnostic.checkCurrentLine": true,
+    "python.pythonPath": "/usr/bin/python3.11"
 }
