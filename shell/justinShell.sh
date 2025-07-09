@@ -66,6 +66,18 @@ alias gdiff="git diff"
 alias gsw="git switch"
 alias cdgroot="cd \$(groot)"
 alias pushdgroot="pushd \$(groot)"
+# Sometimes very large repos will have custom fetch refspecs to minimize on
+# number of branches/tags pulled. Maually fetch before switching to the branch
+gfsw() {
+  git fetch --refmap='*:refs/remotes/origin/*' origin $1
+  if git rev-parse --quiet --verify $1
+  then
+    git switch $1
+  else
+    git switch -c $1
+  fi
+  return 0
+}
 # TODO: Figure out why these have to be functions for completions to work instead of aliases
 btest() {
     bazel test "$@"

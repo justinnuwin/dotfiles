@@ -76,10 +76,11 @@ autocmd Filetype bzl setlocal shiftwidth=4
 autocmd Filetype bzl setlocal softtabstop=4
 
 # Folding
+# Don't automatically fold
 # Use zR to make all folds go away
-set foldmethod=indent
-set foldlevel=3
-set foldclose=all
+# set foldmethod=indent
+# set foldlevel=3
+# set foldclose=all
 
 # Cursor motion
 set scrolloff=3
