@@ -69,12 +69,12 @@ alias pushdgroot="pushd \$(groot)"
 # Sometimes very large repos will have custom fetch refspecs to minimize on
 # number of branches/tags pulled. Maually fetch before switching to the branch
 gfsw() {
-  git fetch --refmap='*:refs/remotes/origin/*' origin $1
+  git fetch --force --refmap="+$1:refs/remotes/origin/$1" origin $1
   if git rev-parse --quiet --verify $1
   then
     git switch $1
   else
-    git switch -c $1
+    git switch -c $1 origin/$1
   fi
   return 0
 }
@@ -130,6 +130,11 @@ fi
 if [[ -f "$HOME/.localshell" ]]; then
     source $HOME/.localshell
 fi
+
+# Node Version Manager
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # Add ~/.local/bin to path for many pip or other local applications
 export PATH="$PATH:$HOME/.local/bin"
