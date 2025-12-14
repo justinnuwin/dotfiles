@@ -11,6 +11,20 @@ g:coc_config_home = '~/.dotfiles/vim'
 # List installed extensions with ':CocList extensions'
 # List of extensions can be found here: https://github.com/neoclide/coc.nvim/wiki/Using-coc-extensions#implemented-coc-extensions
 g:coc_global_extensions = ['coc-clangd', 'coc-json', 'coc-pydocstring', 'coc-pyright', 'coc-snippets']
+# Use <C-l> for trigger snippet expand.
+imap <C-l> <Plug>(coc-snippets-expand)
+# Use <C-j> for select text for visual placeholder of snippet.
+vmap <C-j> <Plug>(coc-snippets-select)
+# Use <C-j> for jump to next placeholder, it's default of coc.nvim
+g:coc_snippet_next = '<c-j>'
+# Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+g:coc_snippet_prev = '<c-k>'
+# Use <C-j> for both expand and jump (make expand higher priority.)
+imap <C-j> <Plug>(coc-snippets-expand-jump)
+# Less distracting coloring of inlay hints
+highlight CocInlayHint cterm=italic ctermfg=darkgray ctermbg=black
+# Disable Coc when it gets too noisy
+map <C-S> :call CocAction('diagnosticToggle')<CR>
 # set cmdheight=2
 set updatetime=300
 set shortmess+=c
@@ -24,18 +38,32 @@ def CheckBackspace(): bool
   var col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 enddef
+nmap <silent><nowait> gd <Plug>(coc-definition)
+nmap <silent><nowait> gy <Plug>(coc-type-definition)
+nmap <silent><nowait> gi <Plug>(coc-implementation)
+nmap <silent><nowait> gr <Plug>(coc-references)
+def g:ShowDocumentation(): void
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+enddef
+# Use K to show documentation in preview window
+nnoremap <silent> K :call ShowDocumentation()<CR>
 
 # Syntax Checking
 # Plug 'vim-syntastic/syntastic'
-g:syntastic_check_on_open = 1
-g:syntastic_check_on_wq = 0
-map <C-S> :SyntasticToggleMode<CR>
+# g:syntastic_check_on_open = 1
+# g:syntastic_check_on_wq = 0
+# map <C-S> :SyntasticToggleMode<CR>
 
 # File Tree
-Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
+Plug 'preservim/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
-map <leader>o :NERDTreeToggle<CR>
-map <leader>O :NERDTreeToggleVCS<CR>
+map <leader>o :NERDTreeFind<CR>
+map <leader>O :NERDTreeCWD<CR>
+map <leader>P :NERDTreeClose<CR>
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 # Git Bindings.
@@ -69,9 +97,10 @@ g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 # Vim Bar Theme
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 g:airline_powerline_fonts = 1
-g:airline_extensions = ['branch', 'coc', 'tagbar']
+g:airline_extensions = ['branch']
 g:airline_skip_empty_sections = 1
 g:airline_section_y = [] # Disable default ffenc section
+g:airline_section_z = '%l/%L %c'  # Disable the file percentage
 g:airline#extensions#branch#displayed_head_limit = 20
 g:airline#extensions#branch#format = 2
 g:airline#extensions#tagbar#flags = 'f'

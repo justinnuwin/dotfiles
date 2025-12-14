@@ -40,7 +40,6 @@ function initialize_powerlevel10k() {
   POWERLEVEL9K_INSTANT_PROMPT=verbose
   ZLE_RPROMPT_INDENT=0    # Fix extra space after right prompt
 
-
   # Context setting
   POWERLEVEL9K_CONTEXT_REMOTE_TEMPLATE=''
   POWERLEVEL9K_CONTEXT_TEMPLATE=''
@@ -147,9 +146,9 @@ function initialize_powerlevel10k() {
     # *42 if have stashes.
     (( VCS_STATUS_STASHES        )) && res+="${clean}${POWERLEVEL9K_VCS_STASH_ICON}${VCS_STATUS_STASHES}"
     # 'merge' if the repo is in an unusual state.
-    [[ -n $VCS_STATUS_ACTION     ]] && res+="${conflicted}${VCS_STATUS_ACTION}"
+    [[ -n $VCS_STATUS_ACTION     ]] && res+=" ${conflicted}${VCS_STATUS_ACTION}"
     # ~42 if have merge conflicts.
-    (( VCS_STATUS_NUM_CONFLICTED )) && res+="${conflicted}${POWERLEVEL9K_VCS_CONFLICT_ICON}${VCS_STATUS_NUM_CONFLICTED}"
+    (( VCS_STATUS_NUM_CONFLICTED )) && res+=" ${conflicted}${POWERLEVEL9K_VCS_CONFLICT_ICON}${VCS_STATUS_NUM_CONFLICTED}"
     # +42 if have staged changes.
     (( VCS_STATUS_NUM_STAGED     )) && res+="${modified}${POWERLEVEL9K_VCS_STAGED_ICON}${VCS_STATUS_NUM_STAGED}"
     # !42 if have unstaged changes.
