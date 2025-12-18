@@ -1,0 +1,4 @@
+---
+
+tmux_plugins_dir: "{{ destination_home }}/.tmux/plugins"
+tpm_version: 3.1.0

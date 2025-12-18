@@ -1,0 +1,6 @@
+---
+
+- name: Deploy dotfiles and related utilities
+  hosts: all
+  roles:
+    - tmux

@@ -1,0 +1,27 @@
+---
+
+- name: Setup tmux
+  block:
+
+  - name: Install tmux plugin manager
+    block:
+      - name: Check if tmux plugin manager installed
+        ansible.builtin.stat:
+          path: "{{ tmux_plugins_dir }}/tpm-{{ tpm_version }}/tpm"
+        register: stat_tpm
+
+      - name: Install tmux plugin manager
+        ansible.builtin.include_tasks: install_tpm.yml
+        when: not stat_tpm["stat"]["exists"]
+
+  - name: Install tmux.conf
+    ansible.builtin.file:
+      src: "{{ dotfiles_path }}/tmux/tmux.conf"
+      dest: "{{ destination_home }}/.tmux.conf"
+      state: link
+
+  - name: tmux plugin manager next-steps message
+    ansible.builtin.debug:
+      msg: Use <prefix> + I to install tmux plugins
+
+  tags: setup-tmux

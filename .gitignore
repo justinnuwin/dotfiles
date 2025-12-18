@@ -8,5 +8,6 @@
 
 backups/
 __pycache__/
+venv/
 
 .*.swp

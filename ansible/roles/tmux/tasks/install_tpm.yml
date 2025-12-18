@@ -1,0 +1,18 @@
+---
+
+  - name: Create tmux plugins and plugin manager directory
+    ansible.builtin.file:
+      dest: "{{ tmux_plugins_dir }}"
+      state: directory
+
+  - name: Download tmux plugin manager
+    ansible.builtin.get_url:
+      url: https://github.com/tmux-plugins/tpm/archive/refs/tags/v3.1.0.zip
+      checksum: sha256:f92bf5db248417e6f62df1debc0dfe4f071f36f9c66bdf11c37c9c5712b06915
+      dest: "{{ tmux_plugins_dir }}/v{{ tpm_version }}.zip"
+
+  - name: Extract tmux plugin manager
+    ansible.builtin.unarchive:
+      src: "{{ tmux_plugins_dir }}/v{{ tpm_version }}.zip"
+      remote_src: true
+      dest: "{{ tmux_plugins_dir }}"
