@@ -24,17 +24,23 @@ set shortmess+=c
 # Remember to set "suggest.noselect": true in coc config
 def Tab(): string
   if coc#pum#visible()
-    # NOTE: For some reason this doesn't work with coc#_select_confirm()
-    var info = coc#pum#info()
-    coc#pum#select(info.index == -1 ? 0 : info.index, true, true)
-    return coc#pum#confirm()
+    return coc#_select_confirm()
   endif
   if coc#jumpable()
-    return NextSnippet()
+    # From default <TAB> mapping from coc-snippets (since user may fill in the
+    # placeholder, asyncronously refresh the buffer, recompute next jump, then
+    # perform the jump)
+    # This is not necessary for <C-l> mappings since the <cmd> mapping
+    # automatically invokes the buffer by "secretly" changing the mode
+    return "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>"
   endif
-  return CheckBackspace() ? "\<TAB>" : coc#refresh()
+  if CheckBackspace()
+    return "\t"
+  endif
+  return coc#refresh()
 enddef
-inoremap <silent> <Tab> <cmd>call <SID>Tab()<CR>
+inoremap <silent><expr> <Tab> <SID>Tab()
+snoremap <silent><expr> <Tab> <SID>Tab()
 
 # Accept completion if the popup menu is open
 # NOTE: \<C-g>u is used to break undo level.
@@ -52,20 +58,24 @@ inoremap <silent><expr> <C-k>
 inoremap <silent><expr> <C-e> coc#pum#visible() ? coc#pum#cancel() : coc#inline#visible() ? coc#inline#cancel() : ""
 
 # Next snippet placeholder
-def NextSnippet(): string
-  echom "next snippet"
-  coc#refresh()
-  coc#pum#visible() ? coc#pum#cancel() : coc#inline#visible() ? coc#inline#cancel() : ""
+def NextSnippet()
+  if coc#pum#visible()
+    coc#pum#cancel()
+  elseif coc#inline#visible()
+    coc#inline#cancel()
+  endif
   coc#snippet#next()
-  return ""
 enddef
 inoremap <silent> <C-l> <cmd>call <SID>NextSnippet()<CR>
 snoremap <silent> <C-l> <cmd>call <SID>NextSnippet()<CR>
 
 # Previous snippet placeholder
 def PrevSnippet()
-  coc#refresh()
-  coc#pum#visible() ? coc#pum#cancel() : coc#inline#visible() ? coc#inline#cancel() : ""
+  if coc#pum#visible()
+    coc#pum#cancel()
+  elseif coc#inline#visible()
+    coc#inline#cancel()
+  endif
   coc#snippet#prev()
 enddef
 inoremap <silent> <C-h> <cmd>call <SID>PrevSnippet()<CR>
