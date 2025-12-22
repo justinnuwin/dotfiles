@@ -17,7 +17,7 @@ function initialize_powerlevel10k() {
 
   # Set the prompt elements
   function my_custom_p10k_precmd() {
-    width=$(stty size | awk '{print $2}')
+    width=$(stty size 2>/dev/null | awk '{print $2}')
     if [[ "$width" -le 180 ]]; then
       # Set variables for two-line prompt in Git repos
       POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs newline prompt_char)

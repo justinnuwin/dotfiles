@@ -13,25 +13,28 @@ local dotfiles="$HOME/.dotfiles"
 source "$dotfiles/shell/path_utils.sh"
 source "$dotfiles/shell/bazel_utils.sh"
 
-if [[ "$(uname)" = "Darwin" ]] && [[ ! -d /usr/local/opt/coreutils ]]; then
-    enable_color="-G"
-else
-    enable_color="--color=always"
-fi
+enable_color="--color=always"
 
 alias rm="rm -i"
+
 alias ls="ls $enable_color"
 alias la="ls -al $enable_color"
 alias ll="ls -alhs $enable_color"
+
 alias grep="grep --color=always"
+
 alias vi="vim"
+
 alias gvis="git log --graph --oneline --color"
 alias gvisualize="git log --graph --full-history --all --color --pretty=format:'%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s'"
 alias gl="git log --oneline"
 alias gls="git log --oneline --name-status"
 alias glstat="git log --oneline --stat"
 alias groot="git rev-parse --show-toplevel"
-alias gs="git status"
+alias gs="git status --short --branch"
+alias gsh="git show"
+alias gc="git commit"
+alias gcanoe="git commit --amend --no-edit"
 alias gcurb="git branch --show-current"
 alias grst="git reset"
 alias grsthrd="git reset --hard"
@@ -87,57 +90,40 @@ bbuild() {
 }
 export GPG_TTY=$(tty)
 
-if [[ "$(uname)" = "Darwin" ]] && [[ -d /usr/local/opt/coreutils ]]; then
-    # brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt grep
-
-    PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-    PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
-    PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
-    PATH="/usr/local/opt/gnu-indent/libexec/gnubin:$PATH"
-    PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
-    PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
-    export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
-
-    export CPPFLAGS="-I/usr/local/opt/readline/include"
-    export LDFLAGS="-L/usr/local/opt/readline/lib"
-
-    export PATH="/usr/local/opt/gettext/bin:$PATH"
-    export CPPFLAGS="-I/usr/local/opt/gettext/include"
-    export LDFLAGS="-L/usr/local/opt/gettext/lib"
-
-    export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
-    export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
-    export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
-
-    export LDFLAGS="-L/usr/local/opt/libffi/lib"
-
-    # brew install python3
-    PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH"
-    alias python3="python"
-    alias pip3="pip"
-
-    # brew install go
-    export GOROOT="/usr/local/opt/golang/libexec"
-    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
-fi
-
-# TODO: zsh-fzf-plugin could also install fzf. Should support that
-if [[ -f "$HOME/.vim/plugins/fzf/bin/fzf" ]]; then
-    export PATH="$HOME/.vim/plugins/fzf/bin:$PATH"
-    source "$HOME/.dotfiles/shell/fzf_aliases.sh"
+if [[ "$(uname)" = "Darwin" ]]; then
+  source "$dotfiles/shell/macos_gnu.sh"
 fi
 
 if [[ -f "$HOME/.localshell" ]]; then
     source $HOME/.localshell
 fi
 
+if [[ -n "$(which fzf)" ]]; then
+    source "$HOME/.dotfiles/shell/fzf_aliases.sh"
+fi
+
 # Node Version Manager
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+if [[ -n "$JNSHELL_USE_NVM" ]] && "$JNSHELL_USE_NVM"; then
+  if [[ -z "$NVM_DIR" ]]; then
+    export NVM_DIR="$HOME/.nvm"
+  fi
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
+
+# Rust
+# This can be installed with: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path -y
+if [[ -n "$JNSHELL_USE_RUST" ]] && "$JNSHELL_USE_RUST"; then
+  if [[ -z "$CARGO_HOME" ]]; then
+    export CARGO_HOME="$HOME/.cargo"
+  fi
+  export PATH="$PATH:$CARGO_HOME/bin"
+fi
 
 # Add ~/.local/bin to path for many pip or other local applications
-export PATH="$PATH:$HOME/.local/bin"
+if echo $PATH | grep --quiet --invert-match "$HOME/.local/bin"; then
+  export PATH="$PATH:$HOME/.local/bin"
+fi
 
 # Add git-mv-changes to PATH
 export PATH="$PATH:$HOME/.dotfiles/shell/git-mv-changes"

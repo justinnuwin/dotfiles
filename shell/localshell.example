@@ -1,0 +1,4 @@
+#!/bin/bash
+
+JNSHELL_USE_RUST=true
+JNSHELL_USE_NVM=true
