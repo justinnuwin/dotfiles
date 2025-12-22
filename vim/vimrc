@@ -10,21 +10,25 @@ vim9script
 g:mapleader = ","
 
 g:dotfilesDirectory = expand('~/.dotfiles')
+g:vimplugScript = expand('~/.vim/autoload/plug.vim')
 g:pluginDirectory = expand('~/.vim/plugins/')
-if isdirectory(g:dotfilesDirectory)
-    execute 'source' g:dotfilesDirectory .. '/vim/bazel_utils.vim'
-    nmap <leader>[ :call OpenBazelBuildDef()<CR>
-    nmap <leader><C-W>[ :call OpenSplitBazelBuildDef()<CR>
-    execute 'source' g:dotfilesDirectory .. '/vim/cpp_utils.vim'
-    nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
-    nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
+if filereadable(g:vimplugScript)
+    if isdirectory(g:dotfilesDirectory)
+      execute 'source' g:dotfilesDirectory .. '/vim/bazel_utils.vim'
+      nmap <leader>[ :call OpenBazelBuildDef()<CR>
+      nmap <leader><C-W>[ :call OpenSplitBazelBuildDef()<CR>
+      execute 'source' g:dotfilesDirectory .. '/vim/cpp_utils.vim'
+      nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
+      nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
 
     if isdirectory(g:pluginDirectory)
         execute 'source ' g:dotfilesDirectory .. '/vim/plugins.vim'
     else
+        echomsg 'Vim-Plug script found, but plugins directory is not present. Create "' .. g:pluginDirectory .. '" to install plugins.'
         # Bind jk to escape because it's too damn far away!
         imap jk <Esc>
     endif
+  endif
 
 endif
 
@@ -124,7 +128,8 @@ set incsearch
 set ignorecase
 set smartcase
 set showmatch
-map <leader><space> :noh<CR>
+# Stop highlighting search
+map <leader><space> :nohlsearch<CR>
 
 # Formatting
 map <leader>q gqip
@@ -140,13 +145,6 @@ set t_Co=256
 set background=dark
 g:solarized_termcolors = 256
 g:solarized_termtrans = 1
-
-# Don't delete leading whitespace on empty line on <CR> or exiting Insert mode
-# TODO: This shouldn't be ignored by easy escape, probably do a PR for Indent
-# Guides to not be soley based off of existing whitespace characters
-inoremap <CR> <CR>x<BS>
-nnoremap o ox<BS>
-nnoremap O Ox<BS>
 
 # Set conceal level to 2 for JSON since there are quote EVERYWHERE
 autocmd Filetype json setlocal conceallevel=2

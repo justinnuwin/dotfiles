@@ -1,5 +1,6 @@
 vim9script
 
+# TODO: The '-printf' option is not POSIX and won't be available on i.e. Macos
 const findOpts = ' -mindepth 1 -type d -printf "%P\n"'
 
 export def GetDirectoriesFromCwdCmd(): string

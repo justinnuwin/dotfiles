@@ -1,62 +1,16 @@
 vim9script
 
-import g:dotfilesDirectory .. '/vim/navigation.vim'
-
 # Vim Plug
 call plug#begin(g:pluginDirectory)
 
+
 # Code Completion
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-g:coc_config_home = '~/.dotfiles/vim'
-# List installed extensions with ':CocList extensions'
-# List of extensions can be found here: https://github.com/neoclide/coc.nvim/wiki/Using-coc-extensions#implemented-coc-extensions
-g:coc_global_extensions = ['coc-clangd', 'coc-json', 'coc-pydocstring', 'coc-pyright', 'coc-snippets']
-# Use <C-l> for trigger snippet expand.
-imap <C-l> <Plug>(coc-snippets-expand)
-# Use <C-j> for select text for visual placeholder of snippet.
-vmap <C-j> <Plug>(coc-snippets-select)
-# Use <C-j> for jump to next placeholder, it's default of coc.nvim
-g:coc_snippet_next = '<c-j>'
-# Use <C-k> for jump to previous placeholder, it's default of coc.nvim
-g:coc_snippet_prev = '<c-k>'
-# Use <C-j> for both expand and jump (make expand higher priority.)
-imap <C-j> <Plug>(coc-snippets-expand-jump)
-# Less distracting coloring of inlay hints
-highlight CocInlayHint cterm=italic ctermfg=darkgray ctermbg=black
-# Disable Coc when it gets too noisy
-map <C-S> :call CocAction('diagnosticToggle')<CR>
-# set cmdheight=2
-set updatetime=300
-set shortmess+=c
-# Remember to set "suggest.noselect": true in coc config
-inoremap <silent><expr> <TAB>
-  \ coc#pum#visible() ? coc#pum#next(1) :
-  \ CheckBackspace() ? "\<Tab>" :
-  \ coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
-def CheckBackspace(): bool
-  var col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-enddef
-nmap <silent><nowait> gd <Plug>(coc-definition)
-nmap <silent><nowait> gy <Plug>(coc-type-definition)
-nmap <silent><nowait> gi <Plug>(coc-implementation)
-nmap <silent><nowait> gr <Plug>(coc-references)
-def g:ShowDocumentation(): void
-  if CocAction('hasProvider', 'hover')
-    call CocActionAsync('doHover')
-  else
-    call feedkeys('K', 'in')
-  endif
-enddef
-# Use K to show documentation in preview window
-nnoremap <silent> K :call ShowDocumentation()<CR>
+execute 'source' g:dotfilesDirectory .. '/vim/coc.vim'
 
-# Syntax Checking
-# Plug 'vim-syntastic/syntastic'
-# g:syntastic_check_on_open = 1
-# g:syntastic_check_on_wq = 0
-# map <C-S> :SyntasticToggleMode<CR>
+# Snippets core engine from 'SirVer/ultisnips' not needed since we can use coc
+# Include popular snippets
+Plug 'honza/vim-snippets'
 
 # File Tree
 Plug 'preservim/nerdtree'
@@ -64,12 +18,16 @@ Plug 'Xuyuanp/nerdtree-git-plugin'
 map <leader>o :NERDTreeFind<CR>
 map <leader>O :NERDTreeCWD<CR>
 map <leader>P :NERDTreeClose<CR>
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+# Close the tab if NERDTree is the only window remaining in it.
+autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+# Exit Vim if NERDTree is the only window remaining in the only tab.
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
 # Git Bindings.
 # Use GBrowse! to display the url without opening a browse (i.e. when SSHed)
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-rhubarb'   # Enables Git-Browse with GitHub
+# TODO: Create PR upstream to get this via default remote 'origin'
 g:github_enterprise_urls = ['https://git.zooxlabs.com']
 
 # Better Latex Syntax Highlighting
@@ -94,7 +52,7 @@ g:sneak#s_next = 1
 Plug 'unblevable/quick-scope' 
 g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
-# Vim Bar Theme
+# Powerline Status Bar
 Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 g:airline_powerline_fonts = 1
 g:airline_extensions = ['branch']
@@ -145,43 +103,6 @@ nnoremap <leader>f :TagbarToggle<CR>
 # Fuzzy search file finder
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-g:fzf_preview_window = ['right,50%,<70(up,40%)']
-nnoremap <C-/> :Files ../../../<CR>
-nnoremap <leader>/ :GFiles <CR>
-# Rg requires ripgrep to be installed
-nnoremap <leader>g :Rg <CR>
-nnoremap <leader>b :execute 'Files ' .. GetBazelBinPath() <CR>
-nnoremap <leader>B :execute 'Files ' .. GetBazelOutPath() <CR>
-nnoremap <leader>l :Buffers <CR>
-def g:FzfCdCurrentGRootDirs()
-  # cd's to the selected directory from a fzf list of directories
-  # in the current Git repo's
-  var cmd = navigation.GetDirectoriesFromGRootCmd()
-  const gitRoot = trim(system('git rev-parse --show-toplevel'))
-  fzf#run(fzf#wrap({
-    'source': cmd,
-    'sink': (p) => {
-      execute 'cd ' .. gitRoot .. '/' .. p
-      pwd
-    },
-    'options': '--prompt=" cd> "'
-  }))
-enddef
-nnoremap <leader>c :call FzfCdCurrentGRootDirs() <CR>
-def g:FzfCdCwd()
-  # cd's to the selected directory from a fzf list of directories
-  # in the cwd
-  var cmd = navigation.GetDirectoriesFromCwdCmd()
-  fzf#run(fzf#wrap({
-    'source': cmd,
-    'sink': (p) => {
-      execute 'cd ' .. p
-      pwd
-    },
-    'options': '--prompt="cd> "'
-  }))
-enddef
-nnoremap <leader>C :call FzfCdCwd() <CR>
-nnoremap <BS> <C-H>
+execute 'source' g:dotfilesDirectory .. '/vim/fzf.vim'
 
 call plug#end()
