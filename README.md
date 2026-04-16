@@ -16,3 +16,8 @@ My \*nix dotfiles.
 - i3-gaps (4.18-1)
 - rofi (1.5.4-1)
 - rofi-file-browser-extended(-git [AUR]) (1.1.0r5)
+
+## TODO:
+
+* Add ansible scripts for building/installing vim deps and vimrc
+* Get Bazel zsh completions working

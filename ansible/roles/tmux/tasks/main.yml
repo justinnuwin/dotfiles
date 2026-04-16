@@ -17,8 +17,9 @@
   - name: Install tmux.conf
     ansible.builtin.file:
       src: "{{ dotfiles_path }}/tmux/tmux.conf"
-      dest: "{{ destination_home }}/.tmux.conf"
+      dest: "{{ ansible_env.HOME }}/.tmux.conf"
       state: link
+      force: true
 
   - name: tmux plugin manager next-steps message
     ansible.builtin.debug:

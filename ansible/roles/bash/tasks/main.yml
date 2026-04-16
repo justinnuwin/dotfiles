@@ -1,0 +1,13 @@
+---
+
+- name: Setup bash
+  block:
+
+  - name: Install .bashrc
+    ansible.builtin.file:
+      src: "{{ ansible_env.HOME }}/.dotfiles/shell/bashrc"
+      dest: "{{ ansible_env.HOME }}/.bashrc"
+      state: link
+      force: true
+
+  tags: setup-bash

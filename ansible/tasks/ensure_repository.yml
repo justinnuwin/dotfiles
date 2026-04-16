@@ -1,0 +1,22 @@
+---
+
+- name: Check if dotfiles repository exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.dotfiles/.git"
+  register: dotfiles_git
+
+- name: Clone dotfiles repository
+  ansible.builtin.git:
+    repo: "{{ dotfiles_git_repo | default('https://github.com/justinnuwin/dotfiles.git') }}"
+    dest: "{{ ansible_env.HOME }}/.dotfiles"
+    clone: yes
+    update: no
+    recursive: true
+  when: not dotfiles_git.stat.exists
+
+- name: Initialize and update git submodules
+  ansible.builtin.command:
+    cmd: git submodule update --init --recursive
+    chdir: "{{ ansible_env.HOME }}/.dotfiles"
+  register: dotfiles_submodule_update
+  changed_when: "'Cloning into' in (dotfiles_submodule_update.stderr | default(''))"

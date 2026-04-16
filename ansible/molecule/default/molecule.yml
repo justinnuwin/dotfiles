@@ -1,0 +1,30 @@
+---
+driver:
+  name: docker
+platforms:
+  - name: dotfiles-molecule
+    image: public.ecr.aws/ubuntu/ubuntu:22.04
+    pre_build_image: true
+scenario:
+  name: default
+  test_sequence:
+    - destroy
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+ansible:
+  playbooks:
+    prepare: prepare.yml
+    converge: converge.yml
+    verify: verify.yml
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      dotfiles-molecule:
+        ansible_python_interpreter: /usr/bin/python3
+        ansible_user: root
+verifier:
+  name: ansible

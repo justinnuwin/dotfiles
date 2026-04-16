@@ -1,0 +1,13 @@
+---
+
+- name: Setup zsh
+  block:
+
+  - name: Install .zshrc
+    ansible.builtin.file:
+      src: "{{ ansible_env.HOME }}/.dotfiles/shell/zshrc"
+      dest: "{{ ansible_env.HOME }}/.zshrc"
+      state: link
+      force: true
+
+  tags: setup-zsh

@@ -17,6 +17,7 @@ enable_color="--color=always"
 
 alias rm="rm -i"
 
+alias l="ls"
 alias ls="ls $enable_color"
 alias la="ls -al $enable_color"
 alias ll="ls -alhs $enable_color"

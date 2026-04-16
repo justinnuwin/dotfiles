@@ -1,0 +1,2 @@
+---
+- import_playbook: ../../first_time_setup.yml

@@ -2,5 +2,10 @@
 
 - name: Deploy dotfiles and related utilities
   hosts: all
+  pre_tasks:
+    - name: Ensure dotfiles repository is available
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/ensure_repository.yml"
   roles:
+    - bash
+    - zsh
     - tmux

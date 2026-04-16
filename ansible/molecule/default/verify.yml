@@ -1,0 +1,34 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Verify .bashrc symlink exists
+      ansible.builtin.stat:
+        path: /root/.bashrc
+      register: bashrc_stat
+      failed_when: not bashrc_stat.stat.islnk
+
+    - name: Verify .zshrc symlink exists
+      ansible.builtin.stat:
+        path: /root/.zshrc
+      register: zshrc_stat
+      failed_when: not zshrc_stat.stat.islnk
+
+    - name: Verify .tmux.conf symlink exists
+      ansible.builtin.stat:
+        path: /root/.tmux.conf
+      register: tmux_conf_stat
+      failed_when: not tmux_conf_stat.stat.islnk
+
+    - name: Verify dotfiles repository exists
+      ansible.builtin.stat:
+        path: /root/.dotfiles
+      register: dotfiles_stat
+      failed_when: not dotfiles_stat.stat.isdir
+
+    - name: Verify dotfiles repository is a git repository
+      ansible.builtin.stat:
+        path: /root/.dotfiles/.git
+      register: dotfiles_git_stat
+      failed_when: not dotfiles_git_stat.stat.exists
