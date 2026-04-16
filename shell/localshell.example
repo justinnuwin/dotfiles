@@ -1,4 +1,11 @@
 #!/bin/bash
 
+# Installs rust and cargo
 JNSHELL_USE_RUST=true
+
+# Installs nvm and adds it to the path
 JNSHELL_USE_NVM=true
+
+# Symlinks ssh auth socket so long-lived terminals (especially those alive via
+# tmux don't end up with a stale env variable pointing to an old ssh auth sock)
+JNSHELL_LONG_LIVED_REMOTE=true

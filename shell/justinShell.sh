@@ -99,6 +99,10 @@ if [[ -f "$HOME/.localshell" ]]; then
     source $HOME/.localshell
 fi
 
+if [[ -n "$JNSHELL_LONG_LIVED_REMOTE" ]] && "$JNSHELL_LONG_LIVED_REMOTE"; then
+  SSH_AUTH_SOCK=$HOME/.ssh/ssh_auth_sock
+fi
+
 if [[ -n "$(which fzf)" ]]; then
     source "$HOME/.dotfiles/shell/fzf_aliases.sh"
 fi
