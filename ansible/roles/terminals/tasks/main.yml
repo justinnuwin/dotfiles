@@ -15,6 +15,7 @@
       dest: "{{ ghostty_config_dir }}/config"
       state: link
       force: true
+      follow: false
 
   - name: iTerm2 profile next-steps message
     ansible.builtin.debug:
@@ -22,6 +23,6 @@
         iTerm2 profile available at
         {{ dotfiles_path }}/terminals/iterm_profile.json —
         import via iTerm → Preferences → Profiles → Other Actions → Import.
-    when: ansible_os_family == 'Darwin'
+    when: ansible_facts['os_family'] == 'Darwin'
 
   tags: setup-terminals

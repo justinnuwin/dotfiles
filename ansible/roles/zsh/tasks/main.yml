@@ -5,8 +5,8 @@
 
   - name: Install .zshrc
     ansible.builtin.file:
-      src: "{{ ansible_env.HOME }}/.dotfiles/shell/zshrc"
-      dest: "{{ ansible_env.HOME }}/.zshrc"
+      src: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/zshrc"
+      dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
       state: link
       force: true
 

@@ -17,7 +17,7 @@
   - name: Install tmux.conf
     ansible.builtin.file:
       src: "{{ dotfiles_path }}/tmux/tmux.conf"
-      dest: "{{ ansible_env.HOME }}/.tmux.conf"
+      dest: "{{ ansible_facts['env']['HOME'] }}/.tmux.conf"
       state: link
       force: true
 

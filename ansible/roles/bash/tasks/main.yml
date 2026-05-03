@@ -5,8 +5,8 @@
 
   - name: Install .bashrc
     ansible.builtin.file:
-      src: "{{ ansible_env.HOME }}/.dotfiles/shell/bashrc"
-      dest: "{{ ansible_env.HOME }}/.bashrc"
+      src: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/bashrc"
+      dest: "{{ ansible_facts['env']['HOME'] }}/.bashrc"
       state: link
       force: true
 
