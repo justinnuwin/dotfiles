@@ -2,6 +2,13 @@
 
 My \*nix dotfiles.
 
+## Project overview
+
+For a quick orientation to the repository — directory layout, deployment
+model (Ansible), conventions, and testing — see
+[`docs/overview.md`](docs/overview.md). LLM agents working on this repo
+should read that file first to come up to speed.
+
 ## Stuff I use:
 
 - termite (or iTerm2 on OSX)
