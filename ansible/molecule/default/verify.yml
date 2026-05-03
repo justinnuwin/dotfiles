@@ -21,6 +21,12 @@
       register: tmux_conf_stat
       failed_when: not tmux_conf_stat.stat.islnk
 
+    - name: Verify ghostty config symlink exists
+      ansible.builtin.stat:
+        path: /root/.config/ghostty/config
+      register: ghostty_config_stat
+      failed_when: not ghostty_config_stat.stat.islnk
+
     - name: Verify dotfiles repository exists
       ansible.builtin.stat:
         path: /root/.dotfiles

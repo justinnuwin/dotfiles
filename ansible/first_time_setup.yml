@@ -10,4 +10,5 @@
     - zsh
     - terminfo
     - tmux
+    - terminals
     - claude

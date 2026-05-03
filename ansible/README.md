@@ -4,7 +4,7 @@ This directory contains Ansible playbooks and roles for deploying dotfiles to ta
 
 ## Overview
 
-The Ansible configuration manages the deployment of shell configurations (bash, zsh), terminal multiplexer settings (tmux), and ensures the dotfiles repository is properly cloned and initialized with all required git submodules.
+The Ansible configuration manages the deployment of shell configurations (bash, zsh), terminal multiplexer settings (tmux), terminal emulator configurations (Ghostty, iTerm2), and ensures the dotfiles repository is properly cloned and initialized with all required git submodules.
 
 ## Structure
 
@@ -12,7 +12,6 @@ The Ansible configuration manages the deployment of shell configurations (bash, 
 ansible/
 ├── first_time_setup.yml      # Main playbook for deploying dotfiles
 ├── local_first_time_setup.sh # Script for local deployment
-├── run_tests.sh              # Script to run Molecule tests
 ├── requirements.txt          # Python dependencies
 ├── tasks/
 │   └── ensure_repository.yml # Common task: ensure dotfiles repo exists
@@ -25,7 +24,8 @@ ansible/
 └── roles/
     ├── bash/                 # Bash shell configuration
     ├── zsh/                  # Zsh shell configuration
-    └── tmux/                 # Tmux configuration
+    ├── tmux/                 # Tmux configuration
+    └── terminals/            # Terminal emulator configuration (Ghostty, iTerm2)
 ```
 
 ## Playbooks
@@ -39,6 +39,7 @@ The main playbook that orchestrates the deployment of all dotfiles. It:
    - `bash` - Sets up bash configuration
    - `zsh` - Sets up zsh configuration
    - `tmux` - Sets up tmux configuration
+   - `terminals` - Sets up terminal emulator configuration (Ghostty, iTerm2)
 
 **Usage:**
 ```bash
@@ -81,6 +82,23 @@ Deploys tmux configuration and sets up the tmux plugin manager (TPM).
 
 **Tag:** `setup-tmux`
 
+### terminals
+
+Deploys terminal emulator configuration. Cross-platform: the Ghostty
+config is installed on both macOS and Linux; the iTerm2 profile is
+referenced via a manual-import message on macOS only.
+
+**Tasks:**
+- Symlinks `terminals/config.ghostty` to the platform-specific Ghostty
+  config path:
+  - macOS: `~/Library/Application Support/com.mitchellh.ghostty/config`
+  - Linux: `~/.config/ghostty/config`
+- On macOS, displays a message pointing to
+  `terminals/iterm_profile.json` so it can be imported manually via
+  iTerm → Preferences → Profiles → Other Actions → Import.
+
+**Tag:** `setup-terminals`
+
 ## Common Tasks
 
 ### ensure_repository.yml
@@ -104,18 +122,6 @@ Molecule provides containerized testing for Ansible playbooks, allowing you to t
 - Virtual environment (created automatically by test script)
 
 ### Running Tests
-
-**Quick test (recommended):**
-```bash
-./run_tests.sh
-```
-
-This script will:
-1. Create/activate the virtual environment
-2. Install all dependencies from `requirements.txt`
-3. Run the full Molecule test suite
-
-**Manual testing:**
 
 1. Activate the virtual environment:
 ```bash
@@ -163,6 +169,7 @@ The verification playbook (`molecule/default/verify.yml`) checks:
 - `.bashrc` symlink exists and is valid
 - `.zshrc` symlink exists and is valid
 - `.tmux.conf` symlink exists and is valid
+- `~/.config/ghostty/config` symlink exists and is valid
 - Dotfiles repository exists at `~/.dotfiles`
 - Dotfiles repository is a valid git repository
 
@@ -217,6 +224,9 @@ ansible-playbook first_time_setup.yml --tags setup-zsh
 
 # Run only tmux setup
 ansible-playbook first_time_setup.yml --tags setup-tmux
+
+# Run only terminals setup
+ansible-playbook first_time_setup.yml --tags setup-terminals
 
 # Run multiple tags
 ansible-playbook first_time_setup.yml --tags setup-bash,setup-zsh

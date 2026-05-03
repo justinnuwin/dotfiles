@@ -1,0 +1,27 @@
+---
+
+- name: Setup terminal emulators
+  block:
+
+  - name: Ensure Ghostty config directory exists
+    ansible.builtin.file:
+      path: "{{ ghostty_config_dir }}"
+      state: directory
+      mode: "0755"
+
+  - name: Install Ghostty config
+    ansible.builtin.file:
+      src: "{{ dotfiles_path }}/terminals/config.ghostty"
+      dest: "{{ ghostty_config_dir }}/config"
+      state: link
+      force: true
+
+  - name: iTerm2 profile next-steps message
+    ansible.builtin.debug:
+      msg: >-
+        iTerm2 profile available at
+        {{ dotfiles_path }}/terminals/iterm_profile.json —
+        import via iTerm → Preferences → Profiles → Other Actions → Import.
+    when: ansible_os_family == 'Darwin'
+
+  tags: setup-terminals

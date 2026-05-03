@@ -1,0 +1,7 @@
+---
+
+ghostty_config_dir: "{{
+  ansible_env.HOME + '/Library/Application Support/com.mitchellh.ghostty'
+  if ansible_os_family == 'Darwin'
+  else ansible_env.HOME + '/.config/ghostty'
+}}"
