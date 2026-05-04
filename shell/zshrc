@@ -81,12 +81,8 @@ then
   eval "$(dircolors "$dotfiles"/shell/dircolors)"
 fi
 
-# Powerlevel10k theme
-powerlevel10k_path="$dotfiles/shell/zsh_plugins/powerlevel10k/powerlevel10k.zsh-theme"
-if [[ -f "$powerlevel10k_path" ]]; then
-  source $dotfiles/shell/p10k.zsh
-  initialize_powerlevel10k "$powerlevel10k_path"
-fi
+# Prompt theme is selected by JNSHELL_PROMPT in ~/.localshell and loaded by
+# shell/modules/prompt.sh (sourced via justinShell.sh below).
 
 # Enable fuzzy command history and file search
 fzf_zsh_path="$dotfiles/shell/zsh_plugins/fzf-zsh-plugin"

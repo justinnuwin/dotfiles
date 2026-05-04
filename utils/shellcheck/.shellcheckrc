@@ -1,0 +1,10 @@
+# Project-wide shellcheck config.
+# Resolved when shellcheck is invoked from the repo root or any subdirectory.
+
+# Follow `source "$dotfiles/shell/..."` paths so cross-file checks work.
+external-sources=true
+
+# Opt-in checks that catch real bugs without being noisy.
+enable=add-default-case
+enable=quote-safe-variables
+enable=deprecate-which

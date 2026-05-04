@@ -9,4 +9,5 @@
 [[ $- != *i* ]] && return
 
 PS1='[\u@\h \W]\$ '
+# shellcheck source=justinShell.sh
 source ~/.dotfiles/shell/justinShell.sh

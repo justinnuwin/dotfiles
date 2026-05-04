@@ -1,11 +1,43 @@
 #!/bin/bash
+# Host-specific configuration. Sourced by shell/justinShell.sh.
+# Copy this file to ~/.localshell and uncomment / edit the lines you want.
+#
+# Every flag below is opt-in (commented out by default). Each one's
+# prerequisites are checked at shell startup; missing prereqs produce a
+# warning and the feature is skipped so the shell still starts.
 
-# Installs rust and cargo
-JNSHELL_USE_RUST=true
+# --- Prompt selection -------------------------------------------------------
+# One of: zsh-p10k, starship, none (default: none -- the shell's built-in
+# prompt is used).
+#   zsh-p10k -- zsh only. Requires the powerlevel10k git submodule
+#               (git -C ~/.dotfiles submodule update --init --recursive).
+#   starship -- bash or zsh. Requires JNSHELL_USE_RUST=true AND the starship
+#               binary on PATH (https://starship.rs/#installation).
+# JNSHELL_PROMPT=zsh-p10k
 
-# Installs nvm and adds it to the path
-JNSHELL_USE_NVM=true
+# --- Default-on alias bundles -----------------------------------------------
+# These are enabled by default. Set to "false" to opt out.
 
-# Symlinks ssh auth socket so long-lived terminals (especially those alive via
-# tmux don't end up with a stale env variable pointing to an old ssh auth sock)
-JNSHELL_LONG_LIVED_REMOTE=true
+# Common aliases
+# JNSHELL_USE_COMMON_ALIASES=false
+
+# Git aliases and helpers
+# JNSHELL_USE_GIT_ALIASES=false
+
+# --- Toolchains -------------------------------------------------------------
+# Initialize the Rust toolchain (sets CARGO_HOME, appends $CARGO_HOME/bin to PATH).
+# Requires cargo at $CARGO_HOME/bin/cargo (https://rustup.rs).
+# JNSHELL_USE_RUST=true
+
+# Initialize Node Version Manager.
+# Requires nvm at $NVM_DIR/nvm.sh (https://github.com/nvm-sh/nvm#installing-and-updating).
+# JNSHELL_USE_NVM=true
+
+# Warn (instead of silently skipping) if fzf is not installed.
+# https://github.com/junegunn/fzf#installation
+# JNSHELL_USE_FZF=true
+
+# --- Networking / sessions --------------------------------------------------
+# Symlink the SSH auth sock so long-lived terminals (e.g. tmux sessions) don't
+# end up with a stale env var pointing to a dead ssh-agent socket.
+# JNSHELL_LONG_LIVED_REMOTE=true
