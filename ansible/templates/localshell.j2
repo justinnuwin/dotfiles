@@ -1,0 +1,13 @@
+{# Rendered into ~/.localshell as a blockinfile-managed block. The marker
+   comments are added by ansible.builtin.blockinfile; lines outside the markers
+   are user-owned and preserved across plays. #}
+# {{ ansible_managed }}
+{% if rust_installed | default(false) | bool -%}
+JNSHELL_USE_RUST=true
+{% endif -%}
+{% if nvm_installed | default(false) | bool -%}
+JNSHELL_USE_NVM=true
+{% endif -%}
+{% if starship_installed | default(false) | bool -%}
+JNSHELL_PROMPT=starship
+{% endif -%}

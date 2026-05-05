@@ -1,0 +1,40 @@
+---
+
+- name: Toolchain
+  tags:
+    - setup-toolchain
+  block:
+    # Hydrate per-tool installed booleans from the consolidated dotfiles fact
+    # file (written by the dotfiles_facts role on previous runs). Multi-line
+    # `when:` list per the ansible-feature-gating skill's anti-pattern check.
+    - name: Hydrate per-tool installed flags from ansible_local.dotfiles
+      ansible.builtin.set_fact:
+        rust_installed: "{{ ansible_local.dotfiles.rust.installed | bool }}"
+      when:
+        - rust_installed is not defined
+        - ansible_local.dotfiles is defined
+        - ansible_local.dotfiles.rust is defined
+        - ansible_local.dotfiles.rust.installed is defined
+
+    - name: Hydrate nvm_installed
+      ansible.builtin.set_fact:
+        nvm_installed: "{{ ansible_local.dotfiles.nvm.installed | bool }}"
+      when:
+        - nvm_installed is not defined
+        - ansible_local.dotfiles is defined
+        - ansible_local.dotfiles.nvm is defined
+        - ansible_local.dotfiles.nvm.installed is defined
+
+    # Per-tool gated install. Each tool runs only when (a) the caller opted in
+    # AND (b) the force flag is set OR the tool is not already installed.
+    - name: Install rust
+      ansible.builtin.include_tasks: install_rust.yml
+      when:
+        - install_rust | bool
+        - (toolchain_run_first_time_setup | bool) or (not (rust_installed | default(false) | bool))
+
+    - name: Install nvm
+      ansible.builtin.include_tasks: install_nvm.yml
+      when:
+        - install_nvm | bool
+        - (toolchain_run_first_time_setup | bool) or (not (nvm_installed | default(false) | bool))

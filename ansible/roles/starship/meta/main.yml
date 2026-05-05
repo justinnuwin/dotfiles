@@ -1,0 +1,9 @@
+---
+
+galaxy_info:
+  author: Justin Nguyen
+  description: Install the starship prompt via the official installer (pre-built binary, no rust dep).
+  license: MIT
+  min_ansible_version: "2.14"
+
+dependencies: []

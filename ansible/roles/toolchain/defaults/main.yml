@@ -1,0 +1,13 @@
+---
+
+# Per-tool opt-ins. Default off; callers / operators set to true to install.
+install_rust: false
+install_nvm: false
+
+# Force re-install even when the tool is already recorded as installed.
+toolchain_run_first_time_setup: false
+
+# Pinned numerical versions. Bump in this file to roll a new version forward
+# for every host on the next play, or override per-host via -e on the CLI.
+rust_version: "1.83.0"        # rustup --default-toolchain (numerical)
+nvm_version: v0.40.1          # tag of the nvm install script

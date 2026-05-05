@@ -21,11 +21,16 @@ ansible/
 │       ├── prepare.yml       # Container bootstrap (packages for the test image)
 │       ├── converge.yml      # Imports first_time_setup.yml
 │       └── verify.yml        # Verification tests
+├── templates/
+│   └── localshell.j2        # Shared Jinja2 template for ~/.localshell managed block
 └── roles/
-    ├── bash/                 # Bash shell configuration
-    ├── zsh/                  # Zsh shell configuration
-    ├── tmux/                 # Tmux configuration
-    └── terminals/            # Terminal emulator configuration (Ghostty, iTerm2)
+    ├── toolchain/           # Opt-in language toolchains (rust, nvm)
+    ├── starship/            # Starship prompt (pre-built binary, no rust dep)
+    ├── dotfiles_facts/      # Owns /etc/ansible/facts.d/dotfiles.fact
+    ├── bash/                # Bash shell configuration + localshell render
+    ├── zsh/                 # Zsh shell configuration + localshell render
+    ├── tmux/                # Tmux configuration
+    └── terminals/           # Terminal emulator configuration (Ghostty, iTerm2)
 ```
 
 ## Playbooks
@@ -36,20 +41,56 @@ The main playbook that orchestrates the deployment of all dotfiles. It:
 
 1. **Pre-tasks**: Ensures the dotfiles repository is available (cloned if needed, submodules initialized)
 2. **Roles**: Applies the following roles in order:
-   - `bash` - Sets up bash configuration
-   - `zsh` - Sets up zsh configuration
+   - `toolchain` - Opt-in language toolchain installs (rust, nvm); sets in-process facts
+   - `starship` - Starship prompt install (pre-built binary, no rust dep); sets in-process fact
+   - `dotfiles_facts` - Hydrates and persists `/etc/ansible/facts.d/dotfiles.fact` for next-run gating
+   - `bash` - Sets up bash configuration + renders ansible-managed block in `~/.localshell`
+   - `zsh` - Sets up zsh configuration + renders ansible-managed block in `~/.localshell`
    - `tmux` - Sets up tmux configuration
    - `terminals` - Sets up terminal emulator configuration (Ghostty, iTerm2)
 
 **Usage:**
 ```bash
-ansible-playbook first_time_setup.yml --connection=local --inventory 127.0.0.1, --limit 127.0.0.1
+# --ask-become-pass: dotfiles_facts writes /etc/ansible/facts.d/ which needs sudo.
+ansible-playbook first_time_setup.yml \
+  --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 \
+  --ask-become-pass
 ```
 
 Or use the convenience script:
 ```bash
 ./local_first_time_setup.sh
 ```
+
+> **Sudo**: This is the project's first sudo escalation — `dotfiles_facts` writes the consolidated fact file to `/etc/ansible/facts.d/dotfiles.fact`, which is root-owned. Use `--ask-become-pass`, or set `ansible_become_pass` per-host, or rely on NOPASSWD sudo.
+
+## Toolchains and prompt
+
+Three roles — `toolchain`, `starship`, and `dotfiles_facts` — work together to install language toolchains + the starship prompt and surface that state to the rest of the play:
+
+- **`toolchain`** is per-tool opt-in. Set `install_rust=true` and/or `install_nvm=true` (in `~/.localshell`-equivalent host vars, group_vars, or `-e`) to install. Pinned versions (`rust_version`, `nvm_version`) live in `roles/toolchain/defaults/main.yml`.
+- **`starship`** has no opt-in flag; being listed in the playbook means it installs on first run. Pinned `starship_version` lives in `roles/starship/defaults/main.yml`. The role uses the official `https://starship.rs/install.sh` installer (pre-built binary into `~/.local/bin` — no toolchain dependency).
+- **`dotfiles_facts`** writes the consolidated `/etc/ansible/facts.d/dotfiles.fact`. It also hydrates the `*_installed` vars used by the bash/zsh roles to render `~/.localshell`.
+
+`bash` and `zsh` then render an ansible-managed block of `JNSHELL_*` flags inside `~/.localshell` based on which tools were installed. The block is wrapped in `# BEGIN/END ANSIBLE MANAGED BLOCK (dotfiles)` markers — content above and below is user-owned and preserved across runs.
+
+### Force re-install on a specific host
+
+```bash
+ansible-playbook first_time_setup.yml --limit <host> \
+  -e install_rust=true -e toolchain_run_first_time_setup=true
+ansible-playbook first_time_setup.yml --limit <host> -e starship_run_first_time_setup=true
+```
+
+### Bumping a pinned version
+
+Edit the relevant `defaults/main.yml`, then rerun the play with the matching `_run_first_time_setup` flag.
+
+### Per-tool gating semantics
+
+See `roles/toolchain/README.md` and `roles/starship/README.md` for the full decision matrices.
+
+---
 
 ## Roles
 
@@ -172,6 +213,9 @@ The verification playbook (`molecule/default/verify.yml`) checks:
 - `~/.config/ghostty/config` symlink exists and is valid
 - Dotfiles repository exists at `~/.dotfiles`
 - Dotfiles repository is a valid git repository
+- `/etc/ansible/facts.d/dotfiles.fact` exists (consolidated fact file)
+- `~/.localshell` contains the ansible-managed block markers
+- `~/.local/bin/starship` exists (starship is in the bootstrap roles list, so it always installs)
 
 ## Dependencies
 
@@ -228,7 +272,17 @@ ansible-playbook first_time_setup.yml --tags setup-tmux
 # Run only terminals setup
 ansible-playbook first_time_setup.yml --tags setup-terminals
 
-# Run multiple tags
+# Run only the toolchain installs (e.g. with -e install_rust=true)
+ansible-playbook first_time_setup.yml --tags setup-toolchain -e install_rust=true
+
+# Run only the starship install
+ansible-playbook first_time_setup.yml --tags setup-starship
+
+# Run only the fact-file refresh
+ansible-playbook first_time_setup.yml --tags setup-dotfiles_facts
+
+# Run multiple tags (note: setup-dotfiles_facts must precede setup-bash/zsh
+# if you want the localshell block to reflect newly-installed tools)
 ansible-playbook first_time_setup.yml --tags setup-bash,setup-zsh
 ```
 

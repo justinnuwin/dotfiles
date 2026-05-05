@@ -2,6 +2,7 @@
 
 - name: Deploy dotfiles and related utilities
   hosts: all
+  gather_facts: true   # required so ansible_local.dotfiles is loaded for the gating roles
   pre_tasks:
     - name: Ensure dotfiles repository is available
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/ensure_repository.yml"
@@ -9,6 +10,9 @@
     - bash
     - zsh
     - terminfo
+    - toolchain        # opt-in installs (rust, nvm); sets in-process *_installed
+    - starship         # always installs (gated by ansible_local.dotfiles.starship); sets in-process
+    - dotfiles_facts   # hydrates *_installed vars + writes /etc/ansible/facts.d/dotfiles.fact
     - tmux
     - terminals
     - claude

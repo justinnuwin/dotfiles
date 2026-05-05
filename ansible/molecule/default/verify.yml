@@ -44,3 +44,20 @@
       environment:
         TERMINFO: /root/.terminfo
       changed_when: false
+
+    - name: Verify consolidated dotfiles fact file exists
+      ansible.builtin.stat:
+        path: /etc/ansible/facts.d/dotfiles.fact
+      register: dotfiles_fact_stat
+      failed_when: not dotfiles_fact_stat.stat.exists
+
+    - name: Verify ~/.localshell contains the ansible-managed block markers
+      ansible.builtin.shell:
+        cmd: grep -q "ANSIBLE MANAGED BLOCK (dotfiles)" /root/.localshell
+      changed_when: false
+
+    - name: Verify starship binary exists (installed unconditionally by the role)
+      ansible.builtin.stat:
+        path: /root/.local/bin/starship
+      register: starship_bin_stat
+      failed_when: not starship_bin_stat.stat.exists

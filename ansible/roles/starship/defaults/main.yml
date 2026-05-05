@@ -1,0 +1,10 @@
+---
+
+# Force re-install even when the binary is already recorded as installed.
+starship_run_first_time_setup: false
+
+# Pinned numerical version (a starship release tag).
+starship_version: v1.21.1
+
+# Where the official installer drops the binary. User-local so no sudo needed.
+starship_bin_dir: "{{ ansible_facts['env']['HOME'] }}/.local/bin"

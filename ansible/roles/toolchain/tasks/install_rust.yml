@@ -1,0 +1,16 @@
+---
+
+# Canonical rustup install. --no-modify-path because shell/modules/rust.sh
+# owns the PATH wiring; --default-toolchain pins to a numerical version.
+- name: Install rust toolchain via rustup
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+      sh -s -- --no-modify-path -y --default-toolchain {{ rust_version }}
+    creates: "{{ ansible_facts['env']['HOME'] }}/.cargo/bin/cargo"
+    executable: /bin/bash
+
+- name: Mark rust installed (in-process; persisted by dotfiles_facts later)
+  ansible.builtin.set_fact:
+    rust_installed: true

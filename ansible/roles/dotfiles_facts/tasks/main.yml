@@ -1,0 +1,49 @@
+---
+
+- name: Dotfiles facts
+  tags:
+    - setup-dotfiles_facts
+  block:
+    # Hydrate every consumer-visible fact. Each variable prefers an in-process
+    # value (set by an install role earlier in the same play) and falls back to
+    # ansible_local.dotfiles (last run's persisted state) if the install role
+    # didn't run this time.
+    - name: Hydrate dotfiles facts (in-process or from last-run ansible_local)
+      ansible.builtin.set_fact:
+        rust_installed: >-
+          {{ rust_installed
+             | default((ansible_local.dotfiles.rust.installed
+                        if (ansible_local.dotfiles is defined and ansible_local.dotfiles.rust is defined)
+                        else 'false'))
+             | bool }}
+        nvm_installed: >-
+          {{ nvm_installed
+             | default((ansible_local.dotfiles.nvm.installed
+                        if (ansible_local.dotfiles is defined and ansible_local.dotfiles.nvm is defined)
+                        else 'false'))
+             | bool }}
+        starship_installed: >-
+          {{ starship_installed
+             | default((ansible_local.dotfiles.starship.installed
+                        if (ansible_local.dotfiles is defined and ansible_local.dotfiles.starship is defined)
+                        else 'false'))
+             | bool }}
+
+    # gid 0 is "wheel" on Darwin, "root" elsewhere. Use the right name per OS.
+    - name: Ensure /etc/ansible/facts.d exists
+      become: true
+      ansible.builtin.file:
+        path: /etc/ansible/facts.d
+        state: directory
+        owner: root
+        group: "{{ 'wheel' if ansible_facts['os_family'] == 'Darwin' else 'root' }}"
+        mode: "0755"
+
+    - name: Persist consolidated dotfiles facts
+      become: true
+      ansible.builtin.template:
+        src: dotfiles.fact.j2
+        dest: /etc/ansible/facts.d/dotfiles.fact
+        owner: root
+        group: "{{ 'wheel' if ansible_facts['os_family'] == 'Darwin' else 'root' }}"
+        mode: "0644"

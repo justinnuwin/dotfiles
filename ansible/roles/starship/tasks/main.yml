@@ -1,0 +1,20 @@
+---
+
+- name: Starship
+  tags:
+    - setup-starship
+  block:
+    - name: Hydrate starship_installed from ansible_local.dotfiles
+      ansible.builtin.set_fact:
+        starship_installed: "{{ ansible_local.dotfiles.starship.installed | bool }}"
+      when:
+        - starship_installed is not defined
+        - ansible_local.dotfiles is defined
+        - ansible_local.dotfiles.starship is defined
+        - ansible_local.dotfiles.starship.installed is defined
+
+    - name: Starship first-time setup
+      ansible.builtin.include_tasks: first_time_setup.yml
+      when: >-
+        (starship_run_first_time_setup | bool)
+        or (not (starship_installed | default(false) | bool))

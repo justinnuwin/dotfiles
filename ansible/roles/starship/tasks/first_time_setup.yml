@@ -1,0 +1,20 @@
+---
+
+- name: Ensure starship bin dir exists
+  ansible.builtin.file:
+    path: "{{ starship_bin_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Install starship via official installer (pinned version)
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      curl -sS https://starship.rs/install.sh |
+      sh -s -- -b {{ starship_bin_dir }} -v {{ starship_version }} -y
+    creates: "{{ starship_bin_dir }}/starship"
+    executable: /bin/bash
+
+- name: Mark starship installed (in-process; persisted by dotfiles_facts later)
+  ansible.builtin.set_fact:
+    starship_installed: true

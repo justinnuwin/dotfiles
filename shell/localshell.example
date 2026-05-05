@@ -11,8 +11,8 @@
 # prompt is used).
 #   zsh-p10k -- zsh only. Requires the powerlevel10k git submodule
 #               (git -C ~/.dotfiles submodule update --init --recursive).
-#   starship -- bash or zsh. Requires JNSHELL_USE_RUST=true AND the starship
-#               binary on PATH (https://starship.rs/#installation).
+#   starship -- bash or zsh. Requires the starship binary on PATH
+#               (https://starship.rs/installing/).
 # JNSHELL_PROMPT=zsh-p10k
 
 # --- Default-on alias bundles -----------------------------------------------

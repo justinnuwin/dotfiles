@@ -10,4 +10,15 @@
       state: link
       force: true
 
+  # Renders an ansible-managed block of JNSHELL_* flags inside ~/.localshell.
+  # Same task as in roles/bash; idempotent — second blockinfile write is a
+  # no-op when the first ran. Hydration is upstream in dotfiles_facts.
+  - name: Render ansible-managed block in ~/.localshell
+    ansible.builtin.blockinfile:
+      path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+      create: true
+      mode: "0644"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK (dotfiles)"
+      block: "{{ lookup('template', playbook_dir ~ '/templates/localshell.j2') }}"
+
   tags: setup-zsh

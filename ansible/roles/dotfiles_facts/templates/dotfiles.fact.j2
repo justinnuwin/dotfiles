@@ -1,0 +1,13 @@
+; {{ ansible_managed }}
+; dotfiles revision: {{ lookup('pipe', 'git -C ' ~ playbook_dir ~ ' rev-parse --short HEAD 2>/dev/null') | default('unknown', true) }}
+; Consolidated facts for all dotfiles roles. Written by roles/dotfiles_facts.
+; Do not hand-edit.
+
+[rust]
+installed = {{ rust_installed | default(false) | bool }}
+
+[nvm]
+installed = {{ nvm_installed | default(false) | bool }}
+
+[starship]
+installed = {{ starship_installed | default(false) | bool }}

@@ -10,4 +10,15 @@
       state: link
       force: true
 
+  # Renders an ansible-managed block of JNSHELL_* flags inside ~/.localshell.
+  # Hydration of *_installed vars happens upstream in the dotfiles_facts role.
+  # Lines outside the markers are user-owned and preserved across plays.
+  - name: Render ansible-managed block in ~/.localshell
+    ansible.builtin.blockinfile:
+      path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+      create: true
+      mode: "0644"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK (dotfiles)"
+      block: "{{ lookup('template', playbook_dir ~ '/templates/localshell.j2') }}"
+
   tags: setup-bash
