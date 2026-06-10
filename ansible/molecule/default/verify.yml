@@ -32,3 +32,9 @@
         path: /root/.dotfiles/.git
       register: dotfiles_git_stat
       failed_when: not dotfiles_git_stat.stat.exists
+
+    - name: Verify xterm-256color-italic terminfo entry installed
+      ansible.builtin.command: infocmp xterm-256color-italic
+      environment:
+        TERMINFO: /root/.terminfo
+      changed_when: false

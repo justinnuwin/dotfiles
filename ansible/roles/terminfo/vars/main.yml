@@ -1,0 +1,5 @@
+---
+
+dotfiles_path: "{{ ansible_env.HOME }}/.dotfiles"
+terminfo_sources:
+  - shell/xterm-256color-italic.terminfo

@@ -1,0 +1,18 @@
+---
+
+- name: Setup terminfo
+  block:
+
+  - name: Ensure tic is available
+    ansible.builtin.command: tic -V
+    register: tic_check
+    changed_when: false
+
+  - name: Compile terminfo sources
+    ansible.builtin.command:
+      cmd: tic -x -o {{ ansible_env.HOME }}/.terminfo {{ dotfiles_path }}/{{ item }}
+    loop: "{{ terminfo_sources }}"
+    register: tic_result
+    changed_when: tic_result.rc == 0
+
+  tags: setup-terminfo

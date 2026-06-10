@@ -8,4 +8,5 @@
   roles:
     - bash
     - zsh
+    - terminfo
     - tmux
