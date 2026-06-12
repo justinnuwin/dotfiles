@@ -1,0 +1,13 @@
+---
+
+- name: Setup claude
+  block:
+
+  - name: Symlink ~/.claude
+    ansible.builtin.file:
+      src: "{{ ansible_env.HOME }}/.dotfiles/claude"
+      dest: "{{ ansible_env.HOME }}/.claude"
+      state: link
+      force: true
+
+  tags: setup-claude

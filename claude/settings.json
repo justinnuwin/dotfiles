@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "theme": "auto",
+  "remoteControlAtStartup": true,
+  "skipAutoPermissionPrompt": true,
+  "agentPushNotifEnabled": true
+}

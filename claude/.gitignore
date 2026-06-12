@@ -1,0 +1,23 @@
+# Strict opt-in: only the explicitly listed files are tracked.
+# Anything else (sessions, history, plugins, skills, etc.) is ignored.
+/*
+
+# Top-level tracked files
+!.gitignore
+!CLAUDE.md
+!settings.json
+
+# plugins/known_marketplaces.json
+!plugins/
+plugins/*
+!plugins/known_marketplaces.json
+
+# skills/memory-management/{SKILL.md, references/directives.md}
+!skills/
+skills/*
+!skills/memory-management/
+skills/memory-management/*
+!skills/memory-management/references/
+skills/memory-management/references/*
+!skills/memory-management/SKILL.md
+!skills/memory-management/references/directives.md
