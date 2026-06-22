@@ -1,3 +1,7 @@
+# Additional Rules/Guidelines/etc.
+
+@~/local.CLAUDE.md
+
 # Personal coding rules
 
 Applies to every session. Project `CLAUDE.md` and explicit in-session

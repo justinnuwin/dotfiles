@@ -3,11 +3,29 @@
 - name: Setup claude
   block:
 
+  - name: Check existing ~/.claude
+    ansible.builtin.stat:
+      path: "{{ ansible_env.HOME }}/.claude"
+      follow: false
+    register: claude_dest
+
+  # Only symlink when the destination is absent or already a symlink. A real
+  # directory (e.g. one Claude Code created itself, with sessions/config) must
+  # never be clobbered.
   - name: Symlink ~/.claude
     ansible.builtin.file:
       src: "{{ ansible_env.HOME }}/.dotfiles/claude"
       dest: "{{ ansible_env.HOME }}/.claude"
       state: link
       force: true
+    when: not claude_dest.stat.exists or claude_dest.stat.islnk
+
+  - name: Warn that ~/.claude was not symlinked
+    ansible.builtin.debug:
+      msg: >-
+        Skipping ~/.claude symlink: directory already exists and is not a symlink.
+        Back up and remove it (or move its contents into ~/.dotfiles/claude)
+        before re-running to have it managed here.
+    when: claude_dest.stat.exists and not claude_dest.stat.islnk
 
   tags: setup-claude
