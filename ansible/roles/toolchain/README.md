@@ -2,7 +2,7 @@
 
 Installs opt-in language toolchains on a host (currently rust and nvm). Each tool is gated by its own `install_*` flag, and the role short-circuits on the next run when the tool is already recorded as installed.
 
-The role only sets in-process facts — the consolidated `/etc/ansible/facts.d/dotfiles.fact` is written by the `dotfiles_facts` role later in the play.
+The role sets several \*\_installed facts.
 
 ## Variables
 

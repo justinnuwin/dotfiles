@@ -78,9 +78,9 @@ prompt_yes_no() {
 
 # Defaults applied in both interactive and --no-prompt modes. Edit these to
 # change what happens when a user just presses Enter / runs --no-prompt.
-default_install_rust=N
+default_install_rust=Y
 default_install_nvm=Y
-default_starship_force=N
+default_starship_force=Y
 default_toolchain_force=N
 
 # Resolved answers — start at defaults, then prompts may override.
@@ -96,7 +96,7 @@ if [[ "$no_prompt" != "true" ]]; then
     && install_rust=Y || install_rust=N
   prompt_yes_no "  Install nvm (Node Version Manager)?" "$default_install_nvm" \
     && install_nvm=Y || install_nvm=N
-  prompt_yes_no "  Force-reinstall starship (e.g. to upgrade)?" "$default_starship_force" \
+  prompt_yes_no "  Install (or force-reinstall e.g. to upgrade) starship?" "$default_starship_force" \
     && starship_force=Y || starship_force=N
   prompt_yes_no "  Force-reinstall toolchains (rust/nvm if already present)?" "$default_toolchain_force" \
     && toolchain_force=Y || toolchain_force=N

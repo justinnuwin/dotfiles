@@ -11,6 +11,6 @@
     creates: "{{ ansible_facts['env']['HOME'] }}/.cargo/bin/cargo"
     executable: /bin/bash
 
-- name: Mark rust installed (in-process; persisted by dotfiles_facts later)
+- name: Mark rust installed
   ansible.builtin.set_fact:
     rust_installed: true

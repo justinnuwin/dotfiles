@@ -2,7 +2,7 @@
 
 Installs the [starship](https://starship.rs/) prompt via the official installer. The installer ships a pre-built binary, so this role has no toolchain dependency.
 
-The role only sets an in-process fact — the consolidated `/etc/ansible/facts.d/dotfiles.fact` is written by the `dotfiles_facts` role later in the play.
+The role sets the starship_installed fact.
 
 ## Variables
 

@@ -41,8 +41,8 @@ The main playbook that orchestrates the deployment of all dotfiles. It:
 
 1. **Pre-tasks**: Ensures the dotfiles repository is available (cloned if needed, submodules initialized)
 2. **Roles**: Applies the following roles in order:
-   - `toolchain` - Opt-in language toolchain installs (rust, nvm); sets in-process facts
-   - `starship` - Starship prompt install (pre-built binary, no rust dep); sets in-process fact
+   - `toolchain` - Opt-in language toolchain installs (rust, nvm)
+   - `starship` - Starship prompt install (pre-built binary, no rust dep)
    - `dotfiles_facts` - Hydrates and persists `/etc/ansible/facts.d/dotfiles.fact` for next-run gating
    - `bash` - Sets up bash configuration + renders ansible-managed block in `~/.localshell`
    - `zsh` - Sets up zsh configuration + renders ansible-managed block in `~/.localshell`

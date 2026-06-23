@@ -8,7 +8,7 @@
     # value (set by an install role earlier in the same play) and falls back to
     # ansible_local.dotfiles (last run's persisted state) if the install role
     # didn't run this time.
-    - name: Hydrate dotfiles facts (in-process or from last-run ansible_local)
+    - name: Hydrate dotfiles facts
       ansible.builtin.set_fact:
         rust_installed: >-
           {{ rust_installed

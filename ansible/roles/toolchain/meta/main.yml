@@ -1,9 +1,0 @@
----
-
-galaxy_info:
-  author: Justin Nguyen
-  description: Install opt-in language toolchains (rust, nvm). Sets in-process facts consumed later by dotfiles_facts.
-  license: MIT
-  min_ansible_version: "2.14"
-
-dependencies: []

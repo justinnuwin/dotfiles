@@ -6,7 +6,7 @@
     state: directory
     mode: "0755"
 
-- name: Install starship via official installer (pinned version)
+- name: Install starship via official installer
   ansible.builtin.shell:
     cmd: >-
       set -o pipefail;
@@ -15,6 +15,6 @@
     creates: "{{ starship_bin_dir }}/starship"
     executable: /bin/bash
 
-- name: Mark starship installed (in-process; persisted by dotfiles_facts later)
+- name: Mark starship installed
   ansible.builtin.set_fact:
     starship_installed: true

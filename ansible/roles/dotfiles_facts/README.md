@@ -2,14 +2,14 @@
 
 Owns the consolidated `/etc/ansible/facts.d/dotfiles.fact` file. Responsibilities:
 
-1. **Hydrate** the play-level vars `rust_installed`, `nvm_installed`, `starship_installed` from in-process `set_fact` (if an install role ran earlier in this play) or from `ansible_local.dotfiles` (last run's persisted state).
+1. **Hydrate** the play-level vars i.e. `rust_installed`, `nvm_installed`, `starship_installed` from `set_fact` (if an install role ran earlier in this play) or from `ansible_local.dotfiles` (last run's persisted state).
 2. **Persist** those vars to the consolidated INI file under `/etc/ansible/facts.d/`. This requires `become: true`.
 
 After this role runs, every later consumer role (currently `bash` and `zsh`, but anything in the play below this role) sees the three `*_installed` vars set as play-level facts. Consumer roles do NOT need to hydrate themselves.
 
 ## Placement in the playbook
 
-This role MUST be listed in the bootstrap play AFTER every role that contributes a fact (`toolchain`, `starship`) and BEFORE every role that consumes one (`bash`, `zsh`). The current order in `first_time_setup.yml` is:
+This role MUST be listed in the play AFTER every role that contributes a fact (`toolchain`, `starship`) and BEFORE every role that consumes one (`bash`, `zsh`). The current order in `first_time_setup.yml` is:
 
 ```yaml
 roles:

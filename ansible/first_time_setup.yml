@@ -7,12 +7,15 @@
     - name: Ensure dotfiles repository is available
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/ensure_repository.yml"
   roles:
+    - toolchain
+    - starship
+    # Roles are ordered around this role. Roles contributing facts to dotfiles
+    # must be before dotfiles_facts. Roles consuming these dotfile facts must
+    # be after dotfiles_facts.
+    - dotfiles_facts  
     - bash
     - zsh
     - terminfo
-    - toolchain        # opt-in installs (rust, nvm); sets in-process *_installed
-    - starship         # always installs (gated by ansible_local.dotfiles.starship); sets in-process
-    - dotfiles_facts   # hydrates *_installed vars + writes /etc/ansible/facts.d/dotfiles.fact
     - tmux
     - terminals
     - claude
