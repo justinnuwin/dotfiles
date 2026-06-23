@@ -1,5 +1,5 @@
-ansible==12.2.0
-ansible-core==2.19.4
-molecule>=6.0.0
-molecule-plugins[docker]>=2.0.0
+ansible>=6.0.0
+ansible-core>=2.12.0
+molecule>=4.0.0
+molecule-plugins[docker]>=22.0.0
 docker>=7.0.0
