@@ -12,8 +12,8 @@
       set -o pipefail;
       curl -sS https://starship.rs/install.sh |
       sh -s -- -b {{ starship_bin_dir }} -v {{ starship_version }} -y
-    creates: "{{ starship_bin_dir }}/starship"
     executable: /bin/bash
+  changed_when: true
 
 - name: Mark starship installed
   ansible.builtin.set_fact:

@@ -13,7 +13,7 @@ $git_branch$git_commit$git_state$git_status\
 [](fg:color_aqua)\
 $fill\
 [](fg:color_python_blue)\
-$python\
+$python$netns\
 [](fg:color_green bg:color_python_blue)\
 $cmd_duration\
 [](fg:color_aqua bg:color_green)\
@@ -126,14 +126,18 @@ disabled = false
 
 [python]
 symbol             = " "
-style              = "fg:color_text bold bg:color_python_blue"
-format             = "[$symbol](fg:color_python_yellow bg:color_python_blue)[$virtualenv ${version}]($style)"
+style              = "fg:color_python_yellow bold bg:color_python_blue"
+format             = "[$symbol$virtualenv ${version}]($style)"
 pyenv_version_name = false
 detect_files       = []
 detect_extensions  = []
 generic_venv_names = ['venv', '.venv']
 version_format     = "v${major}.${minor}"
 
+[netns]
+symbol             = " "
+style              = "fg:color_text bold bg:color_python_blue"
+format             = "[ $symbol$name]($style)"
 
 [cmd_duration]
 min_time = 2000
