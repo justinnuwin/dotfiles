@@ -5,7 +5,7 @@ add_newline = true
 format = """
 [╭─](242)\
 [](color_orange)\
-$username$hostname\
+$username$hostname$sudo\
 [](bg:color_yellow fg:color_orange)\
 $directory\
 [](fg:color_yellow bg:color_aqua)\
@@ -49,6 +49,12 @@ vimcmd_symbol         = "[❮](39 bold)"
 # https://github.com/starship/starship/issues/625#issuecomment-732454148
 vimcmd_visual_symbol  = "[V](39 bold)"
 vimcmd_replace_symbol = "[▶](39 bold)"
+
+[sudo]
+style  = "fg:color_text bold bg:color_orange"
+symbol = " "
+format = "[$symbol]($style)"
+disabled = false
 
 [username]
 disabled = true
