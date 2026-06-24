@@ -77,6 +77,7 @@ ignore_branches   = []
 
 [git_commit]
 style         = "fg:color_text bold bg:color_aqua"
+format        = '[$hash$tag ]($style)'
 only_detached = true
 tag_disabled  = true
 
@@ -97,8 +98,8 @@ stashed     = "  ${count}"
 typechanged = ""
 
 [git_state]
-format       = " ([$state( $progress_current/$progress_total)]($style))"
-style        = "red bold"
+style        = "fg:red bold bg:color_aqua"
+format       = "([$state( $progress_current/$progress_total)]($style))"
 rebase       = "REBASING"
 merge        = "MERGING"
 revert       = "REVERTING"
@@ -120,8 +121,13 @@ disabled = false
 [python]
 symbol             = " "
 style              = "fg:color_text bold bg:color_python_blue"
-format             = "[$symbol](fg:color_python_yellow bg:color_python_blue)[$virtualenv ]($style)"
+format             = "[$symbol](fg:color_python_yellow bg:color_python_blue)[$virtualenv ${version}]($style)"
 pyenv_version_name = false
+detect_files       = []
+detect_extensions  = []
+generic_venv_names = ['venv', '.venv']
+version_format     = "v${major}.${minor}"
+
 
 [cmd_duration]
 min_time = 2000
@@ -131,8 +137,8 @@ format   = "[$duration]($style)"
 [jobs]
 threshold = 1
 symbol    = ""
-style     = "fg:color_text bg:color_aqua"
-format    = "[$symbol$number]($style)"
+style     = "fg:color_text bold bg:color_aqua"
+format    = "[$symbol $number]($style)"
 
 [time]
 style       = "fg:color_text_dark bg:color_bg"
