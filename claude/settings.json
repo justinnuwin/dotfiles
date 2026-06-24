@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash /home/junguyen/.claude/statusline-command.sh",
+    "command": "bash $HOME/.claude/statusline-command.sh",
     "hideVimModeIndicator": true
   },
   "editorMode": "vim",

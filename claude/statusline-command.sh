@@ -1,7 +1,8 @@
 #!/bin/sh
-# Claude Code status line — two lines, gruvbox palette.
+# Claude Code status line — gruvbox palette.
 #   line 1: path  session-name  PR#(link)  vim-mode
 #   line 2: model  +lines/-lines  ctx-bar%  $cost  wall|api  cache-r/w
+#   line 3: 5h/7d rate-limit bars + reset times (only when rate_limits present)
 
 input=$(cat)
 
@@ -18,6 +19,10 @@ lines_add=$(echo "$input"   | jq -r '.cost.total_lines_added // 0')
 lines_rm=$(echo "$input"    | jq -r '.cost.total_lines_removed // 0')
 cache_r=$(echo "$input"     | jq -r '.context_window.current_usage.cache_read_input_tokens // 0')
 cache_w=$(echo "$input"     | jq -r '.context_window.current_usage.cache_creation_input_tokens // 0')
+rl_5h_pct=$(echo "$input"   | jq -r '.rate_limits.five_hour.used_percentage // empty')
+rl_5h_reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+rl_7d_pct=$(echo "$input"   | jq -r '.rate_limits.seven_day.used_percentage // empty')
+rl_7d_reset=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
 # --- truncate cwd to 4 path components ---
 dir_short=$(echo "$cwd" | awk -F/ '{
@@ -66,6 +71,35 @@ fmt_k() {
   echo "$1" | awk '{ if ($1>=1000) printf "%.1fk",$1/1000; else printf "%d",$1 }'
 }
 
+# --- 10-char shade bar from a 0-100 percentage (uses BAR_FULL/BAR_EMPTY) ---
+make_bar() {
+  f=$(( $1 * 10 / 100 ))
+  [ "$f" -gt 10 ] && f=10
+  [ "$f" -lt 0 ] && f=0
+  out=""; j=0
+  while [ "$j" -lt 10 ]; do
+    if [ "$j" -lt "$f" ]; then out="${out}${BAR_FULL}"
+    else                       out="${out}${BAR_EMPTY}"
+    fi
+    j=$((j + 1))
+  done
+  printf '%s' "$out"
+}
+
+# --- gruvbox green/amber/red for a 0-100 percentage (literal escape text) ---
+bar_color() {
+  if   [ "$1" -ge 80 ]; then printf '%s' '\033[31m'
+  elif [ "$1" -ge 50 ]; then printf '%s' '\033[33m'
+  else                       printf '%s' '\033[32m'
+  fi
+}
+
+# --- unix epoch seconds -> local human-readable date-time (GNU date) ---
+fmt_reset() {
+  [ -z "$1" ] && return
+  date -d "@$1" '+%a %b %-d %H:%M' 2>/dev/null
+}
+
 # --- OSC 8 hyperlink: ESC]8;;URL ST text ESC]8;; ST  (ST = ESC\) ---
 make_link() {
   printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$1" "$2"
@@ -77,18 +111,11 @@ BAR_EMPTY=$(printf '\xe2\x96\x91')  # U+2591 LIGHT SHADE
 ARR_D=$(printf '\xe2\x86\x93')      # U+2193 DOWN ARROW
 ARR_U=$(printf '\xe2\x86\x91')      # U+2191 UP ARROW
 BULL=$(printf '\xc2\xb7')           # U+00B7 MIDDLE DOT
+CLK=$(printf '\xe2\x86\xbb')         # U+21BB CLOCKWISE ARROW (reset)
 
 # --- context bar (10 chars) ---
 ctx_int=$(printf '%.0f' "$used_pct")
-filled=$((ctx_int * 10 / 100))
-[ "$filled" -gt 10 ] && filled=10
-bar=""; i=0
-while [ "$i" -lt 10 ]; do
-  if [ "$i" -lt "$filled" ]; then bar="${bar}${BAR_FULL}"
-  else                            bar="${bar}${BAR_EMPTY}"
-  fi
-  i=$((i + 1))
-done
+bar=$(make_bar "$ctx_int")
 
 # --- ANSI colors (gruvbox-inspired) ---
 RESET='\033[0m'
@@ -102,10 +129,7 @@ A='\033[33m'     # amber/yellow — cost, pr link
 C='\033[36m'     # cyan         — time, vim normal
 B='\033[34m'     # blue         — cache
 
-if   [ "$ctx_int" -ge 80 ]; then CTX_C='\033[31m'
-elif [ "$ctx_int" -ge 50 ]; then CTX_C='\033[33m'
-else                              CTX_C='\033[32m'
-fi
+CTX_C=$(bar_color "$ctx_int")
 
 # --- formatted values ---
 cost_str=$(printf '$%.2f' "$total_cost")
@@ -152,4 +176,27 @@ seg_cache="${B}${cache_r_str}${ARR_D} ${cache_w_str}${ARR_U}${RESET}"
 
 line2="${seg_model}${D}${seg_lines}${D}${seg_ctx}${D}${seg_cost}${D}${seg_time}${D}${seg_cache}"
 
-printf "%b\n%b\n" "$line1" "$line2"
+# --- line 3: rate-limit windows (only present for subscription auth) ---
+rl_window() {
+  label=$1; pct=$2; reset=$3
+  [ -z "$pct" ] && return
+  pint=$(printf '%.0f' "$pct")
+  rcol=$(bar_color "$pint")
+  rbar=$(make_bar "$pint")
+  rtime=$(fmt_reset "$reset")
+  seg="${DIM}${label}${RESET} ${rcol}${rbar}${RESET} ${DIM}${pint}%${RESET}"
+  [ -n "$rtime" ] && seg="${seg} ${DIM}${CLK} ${rtime}${RESET}"
+  printf '%s' "$seg"
+}
+
+line3=""
+seg_5h=$(rl_window "5h" "$rl_5h_pct" "$rl_5h_reset")
+seg_7d=$(rl_window "7d" "$rl_7d_pct" "$rl_7d_reset")
+[ -n "$seg_5h" ] && line3="$seg_5h"
+[ -n "$seg_7d" ] && { [ -n "$line3" ] && line3="${line3}${D}${seg_7d}" || line3="$seg_7d"; }
+
+if [ -n "$line3" ]; then
+  printf "%b\n%b\n%b\n" "$line1" "$line2" "$line3"
+else
+  printf "%b\n%b\n" "$line1" "$line2"
+fi
