@@ -1,0 +1,144 @@
+# Starship Shell Prompt Config
+# Loaded via shell/modules/prompt.sh when JNSHELL_PROMPT=starship.
+
+add_newline = true
+format = """
+[╭─](242)\
+[](color_orange)\
+$username$hostname\
+[](bg:color_yellow fg:color_orange)\
+$directory\
+[](fg:color_yellow bg:color_aqua)\
+$git_branch$git_commit$git_state$git_status\
+[](fg:color_aqua)\
+$fill\
+[](fg:color_python_blue)\
+$python\
+[](fg:color_green bg:color_python_blue)\
+$cmd_duration\
+[](fg:color_aqua bg:color_green)\
+$jobs\
+[](fg:color_bg bg:color_aqua)\
+$time\
+[](fg:color_bg)\
+$line_break\
+[╰─](242)$character"""
+right_format = "$status"
+command_timeout = 1000
+continuation_prompt = " ▶▶ "
+palette = 'gruvbox_dark'
+[palettes.gruvbox_dark]
+color_text = '#fbf1c7'
+color_text_dark = '#a0a9cb'
+color_bg = '#3c3836'
+color_python_blue = '#4b8bbe'
+color_python_yellow = '#ffd43b'
+color_blue = '#458588'
+color_aqua = '#689d6a'
+color_green = '#98971a'
+color_orange = '#d65d0e'
+color_purple = '#b16286'
+color_red = '#cc241d'
+color_yellow = '#d1951f'
+
+[character]
+success_symbol        = "[❯](39 bold)"
+error_symbol          = "[❯](red bold)"
+vimcmd_symbol         = "[❮](39 bold)"
+# It appears that Zsh visual sub-modes are not yet working
+# https://github.com/starship/starship/issues/625#issuecomment-732454148
+vimcmd_visual_symbol  = "[V](39 bold)"
+vimcmd_replace_symbol = "[▶](39 bold)"
+
+[username]
+disabled = true
+
+[hostname]
+ssh_only = true
+ssh_symbol = ""
+detect_env_vars = ['!TMUX', 'SSH_CONNECTION']
+format = "[$ssh_symbol]"
+
+[directory]
+truncation_length = 4
+truncate_to_repo  = true
+style             = "fg:color_text bold bg:color_yellow"
+format            = "[$path]($style)[$read_only]($read_only_style)"
+read_only         = ""
+read_only_style   = "red"
+
+[git_branch]
+symbol            = " "
+style             = "fg:color_text bold bg:color_aqua"
+format            = "[$symbol $branch]($style)"
+truncation_length = 24
+truncation_symbol = "…"
+ignore_branches   = []
+
+[git_commit]
+style         = "fg:color_text bold bg:color_aqua"
+only_detached = true
+tag_disabled  = true
+
+[git_status]
+style       = "fg:color_text bold bg:color_aqua"
+format      = "([$all_status$ahead_behind]($style))"
+ahead       = "  ${count}"
+behind      = "  {count}"
+diverged    = "  {behind_count}  ${ahead_count}"
+up_to_date  = ""
+conflicted  = " 󱡝 ${count}"
+untracked   = "  ${count}"
+modified    = "  ${count}"
+staged      = "  ${count}"
+renamed     = "  ${count}"
+deleted     = "  ${count}"
+stashed     = "  ${count}"
+typechanged = ""
+
+[git_state]
+format       = " ([$state( $progress_current/$progress_total)]($style))"
+style        = "red bold"
+rebase       = "REBASING"
+merge        = "MERGING"
+revert       = "REVERTING"
+cherry_pick  = "CHERRY-PICKING"
+bisect       = "BISECTING"
+am           = "AM"
+am_or_rebase = "AM/REBASE"
+
+[status]
+symbol                = "✘"
+not_executable_symbol = " "
+not_found_symbol      = " "
+sigint_symbol         = ""
+signal_symbol         = ""
+style                 = "red bold"
+format                = " [$symbol $common_meaning$signal_name$maybe_int]($style)"
+
+[python]
+symbol             = " "
+style              = "fg:color_text bold bg:color_python_blue"
+format             = "[$symbol](fg:color_python_yellow bg:color_python_blue)[$virtualenv ]($style)"
+pyenv_version_name = false
+
+[cmd_duration]
+min_time = 2000
+style    = "fg:color_text bg:color_green"
+format   = "[$duration]($style)"
+
+[jobs]
+threshold = 1
+symbol    = ""
+style     = "fg:color_text bg:color_aqua"
+format    = "[$symbol$number]($style)"
+
+[time]
+style       = "fg:color_text_dark bg:color_bg"
+format      = "[ $time]($style)"
+time_format = "%H:%M:%S"
+disabled = false
+
+[fill]
+symbol = "·"
+style  = "237"

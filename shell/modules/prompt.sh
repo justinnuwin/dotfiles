@@ -28,6 +28,12 @@ case "${JNSHELL_PROMPT:-}" in
     if ! jnshell_require_cmd starship "https://starship.rs/installing/"; then
       return 0
     fi
+    # Point starship at the dotfiles config (falls back to its built-in
+    # defaults if the file is missing, but keep the env var unset in that
+    # case so starship's own ~/.config/starship.toml still wins if present).
+    if [[ -f "$dotfiles/shell/starship.toml" ]]; then
+      export STARSHIP_CONFIG="$dotfiles/shell/starship.toml"
+    fi
     if jnshell_is_zsh; then
       eval "$(starship init zsh)"
     else
