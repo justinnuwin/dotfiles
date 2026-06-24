@@ -55,9 +55,9 @@ disabled = true
 
 [hostname]
 ssh_only = true
-ssh_symbol = ""
-detect_env_vars = ['!TMUX', 'SSH_CONNECTION']
-format = "[$ssh_symbol]"
+ssh_symbol = " "
+style = "fg:color_text bold bg:color_orange"
+format = "[$ssh_symbol]($style)"
 
 [directory]
 truncation_length = 4
@@ -115,6 +115,7 @@ sigint_symbol         = ""
 signal_symbol         = ""
 style                 = "red bold"
 format                = " [$symbol $common_meaning$signal_name$maybe_int]($style)"
+disabled = false
 
 [python]
 symbol             = " "

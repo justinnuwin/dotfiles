@@ -1,9 +1,15 @@
 {
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/junguyen/.claude/statusline-command.sh",
+    "hideVimModeIndicator": true
+  },
+  "editorMode": "vim",
   "permissions": {
     "defaultMode": "auto"
   },
-  "theme": "auto",
   "remoteControlAtStartup": true,
   "skipAutoPermissionPrompt": true,
+  "skipDangerousModePermissionPrompt": true,
   "agentPushNotifEnabled": true
 }

@@ -1,6 +1,6 @@
 # Additional Rules/Guidelines/etc.
 
-@~/local.CLAUDE.md
+@~/.CLAUDE.local.md
 
 # Personal coding rules
 

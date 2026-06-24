@@ -6,6 +6,7 @@
 !.gitignore
 !CLAUDE.md
 !settings.json
+!statusline-command.sh
 
 # plugins/known_marketplaces.json
 !plugins/
