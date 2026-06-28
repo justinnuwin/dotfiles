@@ -11,6 +11,12 @@
 
 dotfiles="$HOME/.dotfiles"
 
+# Add ~/.local/bin to PATH
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$PATH:$HOME/.local/bin" ;;
+esac
+
 # Shared helpers
 # shellcheck source=jnshell_utils.sh
 source "$dotfiles/shell/jnshell_utils.sh"
@@ -75,12 +81,6 @@ fi
 # and is a no-op when unset.
 # shellcheck source=modules/prompt.sh
 source "$dotfiles/shell/modules/prompt.sh"
-
-# Add ~/.local/bin to PATH for many pip or other local applications
-case ":$PATH:" in
-  *":$HOME/.local/bin:"*) ;;
-  *) export PATH="$PATH:$HOME/.local/bin" ;;
-esac
 
 # Add git-mv-changes to PATH
 export PATH="$PATH:$HOME/.dotfiles/shell/git-mv-changes"
