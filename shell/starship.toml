@@ -71,7 +71,7 @@ truncate_to_repo  = true
 style             = "fg:color_text bold bg:color_yellow"
 format            = "[$path]($style)[$read_only]($read_only_style)"
 read_only         = ""
-read_only_style   = "red"
+read_only_style   = "fg:color_red bg:color_yellow"
 
 ################################################################################
 # Git related settings - BEGIN
@@ -93,8 +93,8 @@ disabled = true
 style       = "fg:color_text bold bg:color_aqua"
 format      = "([$all_status$ahead_behind]($style))"
 ahead       = "  ${count}"
-behind      = "  {count}"
-diverged    = "  {behind_count}  ${ahead_count}"
+behind      = "  ${count}"
+diverged    = "  ${behind_count}  ${ahead_count}"
 up_to_date  = ""
 conflicted  = " 󱡝 ${count}"
 untracked   = "  ${count}"
