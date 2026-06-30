@@ -47,9 +47,19 @@ local dotfiles="$HOME/.dotfiles"
 # Zsh completion
 zstyle :compinstall filename '/home/justin/.zshrc'
 bindkey '\t' menu-complete
-autoload -U compinit
+# Place completion cache in a directory rather than the default $HOME
+mkdir -p ~/.cache/zsh
+export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump"
+autoload -Uz compinit
 fpath=("$dotfiles/shell/zsh_completions" $fpath)
-compinit
+# Check cache age <24hrs, skip security checks if it's fresh
+local -a old_dump=( "$ZSH_COMPDUMP"(N.mh+24) )
+if (( $#old_dump )); then
+  echo "$ZSH_COMPDUMP"(N.mh+24)
+  compinit -d "$ZSH_COMPDUMP"
+else
+  compinit -C -d "$ZSH_COMPDUMP"
+fi
 
 function set_completion_indicator {
   echoti sc # save_cursor

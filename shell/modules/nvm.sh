@@ -9,7 +9,36 @@ if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
   return 0
 fi
 
-# shellcheck disable=SC1091
-. "$NVM_DIR/nvm.sh"
-# shellcheck disable=SC1091
-[[ -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
+# Lazy load nvm, node, and npm to speed up terminal start
+nvm() {
+  unset -f nvm node npm npx
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+	[[ -n "$BASH_VERSION" && -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
+  nvm "$@"
+}
+
+node() {
+  unset -f nvm node npm npx
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+	[[ -n "$BASH_VERSION" && -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
+  node "$@"
+}
+
+npm() {
+  unset -f nvm node npm npx
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+	[[ -n "$BASH_VERSION" && -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
+  npm "$@"
+}
+
+npx() {
+  unset -f nvm node npm npx
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+	[[ -n "$BASH_VERSION" && -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
+  npx "$@"
+}
+
