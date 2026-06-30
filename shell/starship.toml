@@ -92,9 +92,9 @@ tag_disabled  = true
 disabled = true
 style       = "fg:color_text bold bg:color_aqua"
 format      = "([$all_status$ahead_behind]($style))"
-ahead       = "  ${count}"
-behind      = "  {count}"
-diverged    = "  {behind_count}  ${ahead_count}"
+ahead       = "  ${count}"
+behind      = "  {count}"
+diverged    = "  {behind_count}  ${ahead_count}"
 up_to_date  = ""
 conflicted  = " 󱡝 ${count}"
 untracked   = "  ${count}"
@@ -144,12 +144,12 @@ format   = "[ $env_value]($style)"
 [env_var.gsd_ahead]
 variable = "GSD_AHEAD"
 style    = "fg:color_text bold bg:color_aqua"
-format   = "[  $env_value]($style)"
+format   = "[  $env_value]($style)"
 
 [env_var.gsd_behind]
 variable = "GSD_BEHIND"
 style    = "fg:color_text bold bg:color_aqua"
-format   = "[  $env_value]($style)"
+format   = "[  $env_value]($style)"
 
 [env_var.gsd_staged]
 variable = "GSD_STAGED"
