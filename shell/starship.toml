@@ -9,7 +9,7 @@ $username$hostname$sudo\
 [](bg:color_yellow fg:color_orange)\
 $directory\
 [](fg:color_yellow bg:color_aqua)\
-$git_branch$git_commit$git_state$git_status\
+$env_var\
 [](fg:color_aqua)\
 $fill\
 [](fg:color_python_blue)\
@@ -73,21 +73,23 @@ format            = "[$path]($style)[$read_only]($read_only_style)"
 read_only         = ""
 read_only_style   = "red"
 
-[git_branch]
-symbol            = " "
-style             = "fg:color_text bold bg:color_aqua"
-format            = "[$symbol $branch]($style)"
-truncation_length = 24
-truncation_symbol = "…"
-ignore_branches   = []
+################################################################################
+# Git related settings - BEGIN
+################################################################################
+
+# Built-in git status sections
+# Prompt setting: $git_branch$git_commit$git_state$git_status
+# -----------------------------------------------------------
 
 [git_commit]
+disabled = true
 style         = "fg:color_text bold bg:color_aqua"
 format        = '[$hash$tag ]($style)'
 only_detached = true
 tag_disabled  = true
 
 [git_status]
+disabled = true
 style       = "fg:color_text bold bg:color_aqua"
 format      = "([$all_status$ahead_behind]($style))"
 ahead       = "  ${count}"
@@ -104,6 +106,7 @@ stashed     = "  ${count}"
 typechanged = ""
 
 [git_state]
+disabled = true
 style        = "fg:red bold bg:color_aqua"
 format       = "([$state( $progress_current/$progress_total)]($style))"
 rebase       = "REBASING"
@@ -113,6 +116,74 @@ cherry_pick  = "CHERRY-PICKING"
 bisect       = "BISECTING"
 am           = "AM"
 am_or_rebase = "AM/REBASE"
+
+[git_branch]
+disabled = true
+symbol            = " "
+style             = "fg:color_text bold bg:color_aqua"
+format            = "[$symbol $branch]($style)"
+truncation_length = 24
+truncation_symbol = "…"
+ignore_branches   = []
+
+
+# Gitstatusd-backed "manual" prompt sections
+# Prompt setting: $env (this renders all env_var's in declaration order)
+# ----------------------------------------------------------------------
+
+[env_var.gsd_on]
+variable = "GSD_ON"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_action]
+variable = "GSD_ACTION"
+style    = "fg:red bold bg:color_aqua"
+format   = "[ $env_value]($style)"
+
+[env_var.gsd_ahead]
+variable = "GSD_AHEAD"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_behind]
+variable = "GSD_BEHIND"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_staged]
+variable = "GSD_STAGED"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_unstaged]
+variable = "GSD_UNSTAGED"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_untracked]
+variable = "GSD_UNTRACKED"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_conflicted]
+variable = "GSD_CONFLICTED"
+style    = "fg:red bold bg:color_aqua"
+format   = "[ 󱡝 $env_value]($style)"
+
+[env_var.gsd_deleted]
+variable = "GSD_DELETED"
+style    = "fg:red bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stashes]
+variable = "GSD_STASHES"
+style    = "fg:color_text bold bg:color_aqua"
+format   = "[  $env_value]($style)"
+
+################################################################################
+# Git related settings - END
+################################################################################
 
 [status]
 symbol                = "✘"

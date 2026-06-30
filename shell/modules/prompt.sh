@@ -35,6 +35,7 @@ case "${JNSHELL_PROMPT:-}" in
       export STARSHIP_CONFIG="$dotfiles/shell/starship.toml"
     fi
     if jnshell_is_zsh; then
+      source "$dotfiles/shell/modules/starship_gitstatus.zsh"
       eval "$(starship init zsh)"
     else
       eval "$(starship init bash)"
