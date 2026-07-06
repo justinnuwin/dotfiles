@@ -55,8 +55,8 @@ fpath=("$dotfiles/shell/zsh_completions" $fpath)
 # Check cache age <24hrs, skip security checks if it's fresh
 local -a old_dump=( "$ZSH_COMPDUMP"(N.mh+24) )
 if (( $#old_dump )); then
-  echo "$ZSH_COMPDUMP"(N.mh+24)
   compinit -d "$ZSH_COMPDUMP"
+  touch -m "$ZSH_COMPDUMP"
 else
   compinit -C -d "$ZSH_COMPDUMP"
 fi

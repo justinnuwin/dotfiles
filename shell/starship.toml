@@ -54,7 +54,8 @@ vimcmd_replace_symbol = "[▶](39 bold)"
 style  = "fg:color_text bold bg:color_orange"
 symbol = " "
 format = "[$symbol]($style)"
-disabled = false
+# Disable sudo segment for now, it can be noticeably slow
+disabled = true
 
 [username]
 disabled = true
