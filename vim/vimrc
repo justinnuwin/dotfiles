@@ -1,71 +1,70 @@
-vim9script
-#         _                    
-#  __   _(_)_ __ ___  _ __ ___ 
-#  \ \ / / | '_ ` _ \| '__/ __|
-#   \ V /| | | | | | | | | (__ 
-#  (_)_/ |_|_| |_| |_|_|  \___|
-#
+"         _
+"  __   _(_)_ __ ___  _ __ ___
+"  \ \ / / | '_ ` _ \| '__/ __|
+"   \ V /| | | | | | | | | (__
+"  (_)_/ |_|_| |_| |_|_|  \___|
+"
 
-# Leader key
-g:mapleader = ","
+" Leader key
+let g:mapleader = ","
 
-g:dotfilesDirectory = expand('~/.dotfiles')
-g:vimplugScript = expand('~/.vim/autoload/plug.vim')
-g:pluginDirectory = expand('~/.vim/plugins/')
+let g:dotfilesDirectory = expand('~/.dotfiles')
+let g:vimplugScript = expand('~/.vim/autoload/plug.vim')
+let g:pluginDirectory = expand('~/.vim/plugins/')
 if filereadable(g:vimplugScript)
     if isdirectory(g:dotfilesDirectory)
-      execute 'source' g:dotfilesDirectory .. '/vim/bazel_utils.vim'
+      execute 'source' g:dotfilesDirectory . '/vim/bazel_utils.vim'
       nmap <leader>[ :call OpenBazelBuildDef()<CR>
       nmap <leader><C-W>[ :call OpenSplitBazelBuildDef()<CR>
-      execute 'source' g:dotfilesDirectory .. '/vim/cpp_utils.vim'
+      execute 'source' g:dotfilesDirectory . '/vim/cpp_utils.vim'
       nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
       nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
-      # Sidebar for the gshow / gdiff shell aliases (defines GDiffTreeSetup)
-      execute 'source' g:dotfilesDirectory .. '/vim/git_diff_tree.vim'
+      " Sidebar for the gshow / gdiff shell aliases (defines GDiffTreeSetup)
+      execute 'source' g:dotfilesDirectory . '/vim/git_diff_tree.vim'
 
     if isdirectory(g:pluginDirectory)
-        execute 'source ' g:dotfilesDirectory .. '/vim/plugins.vim'
+        execute 'source ' g:dotfilesDirectory . '/vim/plugins.vim'
     else
-        echomsg 'Vim-Plug script found, but plugins directory is not present. Create "' .. g:pluginDirectory .. '" to install plugins.'
-        # Bind jk to escape because it's too damn far away!
+        echomsg 'Vim-Plug script found, but plugins directory is not present. Create "' . g:pluginDirectory . '" to install plugins.'
+        " Bind jk to escape because it's too damn far away!
         imap jk <Esc>
     endif
   endif
 
 endif
 
-# Ask to save rather than error on unsaved changes
+" Ask to save rather than error on unsaved changes
 set confirm
 
-# Helps force plugins to load correctly when it is turned back on below
+" Helps force plugins to load correctly when it is turned back on below
 filetype off
 
-# Turn on syntax highlighting
+" Turn on syntax highlighting
 syntax on
 
-# For plugins to load correctly
+" For plugins to load correctly
 filetype plugin indent on
 
-# Spelling
+" Spelling
 set spell spelllang=en_us
 setlocal spell spelllang=en_us
 set nospell
 map <leader>s :setlocal spell! spell?<CR>
 
-# Security
+" Security
 set modeline
 set modelines=2
 
-# Show line numbers
+" Show line numbers
 set number
 
-# Show file stats
+" Show file stats
 set ruler
 
-# Encoding
+" Encoding
 set encoding=utf-8
 
-# Whitespace
+" Whitespace
 set wrap
 set linebreak
 set nolist
@@ -81,48 +80,49 @@ autocmd Filetype bzl setlocal tabstop=4
 autocmd Filetype bzl setlocal shiftwidth=4
 autocmd Filetype bzl setlocal softtabstop=4
 
-# Folding
-# Don't automatically fold
-# Use zR to make all folds go away
-# set foldmethod=indent
-# set foldlevel=3
-# set foldclose=all
+" Folding
+" Don't automatically fold
+" Use zR to make all folds go away
+" set foldmethod=indent
+" set foldlevel=3
+" set foldclose=all
 
-# Cursor motion
+" Cursor motion
 set scrolloff=3
 set backspace=indent,eol,start
-set matchpairs+=<:> # use % to jump between pairs
+" use % to jump between pairs
+set matchpairs+=<:>
 runtime! macros/matchit.vim
-set mouse=a 
+set mouse=a
 
-# Move up/down display lines for wrapped text
+" Move up/down display lines for wrapped text
 nnoremap j gj
 nnoremap k gk
 
-# Allow hidden buffers
+" Allow hidden buffers
 set hidden
 
-# Rendering
+" Rendering
 set ttyfast
 
-# Status bar
+" Status bar
 set laststatus=2
 
-# Last line
+" Last line
 set showmode
 set showcmd
 
-# Hilight Current line
+" Hilight Current line
 set cursorline
 
-# Visual Autocomplete for command menu
+" Visual Autocomplete for command menu
 set wildmenu
 
-# Don't beep or flash
+" Don't beep or flash
 set visualbell
 set t_vb=
 
-# Searching
+" Searching
 nnoremap / /\v
 vnoremap / /\v
 set hlsearch
@@ -130,54 +130,54 @@ set incsearch
 set ignorecase
 set smartcase
 set showmatch
-# Stop highlighting search
+" Stop highlighting search
 map <leader><space> :nohlsearch<CR>
 
-# Formatting
+" Formatting
 map <leader>q gqip
 
-# Visualize tabs and newlines
-# Old   tab:▸\ ,eol:¬
+" Visualize tabs and newlines
+" Old   tab:▸\ ,eol:¬
 set showbreak=↪
 set listchars=tab:→\ ,eol:↲,space:·,nbsp:␣,trail:·,extends:›,precedes:‹
 map <leader>L :set list!<CR> " Toggle tabs and EOL
 
-# Color scheme (terminal)
+" Color scheme (terminal)
 set t_Co=256
 set background=dark
-g:solarized_termcolors = 256
-g:solarized_termtrans = 1
+let g:solarized_termcolors = 256
+let g:solarized_termtrans = 1
 
-# Set conceal level to 2 for JSON since there are quote EVERYWHERE
+" Set conceal level to 2 for JSON since there are quote EVERYWHERE
 autocmd Filetype json setlocal conceallevel=2
 
-# Color characters at column 81
+" Color characters at column 81
 highlight ColorColumn ctermbg=gray
 call matchadd('ColorColumn', '\%81v', 100)
 
-# Search for ctags in the current file, working directory, and up
+" Search for ctags in the current file, working directory, and up
 set tags=./tags;,tags;
 
-# Remap search current cursor to no move the cursor initially
+" Remap search current cursor to no move the cursor initially
 nnoremap * *N
 nnoremap # #n
 
-# Set syntax highlighting for .inc files to C++
+" Set syntax highlighting for .inc files to C++
 autocmd BufEnter *.inc :setlocal filetype=cpp
 
-# Set syntax highlighting for .mako files to mako template
-# Syntax highlighting file can be found here https://www.vim.org/scripts/script.php?script_id=1858
+" Set syntax highlighting for .mako files to mako template
+" Syntax highlighting file can be found here https://www.vim.org/scripts/script.php?script_id=1858
 autocmd BufEnter *.mako :setlocal filetype=mako
 
-# Unmap C-W C-C or C-W q which closes a pane if we try to not switch panes after invoking C-W
+" Unmap C-W C-C or C-W q which closes a pane if we try to not switch panes after invoking C-W
 nnoremap <C-W><C-C> <ESC>
 nnoremap <C-W>q <ESC>
 
-# Higher-contrast colors for diffs
+" Higher-contrast colors for diffs
 highlight DiffAdd    cterm=bold ctermfg=none ctermbg=22 gui=none guifg=fg guibg=bg
 highlight DiffDelete cterm=none ctermfg=none ctermbg=52 gui=none guifg=fg guibg=bg
 highlight DiffChange cterm=none ctermfg=none ctermbg=17 gui=none guifg=fg guibg=bg
 highlight DiffText   cterm=bold,italic ctermfg=none ctermbg=18
 
-# Shortcut to enter paste mode
+" Shortcut to enter paste mode
 nnoremap <leader>p :set paste!<CR>

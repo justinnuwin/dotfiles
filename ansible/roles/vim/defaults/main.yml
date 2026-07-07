@@ -1,0 +1,12 @@
+---
+
+dotfiles_path: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
+
+# Pinned Neovim release used for the macOS install (no maintained package there).
+neovim_version: "0.12.4"
+
+# Linux OS families with a neovim package this role can install.
+neovim_linux_os_families:
+  - Debian
+  - Archlinux
+  - RedHat

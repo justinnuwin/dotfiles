@@ -15,6 +15,8 @@ alias ll="ls -alhs $enable_color"
 # shellcheck disable=SC2032  # alias body refers to /usr/bin/grep, not the alias
 alias grep="grep --color=always"
 
+# neovim installs its binary as `nvim`; keep muscle-memory `vim`/`vi` working
+alias vim="nvim"
 alias vi="vim"
 
 # TODO: Figure out why these have to be functions for completions to work instead of aliases

@@ -61,3 +61,7 @@
         path: /root/.local/bin/starship
       register: starship_bin_stat
       failed_when: not starship_bin_stat.stat.exists
+
+    - name: Verify neovim is installed and runnable (from the neovim PPA)
+      ansible.builtin.command: nvim --version
+      changed_when: false

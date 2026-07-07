@@ -1,18 +1,16 @@
-vim9script
+" TODO: The '-printf' option is not POSIX and won't be available on i.e. Macos
+let s:findOpts = ' -mindepth 1 -type d -printf "%P\n"'
 
-# TODO: The '-printf' option is not POSIX and won't be available on i.e. Macos
-const findOpts = ' -mindepth 1 -type d -printf "%P\n"'
-
-export def GetDirectoriesFromCwdCmd(): string
-    return "find " .. getcwd() .. findOpts
-enddef
+function! GetDirectoriesFromCwdCmd()
+    return "find " . getcwd() . s:findOpts
+endfunction
 
 
-export def GetDirectoriesFromGRootCmd(): string
-    # Note the returned path is relative to the repo root
-    const gitRoot = trim(system('git rev-parse --show-toplevel'))
+function! GetDirectoriesFromGRootCmd()
+    " Note the returned path is relative to the repo root
+    let l:gitRoot = trim(system('git rev-parse --show-toplevel'))
     if v:shell_error != 0
-        throw "Could not get git repo root: " .. getcwd()
+        throw "Could not get git repo root: " . getcwd()
     endif
-    return "find " .. gitRoot .. findOpts
-enddef
+    return "find " . l:gitRoot . s:findOpts
+endfunction

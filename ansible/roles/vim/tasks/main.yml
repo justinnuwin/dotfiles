@@ -1,0 +1,123 @@
+---
+
+- name: Vim
+  tags:
+    - setup-vim
+  block:
+    # Neovim (not traditional vim): the vimrc and its plugin config are legacy
+    # Vimscript, which Neovim runs. Debian/Ubuntu's own repos either omit
+    # neovim (minimal images) or ship a stale version, so add the upstream PPA
+    # first. Elsewhere the package is named "neovim" on pacman and dnf, so a
+    # plain package install suffices.
+    - name: Add neovim PPA (Debian/Ubuntu)
+      become: true
+      when: ansible_facts['os_family'] == 'Debian'
+      block:
+        - name: Ensure add-apt-repository is available
+          ansible.builtin.apt:
+            name: software-properties-common
+            state: present
+            update_cache: true
+
+        - name: Add neovim stable PPA
+          ansible.builtin.apt_repository:
+            repo: ppa:neovim-ppa/stable
+            state: present
+            update_cache: true
+
+    - name: Install neovim (Linux)
+      become: true
+      when: ansible_facts['os_family'] in neovim_linux_os_families
+      ansible.builtin.package:
+        name: neovim
+        state: present
+
+    # Install the pinned GitHub release for macOS.
+    - name: Install neovim from the pinned GitHub release (macOS)
+      when: ansible_facts['os_family'] == 'Darwin'
+      block:
+        - name: Ensure ~/.local/bin and the versioned neovim prefix exist
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            mode: "0755"
+          loop:
+            - "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+            - "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}"
+
+        - name: Download and extract pinned neovim
+          ansible.builtin.unarchive:
+            src: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ ansible_facts['architecture'] }}.tar.gz"
+            dest: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}"
+            remote_src: true
+            extra_opts:
+              - --strip-components=1
+            creates: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}/bin/nvim"
+
+        - name: Link nvim onto PATH
+          ansible.builtin.file:
+            src: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}/bin/nvim"
+            dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nvim"
+            state: link
+            force: true
+
+    # vim-plug: the vimrc only bootstraps plugins when plug.vim is present at
+    # g:vimplugScript (~/.vim/autoload/plug.vim), so fetch it there. Kept under
+    # ~/.vim so legacy vim still works; neovim reuses it via the init.lua bridge.
+    - name: Ensure vim autoload directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.vim/autoload"
+        state: directory
+        mode: "0755"
+
+    - name: Install vim-plug (plug.vim)
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        dest: "{{ ansible_facts['env']['HOME'] }}/.vim/autoload/plug.vim"
+        mode: "0644"
+
+    # g:pluginDirectory -- the vimrc only sources plugins.vim once this exists.
+    - name: Ensure vim plugin directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.vim/plugins"
+        state: directory
+        mode: "0755"
+
+    # Deploy ~/.vimrc so legacy vim is still supported. It sources everything
+    # else via absolute ~/.dotfiles paths, so a link is all that's needed.
+    - name: Symlink ~/.vimrc to the dotfiles vimrc
+      ansible.builtin.file:
+        src: "{{ dotfiles_path }}/vim/vimrc"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.vimrc"
+        state: link
+        force: true
+
+    # Neovim loads ~/.config/nvim/init.lua (not ~/.vimrc); the bridge there adds
+    # ~/.vim to runtimepath and sources the shared vimrc.
+    - name: Ensure nvim config directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
+        state: directory
+        mode: "0755"
+
+    - name: Symlink Neovim init.lua to the dotfiles bridge
+      ansible.builtin.file:
+        src: "{{ dotfiles_path }}/vim/init.lua"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
+        state: link
+        force: true
+
+    # Bootstrap the plugins declared in plugins.vim. --sync blocks until the
+    # installs finish (headless would otherwise quit mid-download). The coc.nvim
+    # directory is the first Plug, so it doubles as the "already installed"
+    # sentinel that keeps this idempotent.
+    - name: Install vim plugins with vim-plug
+      environment:
+        PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+      ansible.builtin.command:
+        argv:
+          - nvim
+          - --headless
+          - "+PlugInstall --sync"
+          - "+qall"
+        creates: "{{ ansible_facts['env']['HOME'] }}/.vim/plugins/coc.nvim"
