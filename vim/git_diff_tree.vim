@@ -1,0 +1,420 @@
+" ==============================================================================
+" git_diff_tree.vim - Minimal per-tab file-tree sidebar for gshow / gdiff.
+"
+" The gshow / gdiff shell aliases open one Vim tab per changed file (each a
+" vertical diff). This plugin renders a narrow sidebar, displayed identically in
+" every tab, that shows exactly those files as a collapsible directory tree
+" (like NERDTree, scoped to the diff). It also owns tab setup/teardown:
+"
+"   - Selecting a file (click, <CR>, or o) switches to the tab already showing
+"     that file's diff; if that tab was closed, it reopens the diff.
+"   - Selecting a directory toggles it open/closed.
+"   - Closing a diff window (:q) closes the whole tab.
+"   - The tab bar is replaced by a static title bar (the sidebar already lists
+"     every open tab), e.g. "Git Show HEAD (12 tabs open)".
+"
+" The aliases populate it with a title string, a list of entries (one per tab,
+" in order), and a refresh command (argv list, shell-escaped here):
+"     call GDiffTreeSetup('Git Show HEAD',
+"       \ [{'label': 'Commit', 'file': '/tmp/.../COMMIT_DESCRIPTION',
+"       \   'setup': 'setlocal readonly nomodifiable', 'stat': ''},
+"       \  {'label': 'a/b.cc', 'file': '/repo/a/b.cc',
+"       \   'setup': 'try | Gedit HEAD:% | Gvdiffsplit HEAD~1 | catch | endtry',
+"       \   'stat': '+3 -1'}, ...],
+"       \ ['git', '-C', '/repo', 'diff', '--numstat'])
+" where 'file' is the buffer opened in that tab and 'setup' is the Ex command
+" that turns it into the diff. Tabs are already opened by `vim -p`; this applies
+" 'setup', tags each tab with a stable id, and reuses (file, setup) to reopen.
+" A non-empty refresh command re-derives the per-file stats on every :w (for
+" working-tree diffs, whose stats change as you edit); pass [] to disable it.
+" ==============================================================================
+
+if exists('g:loaded_git_diff_tree')
+    finish
+endif
+let g:loaded_git_diff_tree = 1
+
+let g:gdifftree_width = get(g:, 'gdifftree_width', 52)
+
+let s:bufname = '__gdifftree__'
+
+" s:title        - text shown in the title bar (before the tab count)
+" s:entries      - list of {'label', 'file', 'setup', 'stat'}; index == tab id
+" s:tree         - nested node {'dirs': {name: node}, 'files': {name: id},
+"                  'name', 'path'}
+" s:collapsed    - set (dict used as a set) of directory paths that are closed
+" s:line_to_node - {lnum: {'type':'dir','path'} | {'type':'file','id'}}
+" s:pending_close- tab ids queued for deferred close (see s:OnQuitPre)
+let s:title = ''
+let s:entries = []
+let s:refresh = []
+let s:tree = {}
+let s:collapsed = {}
+let s:line_to_node = {}
+let s:pending_close = []
+
+function! s:NewNode(name, path) abort
+    return {'dirs': {}, 'files': {}, 'name': a:name, 'path': a:path}
+endfunction
+
+" Total number of directory and file nodes when the tree is fully expanded.
+function! s:CountNodes(node) abort
+    let l:count = len(keys(a:node.files))
+    for l:dir in values(a:node.dirs)
+        let l:count += 1 + s:CountNodes(l:dir)
+    endfor
+    return l:count
+endfunction
+
+" Mark every directory in the tree as collapsed.
+function! s:CollapseAll(node) abort
+    for l:dir in values(a:node.dirs)
+        let s:collapsed[l:dir.path] = 1
+        call s:CollapseAll(l:dir)
+    endfor
+endfunction
+
+" Build the directory tree from the entry labels; each file leaf stores the
+" entry's stable id.
+function! s:BuildTree() abort
+    let s:tree = s:NewNode('', '')
+    let s:collapsed = {}
+
+    let l:entry_id = 0
+    while l:entry_id < len(s:entries)
+        let l:parts = split(s:entries[l:entry_id].label, '/')
+        let l:node = s:tree
+        let l:part_index = 0
+        while l:part_index < len(l:parts) - 1
+            let l:part = l:parts[l:part_index]
+            if !has_key(l:node.dirs, l:part)
+                let l:path = l:node.path ==# '' ? l:part : l:node.path . '/' . l:part
+                let l:node.dirs[l:part] = s:NewNode(l:part, l:path)
+            endif
+            let l:node = l:node.dirs[l:part]
+            let l:part_index += 1
+        endwhile
+        if !empty(l:parts)
+            let l:node.files[l:parts[-1]] = l:entry_id
+        endif
+        let l:entry_id += 1
+    endwhile
+
+    " Expand everything when the fully expanded tree fits within 150% of the
+    " screen height; otherwise start with all directories collapsed.
+    if s:CountNodes(s:tree) >= float2nr(1.5 * &lines)
+        call s:CollapseAll(s:tree)
+    endif
+endfunction
+
+" Apply each entry's diff setup to its (already open) tab, tag the tab with its
+" stable id, and add the sidebar. Then wire up the autocmds that keep the
+" sidebar present and close tabs when their diff is closed.
+function! GDiffTreeSetup(title, entries, refresh) abort
+    let s:title = a:title
+    let s:entries = a:entries
+    let s:refresh = a:refresh
+    call s:BuildTree()
+    call s:SetupTitleBar()
+
+    let l:start_tab = tabpagenr()
+    let l:entry_id = 0
+    while l:entry_id < len(a:entries)
+        let l:tabnr = l:entry_id + 1
+        execute 'tabnext ' . l:tabnr
+        call s:PrepareTab(l:entry_id)
+        let l:entry_id += 1
+    endwhile
+
+    augroup gdifftree
+        autocmd!
+        autocmd TabEnter * call s:EnsureSidebar()
+        autocmd QuitPre * call s:OnQuitPre()
+        " Rebalance the diff panes when the terminal/window size changes.
+        autocmd VimResized * wincmd =
+    augroup END
+    " For working-tree diffs, re-derive the change stats whenever a buffer is
+    " saved so the sidebar reflects edits made in the diff.
+    if !empty(s:refresh)
+        autocmd gdifftree BufWritePost * call s:RefreshStats()
+    endif
+
+    execute 'tabnext ' . l:start_tab
+    call s:Render()
+    redraw
+endfunction
+
+" Re-run the numstat command, update every entry's stat, and refresh the
+" sidebar. No-op when no refresh command was supplied (committed diffs).
+function! s:RefreshStats() abort
+    if empty(s:refresh)
+        return
+    endif
+    let l:numstat_lines = systemlist(join(map(copy(s:refresh), 'shellescape(v:val)'), ' '))
+    if v:shell_error
+        return
+    endif
+    let l:stat_by_path = {}
+    for l:line in l:numstat_lines
+        let l:parts = split(l:line, '\t')
+        if len(l:parts) >= 3
+            let l:stat_by_path[l:parts[2]] = l:parts[0] ==# '-'
+                \ ? 'bin' : '+' . l:parts[0] . ' -' . l:parts[1]
+        endif
+    endfor
+    for l:entry in s:entries
+        let l:entry.stat = get(l:stat_by_path, l:entry.label, '')
+    endfor
+    call s:Render()
+endfunction
+
+" Turn the current tab into entry a:id's diff: run its setup, tag it, match diff
+" folds on both panes, and open the sidebar.
+function! s:PrepareTab(id) abort
+    call settabvar(tabpagenr(), 'gdifftree_id', a:id)
+    call settabvar(tabpagenr(), 'gdifftree_label', s:entries[a:id].label)
+    if s:entries[a:id].setup !=# ''
+        execute s:entries[a:id].setup
+    endif
+    silent! windo if &diff | setlocal foldmethod=diff foldlevel=0 | endif
+    call s:OpenSidebar()
+endfunction
+
+function! s:SetupTitleBar() abort
+    " Medium/dark gray bar so it reads clearly as a title, not a tab row.
+    highlight GDiffTreeTitleBar cterm=bold gui=bold ctermbg=240 ctermfg=253 guibg=#585858 guifg=#dadada
+    set showtabline=2
+    set tabline=%!GDiffTreeTitle()
+endfunction
+
+" Render the title bar on a gray background: the previous file (gT target) at
+" the far left, the diff/show description plus a live tab count centered, and
+" the next file (gt target) at the far right.
+function! GDiffTreeTitle() abort
+    let l:tab_count = tabpagenr('$')
+    let l:title_text = s:title . ' (' . l:tab_count . ' tab' . (l:tab_count == 1 ? '' : 's') . ' open)'
+
+    let l:prefix = '%#GDiffTreeTitleBar#'
+    if l:tab_count > 1
+        let l:current_tab = tabpagenr()
+        let l:prev_tab = l:current_tab > 1 ? l:current_tab - 1 : l:tab_count
+        let l:next_tab = l:current_tab < l:tab_count ? l:current_tab + 1 : 1
+        let l:prev_name = fnamemodify(gettabvar(l:prev_tab, 'gdifftree_label', ''), ':t')
+        let l:next_name = fnamemodify(gettabvar(l:next_tab, 'gdifftree_label', ''), ':t')
+        return l:prefix . ' gT <- ' . l:prev_name . '%=' . l:title_text . '%=' . l:next_name . ' -> gt '
+    endif
+    return l:prefix . '%=' . l:title_text . '%='
+endfunction
+
+" Window number of the sidebar in the current tab, or -1 if it is absent.
+function! s:SidebarWinnr() abort
+    let l:winnr = 1
+    while l:winnr <= winnr('$')
+        if getwinvar(l:winnr, '&filetype') ==# 'gdifftree'
+            return l:winnr
+        endif
+        let l:winnr += 1
+    endwhile
+    return -1
+endfunction
+
+" Ensure the sidebar exists in the current tab and its contents are current,
+" then rebalance the diff panes (winfixwidth keeps the sidebar's width).
+function! s:EnsureSidebar() abort
+    if s:SidebarWinnr() == -1
+        call s:OpenSidebar()
+    endif
+    call s:Render()
+    wincmd =
+endfunction
+
+function! s:OpenSidebar() abort
+    let l:content_win = win_getid()
+
+    execute 'topleft vsplit'
+    if exists('s:bufnr') && bufexists(s:bufnr)
+        execute 'buffer ' . s:bufnr
+    else
+        execute 'edit ' . fnameescape(s:bufname)
+        let s:bufnr = bufnr('%')
+    endif
+    execute 'vertical resize ' . g:gdifftree_width
+
+    setlocal buftype=nofile bufhidden=hide noswapfile nobuflisted
+    setlocal nonumber norelativenumber nolist nowrap nospell
+    setlocal signcolumn=no foldcolumn=0
+    setlocal cursorline winfixwidth
+    setlocal filetype=gdifftree
+    call s:SetupSyntax()
+    nnoremap <buffer> <silent> <CR> :call <SID>Select()<CR>
+    nnoremap <buffer> <silent> o :call <SID>Select()<CR>
+    nnoremap <buffer> <silent> <LeftRelease> :call <SID>Select()<CR>
+
+    call s:Render()
+    call win_gotoid(l:content_win)
+    " Force the diff panes back to equal width now that the fixed-width sidebar
+    " exists (winfixwidth keeps the sidebar itself out of the equalization).
+    wincmd =
+endfunction
+
+function! s:SetupSyntax() abort
+    syntax clear
+    syntax match gdifftreeHeader /\%1l.*/
+    syntax match gdifftreeDir /^.*\/$/
+    syntax match gdifftreeStat / +\d\+ -\d\+$/ contains=gdifftreeAdd,gdifftreeDel
+    syntax match gdifftreeAdd /+\d\+/ contained
+    syntax match gdifftreeDel /-\d\+/ contained
+    syntax match gdifftreeBin / bin$/
+    highlight default link gdifftreeHeader Title
+    highlight default link gdifftreeDir Directory
+    highlight default link gdifftreeBin Comment
+    highlight GDiffTreeAdd ctermfg=green guifg=#5faf5f
+    highlight GDiffTreeDel ctermfg=red guifg=#d75f5f
+    highlight default link gdifftreeAdd GDiffTreeAdd
+    highlight default link gdifftreeDel GDiffTreeDel
+endfunction
+
+" Append tree items (each {'text', 'node', ['stat']}) for a node's children.
+" Directories are listed (sorted) before files.
+function! s:BuildLines(node, depth, items) abort
+    let l:indent = repeat('  ', a:depth)
+    for l:name in sort(keys(a:node.dirs))
+        let l:child = a:node.dirs[l:name]
+        let l:closed = has_key(s:collapsed, l:child.path)
+        let l:marker = l:closed ? '+' : '-'
+        call add(a:items, {'text': l:indent . l:marker . ' ' . l:name . '/',
+            \ 'node': {'type': 'dir', 'path': l:child.path}})
+        if !l:closed
+            call s:BuildLines(l:child, a:depth + 1, a:items)
+        endif
+    endfor
+    for l:name in sort(keys(a:node.files))
+        let l:file_id = a:node.files[l:name]
+        call add(a:items, {'text': l:indent . '  ' . l:name,
+            \ 'stat': get(s:entries[l:file_id], 'stat', ''),
+            \ 'node': {'type': 'file', 'id': l:file_id}})
+    endfor
+endfunction
+
+" Rewrite the sidebar buffer contents. Must run with the sidebar as the current
+" window; leaves the cursor untouched. Change stats are aligned into a single
+" column (just past the longest file name) so they are easy to scan.
+function! s:Rebuild() abort
+    let s:line_to_node = {}
+    let l:items = []
+    call s:BuildLines(s:tree, 0, l:items)
+
+    let l:max_name_width = 0
+    let l:max_stat_width = 0
+    for l:item in l:items
+        if get(l:item, 'stat', '') !=# ''
+            let l:max_name_width = max([l:max_name_width, strdisplaywidth(l:item.text)])
+            let l:max_stat_width = max([l:max_stat_width, strdisplaywidth(l:item.stat)])
+        endif
+    endfor
+    let l:stat_col = l:max_name_width + 2
+    let l:max_stat_col = g:gdifftree_width - l:max_stat_width - 1
+    if l:stat_col > l:max_stat_col | let l:stat_col = l:max_stat_col | endif
+    if l:stat_col < 1 | let l:stat_col = 1 | endif
+
+    " Line 1 is the pane title; the tree follows after a blank spacer. Both are
+    " non-selectable (absent from s:line_to_node).
+    let l:lines = ['gdifftree - Tabs Open', '']
+    for l:item in l:items
+        let l:text = l:item.text
+        if get(l:item, 'stat', '') !=# ''
+            let l:pad = l:stat_col - strdisplaywidth(l:text)
+            let l:text .= repeat(' ', l:pad > 0 ? l:pad : 1) . l:item.stat
+        endif
+        call add(l:lines, l:text)
+        let s:line_to_node[len(l:lines)] = l:item.node
+    endfor
+
+    setlocal modifiable
+    silent %delete _
+    call setline(1, l:lines)
+    setlocal nomodifiable
+endfunction
+
+" Refresh the sidebar in the current tab and park the cursor on the entry for
+" the tab currently in view.
+function! s:Render() abort
+    let l:sidebar_winnr = s:SidebarWinnr()
+    if l:sidebar_winnr == -1
+        return
+    endif
+
+    let l:prev_win = win_getid()
+    let l:current_id = gettabvar(tabpagenr(), 'gdifftree_id', -2)
+    execute l:sidebar_winnr . 'wincmd w'
+    call s:Rebuild()
+
+    for l:linenr in keys(s:line_to_node)
+        let l:node = s:line_to_node[l:linenr]
+        if l:node.type ==# 'file' && l:node.id == l:current_id
+            call cursor(str2nr(l:linenr), 1)
+            break
+        endif
+    endfor
+
+    call win_gotoid(l:prev_win)
+endfunction
+
+" Toggle a directory, or jump to (reopening if needed) the file under the
+" cursor.
+function! s:Select() abort
+    let l:linenr = line('.')
+    if !has_key(s:line_to_node, l:linenr)
+        return
+    endif
+
+    let l:node = s:line_to_node[l:linenr]
+    if l:node.type ==# 'dir'
+        if has_key(s:collapsed, l:node.path)
+            call remove(s:collapsed, l:node.path)
+        else
+            let s:collapsed[l:node.path] = 1
+        endif
+        call s:Rebuild()
+        call cursor(l:linenr, 1)
+    else
+        call s:GotoOrReopen(l:node.id)
+    endif
+endfunction
+
+" Switch to the tab holding entry a:id, recreating its diff tab if it was
+" closed.
+function! s:GotoOrReopen(id) abort
+    for l:tabnr in range(1, tabpagenr('$'))
+        if gettabvar(l:tabnr, 'gdifftree_id', -2) == a:id
+            execute 'tabnext ' . l:tabnr
+            return
+        endif
+    endfor
+
+    execute '$tabnew ' . fnameescape(s:entries[a:id].file)
+    call s:PrepareTab(a:id)
+endfunction
+
+" On :quit inside a diff window (not the sidebar) of a managed tab, close the
+" whole tab. Deferred via a timer because a window cannot be closed from within
+" QuitPre while the original :quit is still unwinding.
+function! s:OnQuitPre() abort
+    if !exists('t:gdifftree_id') || &filetype ==# 'gdifftree'
+        return
+    endif
+    call add(s:pending_close, t:gdifftree_id)
+    call timer_start(0, function('s:DrainClose'))
+endfunction
+
+function! s:DrainClose(timer) abort
+    while !empty(s:pending_close)
+        let l:target_id = remove(s:pending_close, 0)
+        for l:tabnr in range(1, tabpagenr('$'))
+            if gettabvar(l:tabnr, 'gdifftree_id', -2) == l:target_id
+                execute l:tabnr . 'tabclose'
+                break
+            endif
+        endfor
+    endwhile
+endfunction
