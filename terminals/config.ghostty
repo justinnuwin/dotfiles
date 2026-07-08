@@ -1,2 +1,26 @@
-background = 1d1f21
 font-size = 12
+
+palette = 0=#1d1f21
+palette = 1=#ff5555
+palette = 2=#50fa7b
+palette = 3=#fac357
+palette = 4=#77abff
+palette = 5=#b294bb
+palette = 5=#c792ea
+palette = 6=#6cbfbf
+palette = 7=#c5c8c6
+palette = 8=#666666
+palette = 9=#ff6e6e
+palette = 10=#00ffc3
+palette = 11=#ffcb6b
+palette = 12=#70cfff
+palette = 13=#c397d8
+palette = 13=#ff92df
+palette = 14=#67cbe7
+palette = 15=#eaeaea
+background = #1d1f21
+foreground = #f8f8f2
+cursor-color = #ffffff
+cursor-text = #1a1b27
+selection-background = #25345a
+selection-foreground = #a5b6d4
