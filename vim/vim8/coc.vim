@@ -1,5 +1,5 @@
 " Directory for coc-settings.json
-let g:coc_config_home = '~/.dotfiles/vim'
+let g:coc_config_home = '~/.dotfiles/vim/vim8'
 
 " coc Extensions
 " List installed extensions with ':CocList extensions'

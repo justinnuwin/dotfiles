@@ -108,9 +108,14 @@
         force: true
 
     # Bootstrap the plugins declared in plugins.vim. --sync blocks until the
-    # installs finish (headless would otherwise quit mid-download). The coc.nvim
-    # directory is the first Plug, so it doubles as the "already installed"
-    # sentinel that keeps this idempotent.
+    # installs finish (headless would otherwise quit mid-download). This runs
+    # under nvim, so plugins.vim registers the Neovim set (built-in LSP, cmp,
+    # and the lua UI plugins); nvim-lspconfig is one of them and doubles as the
+    # "already installed" sentinel that keeps this idempotent.
+    #
+    # failed_when: false: on this first launch the lua config requires plugins
+    # that +PlugInstall has not cloned yet, so nvim errors and may exit non-zero.
+    # Registration already happened, so the install still runs.
     - name: Install vim plugins with vim-plug
       environment:
         PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
@@ -120,4 +125,5 @@
           - --headless
           - "+PlugInstall --sync"
           - "+qall"
-        creates: "{{ ansible_facts['env']['HOME'] }}/.vim/plugins/coc.nvim"
+        creates: "{{ ansible_facts['env']['HOME'] }}/.vim/plugins/nvim-lspconfig"
+      failed_when: false

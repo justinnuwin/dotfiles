@@ -1,14 +1,9 @@
 " Vim Plug
 call plug#begin(g:pluginDirectory)
 
-
-" Code Completion
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-execute 'source' g:dotfilesDirectory . '/vim/coc.vim'
-
-" Snippets core engine from 'SirVer/ultisnips' not needed since we can use coc
-" Include popular snippets
-Plug 'honza/vim-snippets'
+" Plugins used by both classic Vim and Neovim live here. Editor-specific plugins
+" are loaded near the end of this file: classic Vim sources vim/vim8/plugins.vim,
+" while Neovim registers its lua-configured set from vim/lua/dotfiles/.
 
 " File Tree
 Plug 'preservim/nerdtree'
@@ -51,43 +46,8 @@ let g:sneak#s_next = 1
 Plug 'unblevable/quick-scope'
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
-" Powerline Status Bar
-Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
-let g:airline_powerline_fonts = 1
-let g:airline_extensions = ['branch']
-let g:airline_skip_empty_sections = 1
-let g:airline_section_y = []  " Disable default ffenc section
-let g:airline_section_z = '%l/%L %c'  " Disable the file percentage
-let g:airline#extensions#branch#displayed_head_limit = 20
-let g:airline#extensions#branch#format = 2
-let g:airline#extensions#tagbar#flags = 'f'
-let g:airline#extensions#tagbar#searchmethod = 'nearest-stl'
-let g:airline_stl_path_style = 'short'
-
 " Display Marks
 Plug 'kshenoy/vim-signature'
-
-" Less janky exiting insert mode (rather than Ctrl-C)
-Plug 'zhou13/vim-easyescape'
-let g:easyescape_chars = { "j": 1, "k": 1 }
-let g:easyescape_timeout = 200
-cnoremap jk <ESC>
-
-" Indentation Highlighting
-Plug 'nathanaelkane/vim-indent-guides'
-" default toggle is <leader>ig
-let g:indent_guides_enable_on_vim_startup = 1
-" g:indent_guides_start_level = 2
-let g:indent_guides_guide_size = 1
-let g:indent_guides_auto_colors = 0
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=235
-autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=236
-
-" Show Git line changes
-Plug 'airblade/vim-gitgutter'
-
-" Easily comment out code
-Plug 'tpope/vim-commentary'
 
 " View and search man pages
 Plug 'vim-utils/vim-man'
@@ -104,4 +64,23 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 execute 'source' g:dotfilesDirectory . '/vim/fzf.vim'
 
+" Editor-specific plugins. Classic Vim gets vim/vim8/plugins.vim (coc.nvim,
+" airline, easyescape, ...); Neovim registers its lua-configured set (built-in
+" LSP, completion, and the faster lua UI plugins). Both run inside this
+" plug#begin/end block.
+if has('nvim')
+  lua require('dotfiles.plugins')
+else
+  execute 'source' g:dotfilesDirectory . '/vim/vim8/plugins.vim'
+endif
+
 call plug#end()
+
+" Configure the Neovim-only plugins now that plug#end put them on the
+" runtimepath. Ordered so completion capabilities exist before the LSP client
+" advertises them.
+if has('nvim')
+  lua require('dotfiles.completion')
+  lua require('dotfiles.lsp')
+  lua require('dotfiles.ui')
+endif
