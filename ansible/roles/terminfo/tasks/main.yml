@@ -15,4 +15,17 @@
     register: tic_result
     changed_when: tic_result.rc == 0
 
+  - name: Check whether the system terminfo already provides xterm-ghostty
+    ansible.builtin.command: infocmp xterm-ghostty
+    register: ghostty_terminfo_check
+    changed_when: false
+    failed_when: false
+
+  - name: Compile xterm-ghostty terminfo from vendored source
+    ansible.builtin.command:
+      cmd: tic -x -o {{ ansible_env.HOME }}/.terminfo {{ dotfiles_path }}/{{ ghostty_terminfo_source }}
+    register: ghostty_tic_result
+    changed_when: ghostty_tic_result.rc == 0
+    when: ghostty_terminfo_check.rc != 0
+
   tags: setup-terminfo

@@ -3,3 +3,6 @@
 dotfiles_path: "{{ ansible_env.HOME }}/.dotfiles"
 terminfo_sources:
   - shell/xterm-256color-italic.terminfo
+
+# Compiled only when the host ncurses does not already ship xterm-ghostty.
+ghostty_terminfo_source: shell/xterm-ghostty.terminfo
