@@ -1,0 +1,24 @@
+# A dark theme with high contrast colors
+
+palette = 0=#1d1f21
+palette = 1=#ff5555
+palette = 2=#58E37B
+palette = 3=#fac357
+palette = 4=#77abff
+palette = 5=#c792ea
+palette = 6=#7fd8cf
+palette = 7=#c5c8c6
+palette = 8=#666666
+palette = 9=#ff6e6e
+palette = 10=#15ff60
+palette = 11=#ffcb6b
+palette = 12=#70cfff
+palette = 13=#ff92df
+palette = 14=#5bfff5
+palette = 15=#eaeaea
+background = #1d1f21
+foreground = #f8f8f2
+cursor-color = #ffffff
+cursor-text = #1a1b27
+selection-background = #25345a
+selection-foreground = #a5b6d4

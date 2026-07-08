@@ -43,20 +43,17 @@
             mode: "0755"
           loop:
             - "{{ ansible_facts['env']['HOME'] }}/.local/bin"
-            - "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}"
+            - "{{ ansible_facts['env']['HOME'] }}/.local/nvim"
 
+        # Note ansible.builtin.unarchive requires GNU tar which Mac doesn't ship with
         - name: Download and extract pinned neovim
-          ansible.builtin.unarchive:
-            src: "https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ ansible_facts['architecture'] }}.tar.gz"
-            dest: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}"
-            remote_src: true
-            extra_opts:
-              - --strip-components=1
+          ansible.builtin.shell:
+            cmd: "curl -L https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ ansible_facts['architecture'] }}.tar.gz | tar -xzf - -C {{ ansible_facts['env']['HOME'] }}/.local/nvim --strip-components 1"
             creates: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}/bin/nvim"
 
         - name: Link nvim onto PATH
           ansible.builtin.file:
-            src: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}/bin/nvim"
+            src: "{{ ansible_facts['env']['HOME'] }}/.local/nvim/bin/nvim"
             dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nvim"
             state: link
             force: true

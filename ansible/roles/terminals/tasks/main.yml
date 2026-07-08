@@ -9,10 +9,24 @@
       state: directory
       mode: "0755"
 
+  - name: Ensure Ghostty user themes directory exists
+    ansible.builtin.file:
+      path: "{{ ghostty_config_dir }}/themes"
+      state: directory
+      mode: "0755"
+
   - name: Install Ghostty config
     ansible.builtin.file:
       src: "{{ dotfiles_path }}/terminals/config.ghostty"
       dest: "{{ ghostty_config_dir }}/config"
+      state: link
+      force: true
+      follow: false
+
+  - name: Install JNTerm Theme
+    ansible.builtin.file:
+      src: "{{ dotfiles_path }}/terminals/ghostty/themes/JNTerm"
+      dest: "{{ ghostty_config_dir }}/themes/JNTerm"
       state: link
       force: true
       follow: false
