@@ -147,6 +147,11 @@ set t_Co=256
 set background=dark
 let g:solarized_termcolors = 256
 let g:solarized_termtrans = 1
+" Neovim applies its colorscheme here -- after 'syntax on' and before the
+" highlight overrides below, so those survive. Classic Vim uses its default.
+if has('nvim')
+  lua require('dotfiles.colors')
+endif
 
 " Set conceal level to 2 for JSON since there are quote EVERYWHERE
 autocmd Filetype json setlocal conceallevel=2

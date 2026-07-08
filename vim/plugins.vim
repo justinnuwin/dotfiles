@@ -24,6 +24,9 @@ Plug 'tpope/vim-rhubarb'
 " TODO: Create PR upstream to get this via default remote 'origin'
 let g:github_enterprise_urls = ['https://git.zooxlabs.com']
 
+" Show Git line changes in the sign column
+Plug 'airblade/vim-gitgutter'
+
 " Better Latex Syntax Highlighting
 Plug 'lervag/vimtex'
 let g:tex_flavor = 'latex'

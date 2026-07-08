@@ -47,10 +47,6 @@ let g:indent_guides_auto_colors = 0
 autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=235
 autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=236
 
-" Show Git line changes.
-" Neovim uses gitsigns.nvim (vim/lua/dotfiles/ui.lua).
-Plug 'airblade/vim-gitgutter'
-
 " Easily comment out code.
 " Neovim has built-in commenting (gc/gcc) since 0.10.
 Plug 'tpope/vim-commentary'

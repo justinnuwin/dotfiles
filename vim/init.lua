@@ -12,3 +12,10 @@ vim.o.packpath = vim.o.runtimepath
 vim.opt.runtimepath:prepend(vim.fn.expand('~/.dotfiles/vim'))
 
 vim.cmd('source ~/.vimrc')
+
+-- lualine shows the mode, so drop Neovim's redundant native indicator. Applied
+-- here (after vimrc) so it wins over the shared 'set showmode', which classic
+-- Vim keeps for its airline statusline. (Colorscheme setup lives in
+-- vim/lua/dotfiles/colors.lua, sourced mid-vimrc so it precedes the highlight
+-- overrides there.)
+vim.o.showmode = false

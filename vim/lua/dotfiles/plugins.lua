@@ -18,6 +18,5 @@ Plug('saadparwaiz1/cmp_luasnip')    -- LuaSnip completion source
 Plug('rafamadriz/friendly-snippets')  -- snippet collection (replaces vim-snippets)
 
 -- Faster lua replacements for the Vim UI plugins.
-Plug('lewis6991/gitsigns.nvim')             -- replaces vim-gitgutter
 Plug('nvim-lualine/lualine.nvim')           -- replaces vim-airline
 Plug('lukas-reineke/indent-blankline.nvim')  -- replaces vim-indent-guides
