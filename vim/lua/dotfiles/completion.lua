@@ -30,20 +30,23 @@ cmp.setup({
         fallback()
       end
     end, { 'i', 's' }),
-    -- Next completion item, or the next snippet placeholder.
+    -- Next completion item, or the next snippet placeholder. Select-only
+    -- behavior (matching coc's pum#next(0)): move the menu highlight without
+    -- inserting the item's text into the buffer.
     ['<C-j>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
-        cmp.select_next_item()
+        cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
       elseif luasnip.jumpable(1) then
         luasnip.jump(1)
       else
         fallback()
       end
     end, { 'i', 's' }),
-    -- Previous completion item, or the previous snippet placeholder.
+    -- Previous completion item, or the previous snippet placeholder. Same
+    -- select-only behavior as <C-j> (matching coc's pum#prev(0)).
     ['<C-k>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
-        cmp.select_prev_item()
+        cmp.select_prev_item({ behavior = cmp.SelectBehavior.Select })
       elseif luasnip.jumpable(-1) then
         luasnip.jump(-1)
       else

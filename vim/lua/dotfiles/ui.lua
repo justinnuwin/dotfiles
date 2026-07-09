@@ -18,15 +18,18 @@ require('better_escape').setup({
   },
 })
 
--- Statusline. Drop the default 'encoding' and 'fileformat' components from
--- section x (the line-ending icon and encoding are not useful); keep branch on
--- the left and "<line>/<total> <col>" on the right.
+-- Statusline. Show the relative path instead of just the basename (lualine
+-- auto-shortens it to fit when the window is narrow). Drop the default
+-- 'encoding' and 'fileformat' components from section x (the line-ending icon
+-- and encoding are not useful); keep branch on the left and "<line>/<total>
+-- <col>" on the right.
 require('lualine').setup({
   options = {
     theme = 'tomorrow_night',
     globalstatus = true,
   },
   sections = {
+    lualine_c = { { 'filename', path = 1 } },
     lualine_x = { 'filetype' },
     lualine_y = {},
     lualine_z = {

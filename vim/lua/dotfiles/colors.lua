@@ -14,3 +14,11 @@ vim.cmd.colorscheme('vim')
 -- Current line: a very slight background highlight instead of the colorscheme's
 -- underline (which the indent guides break up). Set after the colorscheme.
 vim.api.nvim_set_hl(0, 'CursorLine', { ctermbg = 236 })
+
+-- Completion / popup menu. The 'vim' colorscheme defaults these to a garish
+-- magenta background (ctermbg=13); use a dark gray with light text, and a
+-- lighter gray for the selected row. The kind/extra columns share the base look.
+vim.api.nvim_set_hl(0, 'Pmenu', { ctermfg = 250, ctermbg = 238 })
+vim.api.nvim_set_hl(0, 'PmenuSel', { ctermfg = 252, ctermbg = 244 })
+vim.api.nvim_set_hl(0, 'PmenuKind', { link = 'Pmenu' })
+vim.api.nvim_set_hl(0, 'PmenuExtra', { link = 'Pmenu' })
