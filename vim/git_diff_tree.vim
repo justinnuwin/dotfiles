@@ -117,6 +117,9 @@ function! GDiffTreeSetup(title, entries, refresh) abort
     call s:BuildTree()
     call s:SetupTitleBar()
 
+    " One deliberate status line for the whole (silent) per-tab setup; the
+    " trailing redraw below clears it once every diff is wired up.
+    echo 'Preparing gdifftree view (' . len(a:entries) . ' files)...'
     let l:start_tab = tabpagenr()
     let l:entry_id = 0
     while l:entry_id < len(a:entries)
@@ -174,7 +177,11 @@ function! s:PrepareTab(id) abort
     call settabvar(tabpagenr(), 'gdifftree_id', a:id)
     call settabvar(tabpagenr(), 'gdifftree_label', s:entries[a:id].label)
     if s:entries[a:id].setup !=# ''
-        execute s:entries[a:id].setup
+        " silent! swallows the git stderr fugitive surfaces for added/deleted
+        " files (e.g. "fatal: path ... does not exist in <sha>"); with many tabs
+        " these otherwise pile up and flicker during setup. The try/catch in the
+        " setup already handles the Vim-level exception.
+        silent! execute s:entries[a:id].setup
     endif
     silent! windo if &diff | setlocal foldmethod=diff foldlevel=0 | endif
     call s:OpenSidebar()
@@ -187,23 +194,53 @@ function! s:SetupTitleBar() abort
     set tabline=%!GDiffTreeTitle()
 endfunction
 
+" Escape '%' so it is not interpreted as a tabline field (it renders literally).
+function! s:EscapePercent(text) abort
+    return substitute(a:text, '%', '%%', 'g')
+endfunction
+
 " Render the title bar on a gray background: the previous file (gT target) at
 " the far left, the diff/show description plus a live tab count centered, and
 " the next file (gt target) at the far right.
+"
+" Vim's '%=' cannot true-center between two side blocks of unequal width, so the
+" title drifts as the prev/next names change per tab. Instead we center the
+" title against the full window width and pad the gaps ourselves. On a window
+" too narrow to fit the side blocks without touching the centered title, we drop
+" them. strwidth measures the raw text (the single '%#..#' highlight token is
+" prepended only at return, so it never distorts the width math).
 function! GDiffTreeTitle() abort
     let l:tab_count = tabpagenr('$')
-    let l:title_text = s:title . ' (' . l:tab_count . ' tab' . (l:tab_count == 1 ? '' : 's') . ' open)'
+    let l:title = s:title . ' (' . l:tab_count . ' tab' . (l:tab_count == 1 ? '' : 's') . ' open)'
+    let l:hl = '%#GDiffTreeTitleBar#'
+    let l:columns = &columns
+    let l:title_width = strwidth(l:title)
+    let l:title_start = (l:columns - l:title_width) / 2
+    if l:title_start < 0 | let l:title_start = 0 | endif
 
-    let l:prefix = '%#GDiffTreeTitleBar#'
-    if l:tab_count > 1
-        let l:current_tab = tabpagenr()
-        let l:prev_tab = l:current_tab > 1 ? l:current_tab - 1 : l:tab_count
-        let l:next_tab = l:current_tab < l:tab_count ? l:current_tab + 1 : 1
-        let l:prev_name = fnamemodify(gettabvar(l:prev_tab, 'gdifftree_label', ''), ':t')
-        let l:next_name = fnamemodify(gettabvar(l:next_tab, 'gdifftree_label', ''), ':t')
-        return l:prefix . ' gT <- ' . l:prev_name . '%=' . l:title_text . '%=' . l:next_name . ' -> gt '
+    if l:tab_count <= 1
+        return l:hl . repeat(' ', l:title_start) . s:EscapePercent(l:title)
     endif
-    return l:prefix . '%=' . l:title_text . '%='
+
+    let l:current_tab = tabpagenr()
+    let l:prev_tab = l:current_tab > 1 ? l:current_tab - 1 : l:tab_count
+    let l:next_tab = l:current_tab < l:tab_count ? l:current_tab + 1 : 1
+    let l:prev_name = fnamemodify(gettabvar(l:prev_tab, 'gdifftree_label', ''), ':t')
+    let l:next_name = fnamemodify(gettabvar(l:next_tab, 'gdifftree_label', ''), ':t')
+    let l:left = ' gT <- ' . l:prev_name
+    let l:right = l:next_name . ' -> gt '
+    let l:left_width = strwidth(l:left)
+    let l:right_width = strwidth(l:right)
+
+    " Drop the side blocks if they would overlap the centered title.
+    if l:title_start < l:left_width || l:title_start + l:title_width > l:columns - l:right_width
+        return l:hl . repeat(' ', l:title_start) . s:EscapePercent(l:title)
+    endif
+
+    let l:gap_left = l:title_start - l:left_width
+    let l:gap_right = l:columns - l:right_width - l:title_start - l:title_width
+    return l:hl . s:EscapePercent(l:left) . repeat(' ', l:gap_left)
+        \ . s:EscapePercent(l:title) . repeat(' ', l:gap_right) . s:EscapePercent(l:right)
 endfunction
 
 " Window number of the sidebar in the current tab, or -1 if it is absent.

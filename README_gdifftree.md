@@ -8,6 +8,10 @@ per-file change stats. Selecting a file jumps to (or reopens) its diff tab.
 This document captures the design, the code structure, the conventions used, the
 non-obvious implementation lessons, and the planned next steps.
 
+This project is distinct from the diffview.nvim plugin which performs similar
+functionality but is completely powered from within vim. This project actively
+incorporates git from the shell to perform the heavy lifting.
+
 ---
 
 ## Goals / requirements
@@ -201,66 +205,6 @@ These are the traps that cost real debugging time; keep them in mind before
   mode**, which makes coc/fugitive/quick-scope throw noise (`E10`, `E15`, ...)
   that does *not* occur in a real terminal. Always test with `-N` (nocompatible)
   and ignore coc's `-es`-only errors.
-
----
-
-## Known bugs to fix
-
-### B1. `gdiff A..B` range revspec shows whole files as new
-
-`gdiff HEAD~2..HEAD` lists the right files and correct `+N -M` stats (git's
-`--name-only` / `--numstat` understand the `..` range), but each diff shows the
-entire file as newly added.
-
-Cause: the arg parser treats `HEAD~2..HEAD` as a *single* revision, so
-`diff_setup` becomes `Gvdiffsplit HEAD~2..HEAD` - fugitive then diffs against a
-non-existent object literally named `HEAD~2..HEAD` (empty base -> whole file
-looks new).
-
-Fix direction: detect the range forms in a rev arg and split them:
-- `A..B`  -> base `A`, target `B`  -> `Gedit B:% | Gvdiffsplit A`
-- `A...B` -> base `git merge-base A B`, target `B`
-- bare `A` keeps current behavior (rev vs working tree).
-The refresh/numstat command already handles the range as-is, so only
-`diff_setup` (and the rev parsing in `gdiff`) needs to change. Watch the
-`stat_path` keying if renames are in play.
-
-### B2. Title bar is not truly centered (shifts when switching tabs)
-
-The title uses `left %= center %= right`, where `left` = `gT <- <prev>` and
-`right` = `<next> -> gt`. Vim's `%=` centers the middle section in the *leftover*
-space between the two side blocks - but the prev/next file names differ in
-length per tab, so the "centered" title drifts as you move between tabs.
-
-Fix direction: `%=` cannot true-center with asymmetric sides. Compute padding
-from `&columns`: place the title at `(&columns - strwidth(title)) / 2`, pad from
-the end of the left block to that column, then pad from the end of the title to
-`&columns - strwidth(right)`, then the right block. Guard against the side
-blocks overlapping the centered title on narrow windows (truncate/omit
-prev/next when there isn't room). `strwidth` must ignore the `%#...#` highlight
-tokens when measuring.
-
-### B3. `fatal: path '...' does not exist in 'SHA'` leaks during startup
-
-On large diffs you sometimes see `fatal: path 'path/to/file' does not exist in
-'<sha>'` while the viewer is being built.
-
-Cause: files that are added/deleted in the compared revision have no blob on one
-side, so `Gedit rev:%` / `Gvdiffsplit rev~1` make git print that `fatal:` on
-stderr. The `try/catch` around `setup` catches the *Vim* exception, but
-fugitive still surfaces git's stderr, and with many tabs these pile up and
-flicker during the sequential per-tab setup.
-
-Fix direction (two parts):
-- Correctness: choose the diff direction per file status instead of always
-  `rev:%` vs `rev~1` (ties into next-step #4): for an added file diff against an
-  empty base, for a deleted file show `rev~1:%` / `HEAD:%` alone. This removes
-  the root cause rather than hiding it.
-- Presentation: quiet the build. Show a single `Preparing gdifftree view (N
-  files)...` message, run the setup loop with `silent!` (and consider
-  `:noautocmd`) to suppress per-file noise, then one `redraw` at the end (there
-  is already a trailing `redraw`). For very large diffs, a lightweight progress
-  indicator (`echo` with a counter) would help.
 
 ---
 

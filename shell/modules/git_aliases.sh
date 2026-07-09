@@ -245,8 +245,33 @@ gdiff() {
         # Working tree vs index.
         diff_setup="try | Gvdiffsplit | catch | endtry"
     elif [ "$rev_count" -eq 1 ]; then
-        # Given revision vs the working tree.
-        diff_setup="try | Gvdiffsplit $rev1 | catch | endtry"
+        # A single rev arg is either a bare revision (rev vs working tree) or a
+        # range revspec. A range must diff its two endpoints; treating it as one
+        # revision makes fugitive diff against a nonexistent object literally
+        # named "A..B", so every file shows up as wholly new. An empty endpoint
+        # defaults to HEAD, matching git's own range semantics.
+        case "$rev1" in
+            *...*)
+                # Symmetric range A...B: base is the merge-base of A and B.
+                local range_base="${rev1%%...*}" range_target="${rev1##*...}"
+                [ -z "$range_base" ] && range_base="HEAD"
+                [ -z "$range_target" ] && range_target="HEAD"
+                local merge_base
+                merge_base=$(git merge-base "$range_base" "$range_target")
+                diff_setup="try | Gedit $range_target:% | Gvdiffsplit $merge_base | catch | endtry"
+                ;;
+            *..*)
+                # Range A..B: diff base A against target B.
+                local range_base="${rev1%%..*}" range_target="${rev1##*..}"
+                [ -z "$range_base" ] && range_base="HEAD"
+                [ -z "$range_target" ] && range_target="HEAD"
+                diff_setup="try | Gedit $range_target:% | Gvdiffsplit $range_base | catch | endtry"
+                ;;
+            *)
+                # Given revision vs the working tree.
+                diff_setup="try | Gvdiffsplit $rev1 | catch | endtry"
+                ;;
+        esac
     else
         # Two explicit revisions, no working-tree involvement.
         diff_setup="try | Gedit $rev2:% | Gvdiffsplit $rev1 | catch | endtry"
