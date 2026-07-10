@@ -23,13 +23,31 @@ require('better_escape').setup({
 -- 'encoding' and 'fileformat' components from section x (the line-ending icon
 -- and encoding are not useful); keep branch on the left and "<line>/<total>
 -- <col>" on the right.
+-- A readonly or nomodifiable buffer shows a red Nerd Font lock glyph
+-- ('\u{f023}') in place of lualine's default '[-]'. The highlight is embedded in
+-- the symbol string (lualine escapes the filename but leaves symbols verbatim),
+-- so its background is pinned to this theme's section-c bg (#282a2e, constant
+-- across modes) so the glyph blends in; :colorscheme clears custom highlight
+-- groups, so re-apply it on that event.
+local function set_readonly_lock_hl()
+  vim.api.nvim_set_hl(0, 'DotfilesReadonlyLock',
+    { fg = '#d75f5f', bg = '#282a2e', ctermfg = 'red', ctermbg = 235 })
+end
+set_readonly_lock_hl()
+vim.api.nvim_create_autocmd('ColorScheme', {
+  group = vim.api.nvim_create_augroup('dotfiles_readonly_lock', { clear = true }),
+  callback = set_readonly_lock_hl,
+})
+
 require('lualine').setup({
   options = {
     theme = 'tomorrow_night',
     globalstatus = true,
   },
   sections = {
-    lualine_c = { { 'filename', path = 1 } },
+    lualine_c = {
+      { 'filename', path = 1, symbols = { readonly = '%#DotfilesReadonlyLock#\u{f023}' } },
+    },
     lualine_x = { 'filetype' },
     lualine_y = {},
     lualine_z = {

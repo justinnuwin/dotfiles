@@ -19,9 +19,9 @@
             state: present
             update_cache: true
 
-        - name: Add neovim stable PPA
+        - name: Add neovim PPA
           ansible.builtin.apt_repository:
-            repo: ppa:neovim-ppa/stable
+            repo: ppa:neovim-ppa/unstable
             state: present
             update_cache: true
 
