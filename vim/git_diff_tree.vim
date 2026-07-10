@@ -59,6 +59,10 @@ let s:bufname = '__gdifftree__'
 "                  '/', i.e. the pinned folder(s) shown above the diff tree
 " s:collapsed    - set (dict used as a set) of directory paths that are closed
 " s:line_to_node - {lnum: {'type':'dir','path'} | {'type':'file','id'}}
+" s:nav_order    - entry ids in sidebar (tree-display) order: pinned flat
+"                  entries, then the pinned subtree, then the diff tree, each
+"                  depth-first (dirs before files). gt/gT and the title bar walk
+"                  this, so navigation matches the visible tree, not tab order.
 " s:pending_close- tab ids queued for deferred close (see s:OnQuitPre)
 let s:title = ''
 let s:entries = []
@@ -67,6 +71,7 @@ let s:tree = {}
 let s:pinned_tree = {}
 let s:collapsed = {}
 let s:line_to_node = {}
+let s:nav_order = []
 let s:pending_close = []
 
 function! s:NewNode(name, path) abort
@@ -139,6 +144,55 @@ function! s:BuildTree() abort
     if s:CountNodes(s:tree) >= float2nr(1.5 * &lines)
         call s:CollapseAll(s:tree)
     endif
+
+    call s:BuildNavOrder()
+endfunction
+
+" Append a node's file-leaf ids in tree-display order -- directories sorted first
+" and recursed into, then files sorted -- matching s:BuildLines but ignoring
+" collapse state, so navigation visits every file regardless of what is folded.
+function! s:CollectLeaves(node, ids) abort
+    for l:name in sort(keys(a:node.dirs))
+        call s:CollectLeaves(a:node.dirs[l:name], a:ids)
+    endfor
+    for l:name in sort(keys(a:node.files))
+        call add(a:ids, a:node.files[l:name])
+    endfor
+endfunction
+
+" Build s:nav_order: the entry ids in the same top-to-bottom order the sidebar
+" renders them -- pinned flat entries (the commit description) in tab order, then
+" the pinned subtree, then the diff tree, both depth-first.
+function! s:BuildNavOrder() abort
+    let s:nav_order = []
+    let l:id = 0
+    while l:id < len(s:entries)
+        if get(s:entries[l:id], 'pinned', 0) && stridx(s:entries[l:id].label, '/') < 0
+            call add(s:nav_order, l:id)
+        endif
+        let l:id += 1
+    endwhile
+    call s:CollectLeaves(s:pinned_tree, s:nav_order)
+    call s:CollectLeaves(s:tree, s:nav_order)
+endfunction
+
+" Move to the file a:delta steps from the current tab in s:nav_order (wrapping),
+" reopening its diff tab if it was closed. Bound to gt/gT so tab navigation
+" follows the visible tree rather than physical tab order.
+function! s:NavStep(delta) abort
+    if empty(s:nav_order)
+        return
+    endif
+    let l:current_id = gettabvar(tabpagenr(), 'gdifftree_id', -2)
+    let l:idx = index(s:nav_order, l:current_id)
+    if l:idx < 0
+        let l:idx = 0
+    endif
+    let l:next = (l:idx + a:delta) % len(s:nav_order)
+    if l:next < 0
+        let l:next += len(s:nav_order)
+    endif
+    call s:GotoOrReopen(s:nav_order[l:next])
 endfunction
 
 " Apply each entry's diff setup to its (already open) tab, tag the tab with its
@@ -177,7 +231,18 @@ function! GDiffTreeSetup(title, entries, refresh) abort
         autocmd gdifftree BufWritePost * call s:RefreshStats()
     endif
 
-    execute 'tabnext ' . l:start_tab
+    " Walk the visible tree order (s:nav_order), not physical tab order, when
+    " cycling files with gt/gT.
+    nnoremap <silent> gt :call <SID>NavStep(1)<CR>
+    nnoremap <silent> gT :call <SID>NavStep(-1)<CR>
+
+    " Open on the first tree item (the commit description, or the first file
+    " depth-first) rather than whichever tab Vim started on.
+    if !empty(s:nav_order)
+        call s:GotoOrReopen(s:nav_order[0])
+    else
+        execute 'tabnext ' . l:start_tab
+    endif
     call s:Render()
     " Clear the "Preparing..." progress message now that setup is done. A bare
     " :redraw repaints but does not erase an echoed message; :echo '' does.
@@ -225,7 +290,6 @@ endfunction
 " folds on both panes, and open the sidebar.
 function! s:PrepareTab(id) abort
     call settabvar(tabpagenr(), 'gdifftree_id', a:id)
-    call settabvar(tabpagenr(), 'gdifftree_label', s:entries[a:id].label)
     if s:entries[a:id].setup !=# ''
         " silent! swallows the git stderr fugitive surfaces for added/deleted
         " files (e.g. "fatal: path ... does not exist in <sha>"); with many tabs
@@ -337,11 +401,17 @@ function! GDiffTreeTitle() abort
         return l:hl . repeat(' ', l:title_start) . s:EscapePercent(l:title)
     endif
 
-    let l:current_tab = tabpagenr()
-    let l:prev_tab = l:current_tab > 1 ? l:current_tab - 1 : l:tab_count
-    let l:next_tab = l:current_tab < l:tab_count ? l:current_tab + 1 : 1
-    let l:prev_name = fnamemodify(gettabvar(l:prev_tab, 'gdifftree_label', ''), ':t')
-    let l:next_name = fnamemodify(gettabvar(l:next_tab, 'gdifftree_label', ''), ':t')
+    " Prev/next follow the tree-display order (s:nav_order), matching gt/gT.
+    let l:n = len(s:nav_order)
+    let l:current_id = gettabvar(tabpagenr(), 'gdifftree_id', -2)
+    let l:idx = index(s:nav_order, l:current_id)
+    if l:n == 0 || l:idx < 0
+        return l:hl . repeat(' ', l:title_start) . s:EscapePercent(l:title)
+    endif
+    let l:prev_id = s:nav_order[(l:idx - 1 + l:n) % l:n]
+    let l:next_id = s:nav_order[(l:idx + 1) % l:n]
+    let l:prev_name = fnamemodify(s:entries[l:prev_id].label, ':t')
+    let l:next_name = fnamemodify(s:entries[l:next_id].label, ':t')
     let l:left = ' gT <- ' . l:prev_name
     let l:right = l:next_name . ' -> gt '
     let l:left_width = strwidth(l:left)
@@ -511,7 +581,7 @@ function! s:Rebuild() abort
 
     " Line 1 is the pane title; the tree follows after a blank spacer. Both are
     " non-selectable (absent from s:line_to_node).
-    let l:lines = ['gdifftree - Tabs Open', '']
+    let l:lines = ['gdifftree', '']
 
     " Pinned section, above the diff tree: flat pinned entries (the commit
     " description) first, in tab order, then the pinned subtree (the collapsible
