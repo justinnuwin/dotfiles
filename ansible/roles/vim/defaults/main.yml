@@ -2,7 +2,9 @@
 
 dotfiles_path: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
 
-# Pinned Neovim release used for the macOS install (no maintained package there).
+# Pinned Neovim version. Drives the macOS release download and, on old
+# Debian/Ubuntu whose packaged Neovim is older, both the candidate-version
+# threshold that triggers the from-source build and that build's git tag.
 neovim_version: "0.12.4"
 
 # Linux OS families with a neovim package this role can install.

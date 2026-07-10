@@ -1,0 +1,49 @@
+---
+
+# Reached only on Debian/Ubuntu whose available Neovim is older than
+# neovim_version (see main.yml). Build the pinned tag from source into ~/neovim
+# and prepend it to PATH so it wins over anything on the system.
+
+- name: Install Neovim build prerequisites
+  become: true
+  ansible.builtin.apt:
+    name:
+      - ninja-build
+      - gettext
+      - cmake
+      - curl
+      - build-essential
+      - git
+    state: present
+    update_cache: true
+
+- name: Check out the pinned Neovim source
+  ansible.builtin.git:
+    repo: https://github.com/neovim/neovim.git
+    version: "v{{ neovim_version }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/neovim/neovim"
+    depth: 1
+
+# A single make invocation: the CMAKE_* vars configure the build, the install
+# target order-depends on the build target, so this configures, builds, and
+# installs into the prefix. creates: guards re-runs.
+- name: Build and install Neovim
+  ansible.builtin.command:
+    cmd: make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX={{ ansible_facts['env']['HOME'] }}/neovim/local install
+    chdir: "{{ ansible_facts['env']['HOME'] }}/neovim/neovim"
+    creates: "{{ ansible_facts['env']['HOME'] }}/neovim/local/bin/nvim"
+
+# Own a separate marked block in ~/.localshell (the bash/zsh roles own the
+# "(dotfiles)" block of JNSHELL_* flags). Prepend so the from-source nvim is
+# found first; the case guard keeps PATH clean if the file is sourced twice.
+- name: Add the from-source Neovim to PATH in ~/.localshell
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK (neovim)"
+    block: |
+      case ":$PATH:" in
+        *":$HOME/neovim/local/bin:"*) ;;
+        *) export PATH="$HOME/neovim/local/bin:$PATH" ;;
+      esac
