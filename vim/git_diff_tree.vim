@@ -36,6 +36,15 @@ let g:loaded_git_diff_tree = 1
 
 let g:gdifftree_width = get(g:, 'gdifftree_width', 52)
 
+" Symbols for the far-left git-status column, one per status (A added, M
+" modified, D deleted, R renamed, C copied). Defaults are Nerd Font octicon diff
+" glyphs plus a copy glyph, written as \u escapes to keep this file ASCII-only.
+" Override with plain letters -- let g:gdifftree_status_symbols = {'A': 'A', ...}
+" -- or any glyphs; a status absent from the dict shows a blank cell.
+let g:gdifftree_status_symbols = get(g:, 'gdifftree_status_symbols', {
+    \ 'A': "\uf457", 'M': "\uf459", 'D': "\uf458",
+    \ 'R': "\uf45a", 'C': "\uf0c5" })
+
 let s:bufname = '__gdifftree__'
 
 " s:title        - text shown in the title bar (before the tab count)
@@ -178,6 +187,17 @@ endfunction
 
 " Re-run the numstat command, update every entry's stat, and refresh the
 " sidebar. No-op when no refresh command was supplied (committed diffs).
+" Reduce a `--numstat -M` rename path to its post-rename form so it matches the
+" entry label: 'a/{b => c}/d' -> 'a/c/d', and a brace-less 'old => new' -> 'new'.
+" (The refresh runs without -z, since Vim's system() cannot carry NUL bytes.)
+function! s:NumstatNewPath(raw) abort
+    if a:raw !~# ' => '
+        return a:raw
+    endif
+    let l:p = substitute(a:raw, '{.\{-} => \(.\{-}\)}', '\1', '')
+    return substitute(l:p, '^.\{-} => ', '', '')
+endfunction
+
 function! s:RefreshStats() abort
     if empty(s:refresh)
         return
@@ -190,10 +210,11 @@ function! s:RefreshStats() abort
     for l:line in l:numstat_lines
         let l:parts = split(l:line, '\t')
         if len(l:parts) >= 3
-            let l:stat_by_path[l:parts[2]] = l:parts[0] ==# '-'
+            let l:stat_by_path[s:NumstatNewPath(l:parts[2])] = l:parts[0] ==# '-'
                 \ ? 'bin' : '+' . l:parts[0] . ' -' . l:parts[1]
         endif
     endfor
+    " Only the change counts refresh on save; each entry's git status is fixed.
     for l:entry in s:entries
         let l:entry.stat = get(l:stat_by_path, l:entry.label, '')
     endfor
@@ -396,6 +417,18 @@ function! s:SetupSyntax() abort
     syntax match gdifftreeAdd /+\d\+/ contained
     syntax match gdifftreeDel /-\d\+/ contained
     syntax match gdifftreeBin / bin$/
+    " Color each far-left status glyph by its status. Built from the configured
+    " symbols so an override recolors correctly; each glyph anchors at column 1
+    " (only file lines carry one -- dirs/meta lines start with a blank cell).
+    let l:status_hl = {'A': 'GDiffTreeStatusAdd', 'M': 'GDiffTreeStatusMod',
+        \ 'D': 'GDiffTreeStatusDel', 'R': 'GDiffTreeStatusRen', 'C': 'GDiffTreeStatusCopy'}
+    for l:st in keys(g:gdifftree_status_symbols)
+        let l:sym = g:gdifftree_status_symbols[l:st]
+        if l:sym ==# '' || !has_key(l:status_hl, l:st)
+            continue
+        endif
+        execute 'syntax match ' . l:status_hl[l:st] . ' /^' . escape(l:sym, '/\.*$^~[]') . '/'
+    endfor
     highlight default link gdifftreeHeader Title
     highlight default link gdifftreeDir Directory
     highlight default link gdifftreeBin Comment
@@ -403,10 +436,23 @@ function! s:SetupSyntax() abort
     highlight GDiffTreeDel ctermfg=red guifg=#d75f5f
     highlight default link gdifftreeAdd GDiffTreeAdd
     highlight default link gdifftreeDel GDiffTreeDel
+    highlight GDiffTreeStatusAdd  ctermfg=green   guifg=#5faf5f
+    highlight GDiffTreeStatusMod  ctermfg=yellow  guifg=#d7af5f
+    highlight GDiffTreeStatusDel  ctermfg=red     guifg=#d75f5f
+    highlight GDiffTreeStatusRen  ctermfg=magenta guifg=#af87d7
+    highlight GDiffTreeStatusCopy ctermfg=cyan    guifg=#5fafaf
 endfunction
 
-" Append tree items (each {'text', 'node', ['stat']}) for a node's children.
-" Directories are listed (sorted) before files.
+" The far-left status cell for a file: its configured symbol, right-padded to the
+" column width. An empty status (dirs, pinned/meta lines) yields a blank cell.
+function! s:StatusCell(status, width) abort
+    let l:sym = get(g:gdifftree_status_symbols, a:status, '')
+    let l:pad = a:width - strdisplaywidth(l:sym)
+    return l:sym . repeat(' ', l:pad > 0 ? l:pad : 0)
+endfunction
+
+" Append tree items (each {'text', 'node', ['stat'], ['status']}) for a node's
+" children. Directories are listed (sorted) before files.
 function! s:BuildLines(node, depth, items) abort
     let l:indent = repeat('  ', a:depth)
     for l:name in sort(keys(a:node.dirs))
@@ -423,6 +469,7 @@ function! s:BuildLines(node, depth, items) abort
         let l:file_id = a:node.files[l:name]
         call add(a:items, {'text': l:indent . '  ' . l:name,
             \ 'stat': get(s:entries[l:file_id], 'stat', ''),
+            \ 'status': get(s:entries[l:file_id], 'status', ''),
             \ 'node': {'type': 'file', 'id': l:file_id}})
     endfor
 endfunction
@@ -434,6 +481,20 @@ function! s:Rebuild() abort
     let s:line_to_node = {}
     let l:items = []
     call s:BuildLines(s:tree, 0, l:items)
+
+    " Far-left status column: width is the widest configured symbol. Every tree
+    " and pinned line is prefixed with a status cell (the file's symbol, or blank
+    " for dirs and meta lines) so the tree aligns beneath the leftmost glyph.
+    let l:sym_width = 1
+    for l:sym in values(g:gdifftree_status_symbols)
+        let l:sym_width = max([l:sym_width, strdisplaywidth(l:sym)])
+    endfor
+    let l:blank_cell = repeat(' ', l:sym_width) . ' '
+    for l:item in l:items
+        let l:item.text = (l:item.node.type ==# 'file'
+            \ ? s:StatusCell(get(l:item, 'status', ''), l:sym_width) . ' '
+            \ : l:blank_cell) . l:item.text
+    endfor
 
     let l:max_name_width = 0
     let l:max_stat_width = 0
@@ -454,12 +515,13 @@ function! s:Rebuild() abort
 
     " Pinned section, above the diff tree: flat pinned entries (the commit
     " description) first, in tab order, then the pinned subtree (the collapsible
-    " 'Commit Notes' folder), then a blank spacer. All stay selectable.
+    " 'Commit Notes' folder), then a blank spacer. All stay selectable. Pinned
+    " lines get a blank status cell so they align with the diff tree.
     let l:pinned = 0
     let l:pin_id = 0
     while l:pin_id < len(s:entries)
         if get(s:entries[l:pin_id], 'pinned', 0) && stridx(s:entries[l:pin_id].label, '/') < 0
-            call add(l:lines, s:entries[l:pin_id].label)
+            call add(l:lines, l:blank_cell . s:entries[l:pin_id].label)
             let s:line_to_node[len(l:lines)] = {'type': 'file', 'id': l:pin_id}
             let l:pinned += 1
         endif
@@ -468,7 +530,7 @@ function! s:Rebuild() abort
     let l:pinned_items = []
     call s:BuildLines(s:pinned_tree, 0, l:pinned_items)
     for l:item in l:pinned_items
-        call add(l:lines, l:item.text)
+        call add(l:lines, l:blank_cell . l:item.text)
         let s:line_to_node[len(l:lines)] = l:item.node
         let l:pinned += 1
     endfor
@@ -568,7 +630,13 @@ function! s:DrainClose(timer) abort
         let l:target_id = remove(s:pending_close, 0)
         for l:tabnr in range(1, tabpagenr('$'))
             if gettabvar(l:tabnr, 'gdifftree_id', -2) == l:target_id
-                execute l:tabnr . 'tabclose'
+                " Closing the only diff tab leaves nothing to show, so quit Vim
+                " rather than error (E784) trying to close the last tab page.
+                if tabpagenr('$') <= 1
+                    qall
+                else
+                    execute l:tabnr . 'tabclose'
+                endif
                 break
             endif
         endfor

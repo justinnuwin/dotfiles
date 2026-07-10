@@ -86,11 +86,14 @@ tab setup, the sidebar rendering, and the title bar.
 
 **Data model (script-scoped state):**
 
-- `s:entries` - list of `{'label','file','setup','stat'}`; the list **index is
-  the stable tab id** (survives tab reordering/closing). `label` is the repo-
-  relative path; `file` is the buffer to open; `setup` is the Ex command that
-  turns that buffer into the diff; `stat` is the display string (`+N -M`, `bin`,
-  or empty).
+- `s:entries` - list of `{'label','file','setup','stat', ['status','orig_path',
+  'pinned']}`; the list **index is the stable tab id** (survives tab
+  reordering/closing). `label` is the repo-relative (new) path; `file` is the
+  buffer to open; `setup` is the Ex command that turns that buffer into the diff;
+  `stat` is the display string (`+N -M`, `bin`, or empty); `status` is the git
+  status letter (`A`/`M`/`D`/`R`/`C`) shown in the far-left column; `orig_path`
+  is the pre-rename path (R/C, drives the diff); `pinned` lifts a meta entry
+  (commit description / notes) above the tree.
 - `s:tree` - nested `{'dirs': {name: node}, 'files': {name: id}, 'name','path'}`
   built from the entry labels; file leaves store the entry id.
 - `s:collapsed` - set of collapsed directory paths.
@@ -208,6 +211,34 @@ These are the traps that cost real debugging time; keep them in mind before
 
 ---
 
+## File statuses
+
+Every changed file carries a git status, sourced from `git diff[-tree]
+--name-status -M -z` (paired with `--numstat -M -z` for line counts; both are
+NUL-parsed, so spaces and renames are handled). A colored symbol sits in a
+far-left column:
+
+| Status | Meaning | Default color |
+| --- | --- | --- |
+| `A` | added | green |
+| `M` | modified | yellow |
+| `D` | deleted | red |
+| `R` | renamed / moved | magenta |
+| `C` | copied | cyan |
+
+`diff_setup` is built per status (by `_gdifftree_diff_setup`) so each diff is
+meaningful: added shows empty-vs-new, deleted old-vs-empty, renamed/copied the
+old blob at the old path vs the new content, modified the same path on both
+sides. The older side is always on the left.
+
+- Symbols are configurable via `g:gdifftree_status_symbols` (defaults are Nerd
+  Font octicon diff glyphs); set it to `{'A':'A','M':'M','D':'D','R':'R','C':'C'}`
+  for plain letters.
+- Copy detection (`C`) is off by default; set `GDIFFTREE_FIND_COPIES=1` to enable
+  `-C --find-copies-harder` (O(files^2) on large trees).
+
+---
+
 ## Next steps
 
 ### 1. Add tests
@@ -256,25 +287,6 @@ Right now navigation relies on `gt`/`gT` (tabs) and the sidebar
 - Make the mapping set opt-in/overridable (`g:gdifftree_no_default_maps`,
   `<Plug>` mappings) so users can rebind. Document in `doc/gdifftree.txt`.
 
-### 4. Indicators for removed / moved / renamed files
-
-Today we show `+N -M` / `bin`, filter out directories/submodules, and rely on
-try/catch for added/deleted files; renames get no stat (numstat path mismatch).
-Add explicit status indicators like NERDTree-git:
-
-- Source status from `git diff --name-status -M` (and `--find-renames`):
-  `A` added, `M` modified, `D` deleted, `R` renamed (`old -> new`), `C` copied.
-- Pass a `status` field per entry; render a colored indicator in the sidebar
-  (e.g. `A` green, `D` red, `R` yellow with `old -> new`), aligned with the
-  stats column.
-- Adjust `diff_setup` per status so the diff is meaningful:
-  - deleted: show `HEAD:%` (or `rev:%`) against an empty buffer, not the working
-    file (which is gone);
-  - renamed: diff `old` vs `new` contents;
-  - added: current behavior (empty vs new) already works.
-- Renamed/deleted files currently need care in `RefreshStats` too (numstat keys
-  by path); consider keying refresh on status as well.
-
 ---
 
 ## Quick reference
@@ -290,4 +302,6 @@ Add explicit status indicators like NERDTree-git:
 | Close a file's tab | `:q` in a diff pane |
 | Next / prev change in file | `]c` / `[c` (built-in diff) |
 
-Config: `g:gdifftree_width` (sidebar width, default 52).
+Config: `g:gdifftree_width` (sidebar width, default 52);
+`g:gdifftree_status_symbols` (status glyphs); `GDIFFTREE_FIND_COPIES=1` (enable
+copy detection).
