@@ -39,9 +39,15 @@ let g:gdifftree_width = get(g:, 'gdifftree_width', 52)
 let s:bufname = '__gdifftree__'
 
 " s:title        - text shown in the title bar (before the tab count)
-" s:entries      - list of {'label', 'file', 'setup', 'stat'}; index == tab id
+" s:entries      - list of {'label', 'file', 'setup', 'stat', ['pinned']};
+"                  index == tab id. Pinned entries render above the diff tree
+"                  (see s:Rebuild): a pinned label with no '/' is a flat line
+"                  (commit description), one with a '/' joins the pinned subtree
+"                  (the collapsible 'Commit Notes' folder).
 " s:tree         - nested node {'dirs': {name: node}, 'files': {name: id},
-"                  'name', 'path'}
+"                  'name', 'path'} built from the unpinned (diff) entries
+" s:pinned_tree  - same node shape, built from pinned entries whose label has a
+"                  '/', i.e. the pinned folder(s) shown above the diff tree
 " s:collapsed    - set (dict used as a set) of directory paths that are closed
 " s:line_to_node - {lnum: {'type':'dir','path'} | {'type':'file','id'}}
 " s:pending_close- tab ids queued for deferred close (see s:OnQuitPre)
@@ -49,6 +55,7 @@ let s:title = ''
 let s:entries = []
 let s:refresh = []
 let s:tree = {}
+let s:pinned_tree = {}
 let s:collapsed = {}
 let s:line_to_node = {}
 let s:pending_close = []
@@ -74,34 +81,52 @@ function! s:CollapseAll(node) abort
     endfor
 endfunction
 
-" Build the directory tree from the entry labels; each file leaf stores the
-" entry's stable id.
+" Insert entry a:id into tree a:root by splitting its label on '/', creating
+" intermediate directory nodes as needed; the leaf stores the entry's stable id.
+function! s:InsertEntry(root, label, id) abort
+    let l:parts = split(a:label, '/')
+    let l:node = a:root
+    let l:part_index = 0
+    while l:part_index < len(l:parts) - 1
+        let l:part = l:parts[l:part_index]
+        if !has_key(l:node.dirs, l:part)
+            let l:path = l:node.path ==# '' ? l:part : l:node.path . '/' . l:part
+            let l:node.dirs[l:part] = s:NewNode(l:part, l:path)
+        endif
+        let l:node = l:node.dirs[l:part]
+        let l:part_index += 1
+    endwhile
+    if !empty(l:parts)
+        let l:node.files[l:parts[-1]] = a:id
+    endif
+endfunction
+
+" Build the directory trees from the entry labels. Unpinned entries form the
+" diff tree (s:tree); pinned entries whose label contains a '/' form the pinned
+" subtree (s:pinned_tree, e.g. the 'Commit Notes' folder). Flat pinned entries
+" (no '/', the commit description) are not in either tree -- s:Rebuild lists them
+" directly.
 function! s:BuildTree() abort
     let s:tree = s:NewNode('', '')
+    let s:pinned_tree = s:NewNode('', '')
     let s:collapsed = {}
 
     let l:entry_id = 0
     while l:entry_id < len(s:entries)
-        let l:parts = split(s:entries[l:entry_id].label, '/')
-        let l:node = s:tree
-        let l:part_index = 0
-        while l:part_index < len(l:parts) - 1
-            let l:part = l:parts[l:part_index]
-            if !has_key(l:node.dirs, l:part)
-                let l:path = l:node.path ==# '' ? l:part : l:node.path . '/' . l:part
-                let l:node.dirs[l:part] = s:NewNode(l:part, l:path)
+        let l:label = s:entries[l:entry_id].label
+        if get(s:entries[l:entry_id], 'pinned', 0)
+            if stridx(l:label, '/') >= 0
+                call s:InsertEntry(s:pinned_tree, l:label, l:entry_id)
             endif
-            let l:node = l:node.dirs[l:part]
-            let l:part_index += 1
-        endwhile
-        if !empty(l:parts)
-            let l:node.files[l:parts[-1]] = l:entry_id
+        else
+            call s:InsertEntry(s:tree, l:label, l:entry_id)
         endif
         let l:entry_id += 1
     endwhile
 
-    " Expand everything when the fully expanded tree fits within 150% of the
-    " screen height; otherwise start with all directories collapsed.
+    " Expand everything when the fully expanded diff tree fits within 150% of the
+    " screen height; otherwise start with all directories collapsed. The pinned
+    " subtree is small and always starts expanded.
     if s:CountNodes(s:tree) >= float2nr(1.5 * &lines)
         call s:CollapseAll(s:tree)
     endif
@@ -116,9 +141,10 @@ function! GDiffTreeSetup(title, entries, refresh) abort
     let s:refresh = a:refresh
     call s:BuildTree()
     call s:SetupTitleBar()
+    call s:SetupDiffView()
 
-    " One deliberate status line for the whole (silent) per-tab setup; the
-    " trailing redraw below clears it once every diff is wired up.
+    " One deliberate status line for the whole (silent) per-tab setup; it is
+    " cleared at the end once every diff is wired up.
     echo 'Preparing gdifftree view (' . len(a:entries) . ' files)...'
     let l:start_tab = tabpagenr()
     let l:entry_id = 0
@@ -144,7 +170,10 @@ function! GDiffTreeSetup(title, entries, refresh) abort
 
     execute 'tabnext ' . l:start_tab
     call s:Render()
+    " Clear the "Preparing..." progress message now that setup is done. A bare
+    " :redraw repaints but does not erase an echoed message; :echo '' does.
     redraw
+    echo ''
 endfunction
 
 " Re-run the numstat command, update every entry's stat, and refresh the
@@ -183,8 +212,73 @@ function! s:PrepareTab(id) abort
         " setup already handles the Vim-level exception.
         silent! execute s:entries[a:id].setup
     endif
-    silent! windo if &diff | setlocal foldmethod=diff foldlevel=0 | endif
+    " signcolumn=no hides gitgutter's gutter within the diff panes only -- the
+    " side-by-side diff already shows added/removed lines, so the gutter is
+    " redundant here (and coc diagnostics are disabled for this session).
+    silent! windo if &diff | setlocal foldmethod=diff foldlevel=0 signcolumn=no | endif
+    call s:SetupDiffPaneColors()
     call s:OpenSidebar()
+endfunction
+
+" Diff appearance for the managed diff panes. Neovim only: these rely on a
+" full-cell fill character and per-window highlight remaps (winhighlight), so
+" under classic Vim the diff keeps the colors set in the vimrc. Scoped to this
+" (diff-only) editor session regardless.
+"
+"   - Deleted hunks show as filler lines in the opposite pane; instead of a
+"     solid red block, render them on the normal background with a muted gray
+"     slashed hatch, so a deletion reads as absent content.
+"   - Within a changed line, the differing span is tinted per pane by
+"     s:SetupDiffPaneColors (removed text red on the left, added text green on
+"     the right); the groups it maps DiffText onto are defined here.
+function! s:SetupDiffView() abort
+    if !has('nvim')
+        return
+    endif
+    " U+2571 is a full-cell diagonal that tiles into a continuous slash across
+    " the filler line. Written as an escape to keep the source ASCII-only.
+    execute "set fillchars+=diff:\u2571"
+    highlight DiffDelete cterm=none ctermfg=240 ctermbg=none gui=none guifg=#585858 guibg=bg
+    " Whole added/removed lines (DiffAdd): red on the older (left) pane where the
+    " line is a removal, green on the newer (right) pane where it is an addition.
+    highlight GDiffTreeDiffLineDel cterm=bold gui=bold ctermfg=none ctermbg=52 guifg=fg guibg=#5f0000
+    highlight GDiffTreeDiffLineAdd cterm=bold gui=bold ctermfg=none ctermbg=22 guifg=fg guibg=#005f00
+    " Changed-line background (DiffChange): a very muted red/green wash (not the
+    " default blue) so the changed-text span below stands out against it. 52/22
+    " are the darkest red/green in the 256-color cube, which termguicolors=false
+    " limits us to here.
+    highlight GDiffTreeDiffChangeDel cterm=none gui=none ctermfg=none ctermbg=52 guifg=fg guibg=#3a1e1e
+    highlight GDiffTreeDiffChangeAdd cterm=none gui=none ctermfg=none ctermbg=22 guifg=fg guibg=#1e3a1e
+    " Changed-text spans within a changed line (DiffText): a brighter red/green
+    " on top of the DiffChange line background.
+    highlight GDiffTreeDiffTextDel cterm=bold gui=bold ctermfg=none ctermbg=88 guifg=fg guibg=#870000
+    highlight GDiffTreeDiffTextAdd cterm=bold gui=bold ctermfg=none ctermbg=28 guifg=fg guibg=#008700
+endfunction
+
+" Tint each diff pane per side: the older (left) pane in red, the newer (right)
+" pane in green -- both the whole added/removed lines (DiffAdd) and the changed
+" span within a changed line (DiffText). Done with a per-window highlight remap
+" (winhighlight), so it is neovim only. Must run while
+" the two diff panes are the only windows in the tab (before the sidebar opens),
+" so screen position identifies left vs right unambiguously.
+function! s:SetupDiffPaneColors() abort
+    if !has('nvim')
+        return
+    endif
+    let l:diff_wins = []
+    for l:nr in range(1, winnr('$'))
+        if getwinvar(l:nr, '&diff')
+            call add(l:diff_wins, [l:nr, win_screenpos(l:nr)[1]])
+        endif
+    endfor
+    if len(l:diff_wins) < 2
+        return
+    endif
+    call sort(l:diff_wins, {a, b -> a[1] - b[1]})
+    call setwinvar(l:diff_wins[0][0], '&winhighlight',
+        \ 'DiffAdd:GDiffTreeDiffLineDel,DiffChange:GDiffTreeDiffChangeDel,DiffText:GDiffTreeDiffTextDel')
+    call setwinvar(l:diff_wins[-1][0], '&winhighlight',
+        \ 'DiffAdd:GDiffTreeDiffLineAdd,DiffChange:GDiffTreeDiffChangeAdd,DiffText:GDiffTreeDiffTextAdd')
 endfunction
 
 function! s:SetupTitleBar() abort
@@ -357,6 +451,31 @@ function! s:Rebuild() abort
     " Line 1 is the pane title; the tree follows after a blank spacer. Both are
     " non-selectable (absent from s:line_to_node).
     let l:lines = ['gdifftree - Tabs Open', '']
+
+    " Pinned section, above the diff tree: flat pinned entries (the commit
+    " description) first, in tab order, then the pinned subtree (the collapsible
+    " 'Commit Notes' folder), then a blank spacer. All stay selectable.
+    let l:pinned = 0
+    let l:pin_id = 0
+    while l:pin_id < len(s:entries)
+        if get(s:entries[l:pin_id], 'pinned', 0) && stridx(s:entries[l:pin_id].label, '/') < 0
+            call add(l:lines, s:entries[l:pin_id].label)
+            let s:line_to_node[len(l:lines)] = {'type': 'file', 'id': l:pin_id}
+            let l:pinned += 1
+        endif
+        let l:pin_id += 1
+    endwhile
+    let l:pinned_items = []
+    call s:BuildLines(s:pinned_tree, 0, l:pinned_items)
+    for l:item in l:pinned_items
+        call add(l:lines, l:item.text)
+        let s:line_to_node[len(l:lines)] = l:item.node
+        let l:pinned += 1
+    endfor
+    if l:pinned > 0
+        call add(l:lines, '')
+    endif
+
     for l:item in l:items
         let l:text = l:item.text
         if get(l:item, 'stat', '') !=# ''

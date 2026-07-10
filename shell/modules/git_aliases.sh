@@ -85,11 +85,15 @@ _gdifftree_vstr() {
 }
 
 # Emit one Vimscript dict literal for a tab:
-#   {'label':.., 'file':.., 'setup':.., 'stat':..}
+#   {'label':.., 'file':.., 'setup':.., 'stat':.. [, 'pinned': 1]}
+# A non-empty 5th argument marks the entry as pinned: the sidebar lists it above
+# the file tree (used for the commit description and notes) instead of within it.
 _gdifftree_entry() {
-    printf "{'label': %s, 'file': %s, 'setup': %s, 'stat': %s}" \
+    printf "{'label': %s, 'file': %s, 'setup': %s, 'stat': %s" \
         "$(_gdifftree_vstr "$1")" "$(_gdifftree_vstr "$2")" \
         "$(_gdifftree_vstr "$3")" "$(_gdifftree_vstr "$4")"
+    [ -n "$5" ] && printf ", 'pinned': 1"
+    printf "}"
 }
 
 # ------------------------------------------------------------------------------
@@ -97,9 +101,10 @@ _gdifftree_entry() {
 #
 #   1. Each changed file's diff opens in its own tab as a vertical split.
 #   2. With no argument the revision defaults to HEAD.
-#   3. Tab 1 shows the commit description (title and body).
-#   4. Any git notes attached to the commit are shown, one tab, one file per
-#      notes namespace.
+#   3. Tab 1 shows the commit description (title and body), pinned above the
+#      tree in the sidebar.
+#   4. Any git notes attached to the commit appear in a collapsible "Commit
+#      Notes" folder pinned below the commit description, one entry per namespace.
 #   5. A sidebar lists every tab; selecting an entry jumps to that tab.
 #   6. The tmux pane is zoomed while viewing when inside a tmux session.
 # ------------------------------------------------------------------------------
@@ -118,18 +123,20 @@ gshow() {
     # Commit description (title + body) shown in the first tab.
     git show --no-patch --pretty=fuller "$rev" > "$tmpdir/COMMIT_DESCRIPTION"
 
-    # Collect any git notes attached to the commit, one file per namespace.
+    # Collect any git notes attached to the commit, one file per namespace. Each
+    # becomes a pinned "Commit Notes/<namespace>" entry, so the sidebar groups
+    # them in a collapsible "Commit Notes" folder pinned above the diff tree.
     mkdir -p "$tmpdir/notes"
-    local ref content
+    local ref content note_ns
+    local note_namespaces=()
     for ref in $(git for-each-ref --format='%(refname)' refs/notes); do
         content=$(git notes --ref="$ref" show "$rev" 2>/dev/null)
         if [ -n "$content" ]; then
-            echo "$content" > "$tmpdir/notes/${ref##*/}"
+            note_ns="${ref##*/}"
+            echo "$content" > "$tmpdir/notes/$note_ns"
+            note_namespaces+=("$note_ns")
         fi
     done
-    if [ -z "$(ls -A "$tmpdir/notes")" ]; then
-        rm -rf "$tmpdir/notes"
-    fi
 
     # One entry per changed file (path relative to the repo root). Skip
     # submodules/directories: they cannot be shown as a vertical diff, and
@@ -156,11 +163,11 @@ gshow() {
     # errors.
     local diff_setup="try | Gedit $rev:% | Gvdiffsplit $rev~1 | catch | endtry"
     local args=("$tmpdir/COMMIT_DESCRIPTION")
-    local entries="[$(_gdifftree_entry "Commit" "$tmpdir/COMMIT_DESCRIPTION" "setlocal readonly nomodifiable" "")"
-    if [ -d "$tmpdir/notes" ]; then
-        args+=("$tmpdir/notes")
-        entries+=", $(_gdifftree_entry "notes" "$tmpdir/notes" "" "")"
-    fi
+    local entries="[$(_gdifftree_entry "Commit Description" "$tmpdir/COMMIT_DESCRIPTION" "setlocal readonly nomodifiable" "" "pinned")"
+    for note_ns in "${note_namespaces[@]}"; do
+        args+=("$tmpdir/notes/$note_ns")
+        entries+=", $(_gdifftree_entry "Commit Notes/$note_ns" "$tmpdir/notes/$note_ns" "setlocal readonly nomodifiable" "" "pinned")"
+    done
     for changed_file in "${files[@]}"; do
         args+=("$toplevel/$changed_file")
         entries+=", $(_gdifftree_entry "$changed_file" "$toplevel/$changed_file" "$diff_setup" "${stats[$changed_file]}")"
