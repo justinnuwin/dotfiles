@@ -275,18 +275,6 @@ standalone, installable plugin:
 - Keep the shell aliases as the "launcher"; the plugin should be usable on its
   own given a title + entries + refresh spec.
 
-### 3. Built-in hotkeys for easy navigation
-
-Right now navigation relies on `gt`/`gT` (tabs) and the sidebar
-`<CR>`/`o`/click. Add first-class, discoverable, configurable mappings:
-
-- Global (in the diff session): next/prev file, focus sidebar, toggle sidebar
-  visibility, close current tab, expand-all / collapse-all, jump to next/prev
-  change (`]c`/`[c` are built-in in diff mode - document them).
-- Sidebar-local: expand/collapse under cursor, open in the other pane, quit all.
-- Make the mapping set opt-in/overridable (`g:gdifftree_no_default_maps`,
-  `<Plug>` mappings) so users can rebind. Document in `doc/gdifftree.txt`.
-
 ---
 
 ## Quick reference

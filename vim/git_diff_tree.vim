@@ -235,6 +235,12 @@ function! GDiffTreeSetup(title, entries, refresh) abort
     " cycling files with gt/gT.
     nnoremap <silent> gt :call <SID>NavStep(1)<CR>
     nnoremap <silent> gT :call <SID>NavStep(-1)<CR>
+    " Focus the pane to the left/right within the tab (tree | old | new); repeat
+    " to cross panes (e.g. C-h twice from the new pane lands on the tree).
+    nnoremap <silent> <C-h> <C-w>h
+    nnoremap <silent> <C-l> <C-w>l
+    " Echo the key legend from any tab, not just the sidebar.
+    nnoremap <silent> ? :call <SID>ShowHelp()<CR>
 
     " Open on the first tree item (the commit description, or the first file
     " depth-first) rather than whichever tab Vim started on.
@@ -580,8 +586,11 @@ function! s:Rebuild() abort
     if l:stat_col < 1 | let l:stat_col = 1 | endif
 
     " Line 1 is the pane title; the tree follows after a blank spacer. Both are
-    " non-selectable (absent from s:line_to_node).
-    let l:lines = ['gdifftree', '']
+    " non-selectable (absent from s:line_to_node). The '(? for help)' hint is
+    " right-aligned to the sidebar width (s:ShowHelp echoes the key legend).
+    let l:hint = '(? for help)'
+    let l:head_pad = g:gdifftree_width - strdisplaywidth('gdifftree') - strdisplaywidth(l:hint)
+    let l:lines = ['gdifftree' . repeat(' ', l:head_pad > 1 ? l:head_pad : 1) . l:hint, '']
 
     " Pinned section, above the diff tree: flat pinned entries (the commit
     " description) first, in tab order, then the pinned subtree (the collapsible
@@ -646,6 +655,17 @@ function! s:Render() abort
     endfor
 
     call win_gotoid(l:prev_win)
+endfunction
+
+" Echo the key legend (bound to '?' in every tab). The sidebar header advertises
+" this as '(? for help)' so the full list stays out of the always-on UI.
+function! s:ShowHelp() abort
+    echo join([
+        \ 'gdifftree keys:',
+        \ '  [c  ]c    previous / next hunk',
+        \ '  gt  gT    previous / next file',
+        \ '  C-h C-l   focus pane left / right',
+        \ ], "\n")
 endfunction
 
 " Toggle a directory, or jump to (reopening if needed) the file under the
