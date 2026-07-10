@@ -23,22 +23,11 @@ require('better_escape').setup({
 -- 'encoding' and 'fileformat' components from section x (the line-ending icon
 -- and encoding are not useful); keep branch on the left and "<line>/<total>
 -- <col>" on the right.
--- A readonly or nomodifiable buffer shows a red Nerd Font lock glyph
--- ('\u{f023}') in place of lualine's default '[-]'. The highlight is embedded in
--- the symbol string (lualine escapes the filename but leaves symbols verbatim),
--- so its background is pinned to this theme's section-c bg (#282a2e, constant
--- across modes) so the glyph blends in; :colorscheme clears custom highlight
--- groups, so re-apply it on that event.
-local function set_readonly_lock_hl()
-  vim.api.nvim_set_hl(0, 'DotfilesReadonlyLock',
-    { fg = '#d75f5f', bg = '#282a2e', ctermfg = 'red', ctermbg = 235 })
-end
-set_readonly_lock_hl()
-vim.api.nvim_create_autocmd('ColorScheme', {
-  group = vim.api.nvim_create_augroup('dotfiles_readonly_lock', { clear = true }),
-  callback = set_readonly_lock_hl,
-})
-
+-- The filename component shows a red Nerd Font lock glyph ('\u{f0341}',
+-- md-lock-outline) for a readonly or nomodifiable buffer, in place of lualine's
+-- default '[-]'. The highlight (DotfilesReadonlyLock) is embedded in the symbol
+-- string and defined just after this setup call -- it copies lualine's section-c
+-- background, which only exists once lualine has been configured.
 require('lualine').setup({
   options = {
     theme = 'tomorrow_night',
@@ -46,7 +35,7 @@ require('lualine').setup({
   },
   sections = {
     lualine_c = {
-      { 'filename', path = 1, symbols = { readonly = '%#DotfilesReadonlyLock#\u{f023}' } },
+      { 'filename', path = 1, symbols = { readonly = '%#DotfilesReadonlyLock#\u{f0341}' } },
     },
     lualine_x = { 'filetype' },
     lualine_y = {},
@@ -56,6 +45,28 @@ require('lualine').setup({
       end,
     },
   },
+})
+
+-- Define DotfilesReadonlyLock now that lualine's section groups exist. nocombine
+-- is essential: the 'vim' colorscheme's StatusLine group is 'reverse', and a
+-- statusline %#group# combines with (and so inherits 'reverse' from) StatusLine
+-- unless it opts out -- without nocombine the red fg is swapped into the
+-- background, drawing a red block with the glyph knocked out. lualine adds
+-- nocombine to all of its own groups for this reason. The background (gui and
+-- cterm) is copied from lualine's own section-c group so the glyph blends into
+-- the statusline exactly, in both truecolor and 256-color terminals.
+-- :colorscheme clears custom groups (and lualine rebuilds its own), so re-apply.
+local function set_readonly_lock_hl()
+  local sec = vim.api.nvim_get_hl(0, { name = 'lualine_c_normal' })
+  vim.api.nvim_set_hl(0, 'DotfilesReadonlyLock', {
+    fg = '#d75f5f', bg = sec.bg, nocombine = true,
+    ctermfg = 'red', ctermbg = sec.ctermbg,
+  })
+end
+set_readonly_lock_hl()
+vim.api.nvim_create_autocmd('ColorScheme', {
+  group = vim.api.nvim_create_augroup('dotfiles_readonly_lock', { clear = true }),
+  callback = function() vim.schedule(set_readonly_lock_hl) end,
 })
 
 -- Indentation guides. Normally a thin character guide ('\u{258f}', a one-eighth
