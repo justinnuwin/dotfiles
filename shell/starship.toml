@@ -174,7 +174,7 @@ format   = "[ 󱡝 $env_value]($style)"
 
 [env_var.gsd_deleted]
 variable = "GSD_DELETED"
-style    = "fg:red bold bg:color_aqua"
+style    = "fg:color_text bg:color_aqua"
 format   = "[  $env_value]($style)"
 
 [env_var.gsd_stashes]

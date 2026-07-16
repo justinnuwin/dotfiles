@@ -18,6 +18,7 @@ alias grep="grep --color=always"
 # neovim installs its binary as `nvim`; keep muscle-memory `vim`/`vi` working
 alias vim="nvim"
 alias vi="vim"
+alias vimdiff="nvim -d"
 
 # TODO: Figure out why these have to be functions for completions to work instead of aliases
 btest() {

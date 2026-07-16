@@ -1,18 +1,22 @@
 [user]
-	email = justinnuwin@gmail.com
-	name = Justin Nguyen
-	signingkey = F3B0B7D4D0F53655EC949C145F6A76951D920355
+  email = justinnuwin@gmail.com
+  name = Justin Nguyen
+  signingkey = F3B0B7D4D0F53655EC949C145F6A76951D920355
 [gpg]
-	program = gpg2
+  program = gpg2
 [gpgv]
-	program = gpgv2
+  program = gpgv2
 [commit]
-	gpgsign = true
+  gpgsign = true
 [core]
-    editor = vim
+  editor = nvim
 [merge]
-    editor = vimdiff
+  tool = nvimdiff
+  conflictstyle = diff3
 [mergetool]
-    keepBackup = false
+  prompt = false
+  keepBackup = false
+[mergetool "nvimdiff"]
+  layout = "LOCAL,BASE,REMOTE / MERGED"
 [color]
-    grep = always
+  grep = always
