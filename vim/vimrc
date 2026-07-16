@@ -19,8 +19,6 @@ if filereadable(g:vimplugScript)
       execute 'source' g:dotfilesDirectory . '/vim/cpp_utils.vim'
       nmap <leader>] :call OpenCppHeaderSourceFile()<CR>
       nmap <leader><C-W>] :call OpenSplitCppHeaderSourceFile()<CR>
-      " Sidebar for the gshow / gdiff shell aliases (defines GDiffTreeSetup)
-      execute 'source' g:dotfilesDirectory . '/vim/git_diff_tree.vim'
 
     if isdirectory(g:pluginDirectory)
         execute 'source ' g:dotfilesDirectory . '/vim/plugins.vim'

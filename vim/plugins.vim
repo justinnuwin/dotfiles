@@ -27,6 +27,10 @@ let g:github_enterprise_urls = ['https://git.zooxlabs.com']
 " Show Git line changes in the sign column
 Plug 'airblade/vim-gitgutter'
 
+" Viewer powering gshow / gdiff git aliases
+" Local submodule at vim/neodiff; loaded in place, not fetched from remote
+Plug '~/.dotfiles/vim/neodiff'
+
 " Better Latex Syntax Highlighting
 Plug 'lervag/vimtex'
 let g:tex_flavor = 'latex'
