@@ -12,3 +12,7 @@ neovim_linux_os_families:
   - Debian
   - Archlinux
   - RedHat
+
+ctags_min_version: "6.0"
+# Pinned Universal Ctags tag
+ctags_version: "6.2.1"

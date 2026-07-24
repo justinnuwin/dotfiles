@@ -58,6 +58,43 @@
         - ansible_facts['os_family'] == 'Debian'
         - neovim_candidate_version is version(neovim_version, '<')
 
+    # TODO: Add a recipe for macos
+    - name: Install Universal Ctags (Arch)
+      become: true
+      when: ansible_facts['os_family'] == 'Archlinux'
+      ansible.builtin.package:
+        name: ctags
+        state: present
+
+    - name: Query candidate universal-ctags package version (Debian)
+      when: ansible_facts['os_family'] == 'Debian'
+      ansible.builtin.command: apt-cache policy universal-ctags
+      register: ctags_apt_policy
+      changed_when: false
+
+    - name: Parse candidate universal-ctags version (Debian)
+      when: ansible_facts['os_family'] == 'Debian'
+      ansible.builtin.set_fact:
+        ctags_candidate_version: >-
+          {{ (ctags_apt_policy.stdout
+              | regex_search('Candidate:\s+(?:[0-9]+:)?([0-9][0-9.]*)', '\1')
+              | default(['0.0.0'], true) | first) }}
+
+    - name: Install Universal Ctags (Debian)
+      become: true
+      when:
+        - ansible_facts['os_family'] == 'Debian'
+        - ctags_candidate_version is version(ctags_min_version, '>=')
+      ansible.builtin.package:
+        name: universal-ctags
+        state: present
+
+    - name: Build Universal Ctags from source when the packaged version is too old (Debian)
+      ansible.builtin.include_tasks: build_ctags_source.yml
+      when:
+        - ansible_facts['os_family'] == 'Debian'
+        - ctags_candidate_version is version(ctags_min_version, '<')
+
     # Install the pinned GitHub release for macOS.
     - name: Install neovim from the pinned GitHub release (macOS)
       when: ansible_facts['os_family'] == 'Darwin'

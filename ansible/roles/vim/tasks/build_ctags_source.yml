@@ -1,0 +1,48 @@
+---
+
+- name: Install Universal Ctags build prerequisites
+  become: true
+  ansible.builtin.apt:
+    name:
+      - gcc
+      - make
+      - pkg-config
+      - autoconf
+      - automake
+      - git
+      - libjansson-dev
+      - libseccomp-dev
+      - libyaml-dev
+      - libxml2-dev
+      - python3-docutils
+    state: present
+    update_cache: true
+
+- name: Check out the pinned Universal Ctags source
+  ansible.builtin.git:
+    repo: https://github.com/universal-ctags/ctags.git
+    version: "v{{ ctags_version }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/ctags/ctags"
+    depth: 1
+
+- name: Build and install Universal Ctags
+  ansible.builtin.shell:
+    cmd: >-
+      ./autogen.sh &&
+      ./configure --prefix={{ ansible_facts['env']['HOME'] }}/ctags/local &&
+      make &&
+      make install
+    chdir: "{{ ansible_facts['env']['HOME'] }}/ctags/ctags"
+    creates: "{{ ansible_facts['env']['HOME'] }}/ctags/local/bin/ctags"
+
+- name: Add the from-source Universal Ctags to PATH in ~/.localshell
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK (ctags)"
+    block: |
+      case ":$PATH:" in
+        *":$HOME/ctags/local/bin:"*) ;;
+        *) export PATH="$HOME/ctags/local/bin:$PATH" ;;
+      esac

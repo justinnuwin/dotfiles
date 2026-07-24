@@ -65,3 +65,15 @@
     - name: Verify neovim is installed and runnable (from the neovim PPA)
       ansible.builtin.command: nvim --version
       changed_when: false
+
+    - name: Verify Universal ctags version >= 6.0
+      ansible.builtin.command: ctags --version
+      register: ctags_version_out
+      changed_when: false
+      # The regex only matches a "Universal Ctags <ver>" banner, so anything else
+      # (e.g. Exuberant Ctags) yields no match, defaults to 0.0.0, and fails the
+      # threshold -- no separate "is it Universal" check needed.
+      failed_when: >-
+        (ctags_version_out.stdout
+         | regex_search('(?<=Universal Ctags )[0-9][0-9.]*')
+         | default('0.0.0', true)) is version('6.0', '<')
