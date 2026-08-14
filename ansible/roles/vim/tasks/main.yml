@@ -18,12 +18,20 @@
             name: software-properties-common
             state: present
             update_cache: true
+          register: software_properties_result
+          until: software_properties_result is succeeded
+          retries: 10
+          delay: 20
 
         - name: Add neovim PPA
           ansible.builtin.apt_repository:
             repo: ppa:neovim-ppa/unstable
             state: present
             update_cache: true
+          register: neovim_ppa_result
+          until: neovim_ppa_result is succeeded
+          retries: 4
+          delay: 15
 
     # On Debian/Ubuntu the packaged Neovim (even from the PPA) can be older than
     # we need on stale releases like Ubuntu 20.04. Query what apt would install

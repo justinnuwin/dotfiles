@@ -5,7 +5,7 @@ add_newline = true
 format = """
 [╭─](242)\
 [](color_orange)\
-$username$hostname$sudo\
+$username$hostname${env_var.jnshell_starship_show_hostname}$sudo\
 [](bg:color_yellow fg:color_orange)\
 $directory\
 [](fg:color_yellow bg:color_aqua)\
@@ -65,6 +65,11 @@ ssh_only = true
 ssh_symbol = " "
 style = "fg:color_text bold bg:color_orange"
 format = "[$ssh_symbol]($style)"
+
+[env_var.jnshell_starship_show_hostname]
+variable = "JNSHELL_STARSHIP_SHOW_HOSTNAME"
+style    = "fg:color_text bold bg:color_orange"
+format   = "[$env_value ]($style)"
 
 [directory]
 truncation_length = 4
