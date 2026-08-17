@@ -3,6 +3,9 @@
 - name: Setup zsh
   block:
 
+  - name: Build gitstatusd
+    ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/build_gitstatus.yml"
+
   - name: Install .zshrc
     ansible.builtin.file:
       src: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/zshrc"

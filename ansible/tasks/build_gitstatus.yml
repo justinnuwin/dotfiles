@@ -1,0 +1,7 @@
+---
+
+- name: Build gitstatusd (shell/gitstatus submodule)
+  ansible.builtin.command:
+    cmd: ./build -w
+    chdir: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/gitstatus"
+    creates: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/gitstatus/usrbin/gitstatusd"

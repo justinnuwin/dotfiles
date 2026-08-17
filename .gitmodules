@@ -16,3 +16,6 @@
 [submodule "vim/neodiff"]
 	path = vim/neodiff
 	url = https://github.com/justinnuwin/neodiff.git
+[submodule "shell/gitstatus"]
+	path = shell/gitstatus
+	url = https://github.com/justinnuwin/gitstatus.git

@@ -20,6 +20,10 @@ set -eo pipefail
 script_path="$(readlink -f "${BASH_SOURCE[0]}")"
 cd "$(dirname "$script_path")"
 
+# --- Clone Submodules -------------------------------------------------------
+# Don't assume the user did `git clone --recursive`
+git -C .. submodule update --init --recursive
+
 # --- Arg parsing ------------------------------------------------------------
 no_prompt=false
 forward_args=()
