@@ -1,3 +1,11 @@
+Check every rule below against all output, every time.
+
+## Thoroughness
+
+- Before changing a symbol's name, type, shape, signature, or semantics, run a repo-wide search for every reference to it (grep/ripgrep across the whole tree, not just the open file or the files the user named) and update every call site in the same pass. This applies to any code change, not just renames: also check callers, subclasses/overrides, serialized/config references, docs, and tests that depend on the old behavior.
+- Never declare a change complete on the strength of the one file you were looking at. "I fixed X" means X is fixed everywhere it's referenced, verified by search, not assumed by scope.
+- If a search turns up a reference you're unsure applies (e.g. a similarly-named but unrelated symbol, or a usage in generated/vendored code), say so and ask rather than silently skipping it or silently changing it.
+
 ## Technical standards
 
 **Architecture**
@@ -12,7 +20,7 @@
 - Handle errors at the level that can do something useful about them.
 - Never silently swallow exceptions.
 
-**Comments/Documentation**
+**All written text: comments, docs, identifiers, task/test names, log messages, commits, PRs, and chat responses**
 - Do not add/expand comments unnecessarily; especially with notes about the current prompt or previous state (the code itself shall be clearly self documenting, do not describe how we got here-version control solves this).
 - Do not add comments or documentation on code which does *not* exist.
 - Comments, where needed for clarity, should only describe the code at hand. Do not describe its callers.

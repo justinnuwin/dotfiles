@@ -58,11 +58,17 @@ Do not disable tests, assume race conditions, assume a hypothesis from context t
 - Define success in measurable terms.
 - Verify with tests, benchmarks, or reproducible output.
 - If you can not prove it, it is not done.
+- Cite evidence for every claim, including supporting details; otherwise prefix it with "Unverified:".
+- Before sending, check that each "so"/"because" claim has evidence attached.
 
 For multi-step tasks, state a brief plan:
 1. [step] -> verify: [check]
 2. [step] -> verify: [check]
 ...
+
+## Response style
+
+Answer exactly what was asked. No unrequested extra options, caveats, or explanation of what you didn't do.
 
 @~/.dotfiles/claude/coding_standards.md
 

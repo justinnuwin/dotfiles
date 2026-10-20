@@ -29,7 +29,7 @@ git_remove_worktree_delete_local_branch() {
     local branch
     branch="$(gcurb)"
     cd "$(dirname "$(git rev-parse --git-common-dir)")" || return 1
-    git worktree remove "$worktree"
+    git worktree remove "$worktree" $@
     # shellcheck disable=SC2181
     if [[ $? -gt 0 ]]; then
         cd "$worktree" || return 1
