@@ -77,6 +77,11 @@ if jnshell_flag_enabled JNSHELL_USE_RUST; then
   source "$dotfiles/shell/modules/rust.sh"
 fi
 
+if jnshell_flag_enabled JNSHELL_USE_OPENER; then
+  # shellcheck source=modules/opener.sh
+  source "$dotfiles/shell/modules/opener.sh"
+fi
+
 # Prompt is always sourced; the module dispatches on JNSHELL_PROMPT
 # and is a no-op when unset.
 # shellcheck source=modules/prompt.sh

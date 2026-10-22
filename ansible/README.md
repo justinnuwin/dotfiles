@@ -27,6 +27,8 @@ ansible/
     ├── mac/                 # MacPorts from the official .pkg, GNU tar (Darwin only)
     ├── toolchain/           # Opt-in language toolchains (rust, nvm)
     ├── starship/            # Starship prompt (pre-built binary, no rust dep)
+    ├── opener_local/        # superbrothers/opener daemon (opener_role=local)
+    ├── opener_remote/       # opener open/xdg-open shims + sshd config (opener_role=remote)
     ├── dotfiles_facts/      # Owns /etc/ansible/facts.d/dotfiles.fact
     ├── bash/                # Bash shell configuration + localshell render
     ├── zsh/                 # Zsh shell configuration + localshell render
@@ -70,6 +72,13 @@ Or use the convenience script:
 On Darwin the `mac` role installs MacPorts (`macports_version` in `roles/mac/defaults/main.yml`) from the official .pkg and GNU tar for `ansible.builtin.unarchive`, then other roles install packages through MacPorts. Prerequisite: Xcode Command Line Tools (`xcode-select --install`); the play fails fast without them.
 
 Pinned tools (neovim, Universal Ctags, tmux) follow the same rule as Debian: install the package when its version is at least the pin, otherwise build the pinned release from source.
+
+## opener (local vs remote)
+
+[superbrothers/opener](https://github.com/superbrothers/opener) opens URLs from an SSH remote in the local machine's browser. Set `opener_role` (the convenience script prompts for it) to pick a side; when unset, both roles are skipped.
+
+- **`local`** (`opener_local`): installs the pinned daemon release and runs it as a launchd agent (macOS) or systemd user unit (Linux). Forwarding the socket is manual: follow the comment the role adds at the top of `~/.ssh/config` to add a `RemoteForward` to each Host you want.
+- **`remote`** (`opener_remote`): installs `nc` and the pinned `open`/`xdg-open` shims into `~/.local/opener/bin`, sets `StreamLocalBindUnlink yes` for sshd, and enables `JNSHELL_USE_OPENER` so `shell/modules/opener.sh` puts the shims first on PATH.
 
 ## Toolchains and prompt
 

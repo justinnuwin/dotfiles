@@ -21,6 +21,10 @@
     - mac
     - toolchain
     - starship
+    - role: opener_local
+      when: opener_role | default('') == 'local'
+    - role: opener_remote
+      when: opener_role | default('') == 'remote'
     # Roles are ordered around this role. Roles contributing facts to dotfiles
     # must be before dotfiles_facts. Roles consuming these dotfile facts must
     # be after dotfiles_facts.

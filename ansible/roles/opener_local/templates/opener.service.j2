@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=opener daemon: opens URLs sent to ~/.opener.sock in the local browser
+
+[Service]
+ExecStart={{ opener_local_dir }}/opener
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

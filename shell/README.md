@@ -34,6 +34,7 @@ shell/justinShell.sh             (common entry point)
         |--- shell/modules/ssh_socket.sh  (if JNSHELL_LONG_LIVED_REMOTE=true)
         |--- shell/modules/nvm.sh         (if JNSHELL_USE_NVM=true)
         |--- shell/modules/rust.sh        (if JNSHELL_USE_RUST=true)
+        |--- shell/modules/opener.sh      (if JNSHELL_USE_OPENER=true)
         '--- shell/modules/prompt.sh      (always; dispatches on JNSHELL_PROMPT)
 ```
 

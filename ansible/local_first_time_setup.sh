@@ -11,6 +11,7 @@
 #   install_rust:   no
 #   install_nvm:    YES
 #   starship/toolchain force-reinstall: no
+#   opener role:    neither (skips the opener local/remote roles)
 #
 # Anything after a literal `--` is forwarded verbatim to ansible-playbook AFTER
 # the prompt-derived -e flags, so explicit overrides win.
@@ -34,7 +35,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      sed -n '2,17p' "$script_path" | sed 's/^# \{0,1\}//'
+      sed -n '2,18p' "$script_path" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     --)
@@ -80,18 +81,31 @@ prompt_yes_no() {
   fi
 }
 
+# Prints "local", "remote", or nothing (neither) based on the reply.
+prompt_opener_role() {
+  local question="$1"
+  local reply
+  read -r -p "$question [l/r/N] " reply
+  case "$reply" in
+    [Ll]|[Ll][Oo][Cc][Aa][Ll]) echo local ;;
+    [Rr]|[Rr][Ee][Mm][Oo][Tt][Ee]) echo remote ;;
+  esac
+}
+
 # Defaults applied in both interactive and --no-prompt modes. Edit these to
 # change what happens when a user just presses Enter / runs --no-prompt.
 default_install_rust=Y
 default_install_nvm=Y
 default_starship_force=Y
 default_toolchain_force=N
+default_opener_role=
 
 # Resolved answers — start at defaults, then prompts may override.
 install_rust="$default_install_rust"
 install_nvm="$default_install_nvm"
 starship_force="$default_starship_force"
 toolchain_force="$default_toolchain_force"
+opener_role="$default_opener_role"
 
 if [[ "$no_prompt" != "true" ]]; then
   echo
@@ -104,6 +118,7 @@ if [[ "$no_prompt" != "true" ]]; then
     && starship_force=Y || starship_force=N
   prompt_yes_no "  Force-reinstall toolchains (rust/nvm if already present)?" "$default_toolchain_force" \
     && toolchain_force=Y || toolchain_force=N
+  opener_role="$(prompt_opener_role "  opener role: is this system local (you sit at it) or remote (you SSH into it)?")"
   echo
 fi
 
@@ -112,6 +127,7 @@ extra_vars=()
 [[ "$install_nvm"     == "Y" ]] && extra_vars+=("-e" "install_nvm=true")
 [[ "$starship_force"  == "Y" ]] && extra_vars+=("-e" "starship_run_first_time_setup=true")
 [[ "$toolchain_force" == "Y" ]] && extra_vars+=("-e" "toolchain_run_first_time_setup=true")
+[[ -n "$opener_role" ]] && extra_vars+=("-e" "opener_role=$opener_role")
 true   # ensure success exit-status before the playbook invocation
 
 # --- Run --------------------------------------------------------------------

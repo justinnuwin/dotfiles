@@ -1,0 +1,111 @@
+---
+
+- name: Opener (local)
+  tags:
+    - setup-opener
+  block:
+    - name: Install unzip (Linux)
+      become: true
+      when: ansible_facts['os_family'] != 'Darwin'
+      ansible.builtin.package:
+        name: unzip
+        state: present
+
+    - name: Ensure the opener install directory exists
+      ansible.builtin.file:
+        path: "{{ opener_local_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download and extract the pinned opener release
+      ansible.builtin.unarchive:
+        src: "https://github.com/superbrothers/opener/releases/download/{{ opener_local_version }}/opener-{{ ansible_facts['system'] | lower }}-{{ opener_local_release_arch[ansible_facts['architecture']] }}.zip"
+        dest: "{{ opener_local_dir }}"
+        remote_src: true
+        creates: "{{ opener_local_dir }}/opener"
+      register: opener_local_download_result
+      until: opener_local_download_result is succeeded
+      retries: 4
+      delay: 15
+
+    - name: Run the opener daemon with launchd (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      block:
+        - name: Ensure ~/Library/LaunchAgents exists
+          ansible.builtin.file:
+            path: "{{ opener_local_launchd_plist | dirname }}"
+            state: directory
+            mode: "0755"
+
+        - name: Install the opener launchd agent
+          ansible.builtin.template:
+            src: opener.plist.j2
+            dest: "{{ opener_local_launchd_plist }}"
+            mode: "0644"
+          register: opener_local_plist
+
+        - name: Check whether the opener launchd agent is loaded
+          ansible.builtin.command: launchctl print gui/{{ ansible_facts['user_uid'] }}/{{ opener_local_launchd_label }}
+          register: opener_local_launchd_print
+          changed_when: false
+          failed_when: false
+
+        # launchd only rereads a plist on bootstrap, so a changed agent is unloaded first.
+        - name: Unload the changed opener launchd agent
+          when:
+            - opener_local_plist is changed
+            - opener_local_launchd_print.rc == 0
+          ansible.builtin.command: launchctl bootout gui/{{ ansible_facts['user_uid'] }}/{{ opener_local_launchd_label }}
+
+        - name: Load the opener launchd agent
+          when: (opener_local_plist is changed) or (opener_local_launchd_print.rc != 0)
+          ansible.builtin.command: launchctl bootstrap gui/{{ ansible_facts['user_uid'] }} {{ opener_local_launchd_plist }}
+
+    - name: Run the opener daemon with systemd (Linux)
+      when: ansible_facts['os_family'] != 'Darwin'
+      block:
+        - name: Ensure the systemd user unit directory exists
+          ansible.builtin.file:
+            path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
+            state: directory
+            mode: "0755"
+
+        - name: Install the opener systemd user unit
+          ansible.builtin.template:
+            src: opener.service.j2
+            dest: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/opener.service"
+            mode: "0644"
+          register: opener_local_unit
+
+        - name: Enable and start the opener systemd user unit
+          ansible.builtin.systemd_service:
+            name: opener.service
+            scope: user
+            enabled: true
+            daemon_reload: "{{ opener_local_unit is changed }}"
+            state: "{{ 'restarted' if opener_local_unit is changed else 'started' }}"
+
+    - name: Ensure ~/.ssh exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    - name: Document the opener RemoteForward in ~/.ssh/config
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+        create: true
+        mode: "0600"
+        insertbefore: BOF
+        marker: "# {mark} ANSIBLE MANAGED BLOCK (opener)"
+        block: |
+          # opener: to open URLs from a remote host in this machine's browser, add
+          # this line under each Host entry you want it for:
+          #   RemoteForward <remote home>/.opener.sock {{ ansible_facts['env']['HOME'] }}/.opener.sock
+
+    - name: Opener next-steps message
+      ansible.builtin.debug:
+        msg: >-
+          The opener daemon is running, but forwarding its socket is up to you: add a
+          RemoteForward line to each ssh Host you want it for, following the comment at
+          the top of ~/.ssh/config.

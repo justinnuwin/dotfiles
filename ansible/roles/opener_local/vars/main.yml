@@ -1,0 +1,11 @@
+---
+
+opener_local_launchd_label: com.github.superbrothers.opener
+opener_local_launchd_plist: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/{{ opener_local_launchd_label }}.plist"
+
+# ansible_facts['architecture'] -> opener release asset arch.
+opener_local_release_arch:
+  x86_64: amd64
+  arm64: arm64
+  aarch64: arm64
+  armv7l: arm

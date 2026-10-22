@@ -1,0 +1,7 @@
+---
+
+# Pinned superbrothers/opener release of the daemon.
+opener_local_version: v0.1.6
+
+# Versioned so a version bump installs alongside and repoints the service.
+opener_local_dir: "{{ ansible_facts['env']['HOME'] }}/.local/opener/{{ opener_local_version }}"

@@ -44,3 +44,8 @@
 # Symlink the SSH auth sock so long-lived terminals (e.g. tmux sessions) don't
 # end up with a stale env var pointing to a dead ssh-agent socket.
 # JNSHELL_LONG_LIVED_REMOTE=true
+
+# Put the superbrothers/opener open/xdg-open shims first on PATH so URLs opened
+# on this remote host open in the local machine's browser. Requires the shims in
+# ~/.local/opener/bin and nc (installed by the ansible opener_remote role).
+# JNSHELL_USE_OPENER=true

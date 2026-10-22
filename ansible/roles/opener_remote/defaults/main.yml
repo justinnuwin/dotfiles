@@ -1,0 +1,7 @@
+---
+
+# Pinned superbrothers/opener tag the open/xdg-open shims are fetched from.
+opener_remote_version: v0.1.6
+
+# Where the shims are installed. shell/modules/opener.sh prepends this to PATH.
+opener_remote_shim_dir: "{{ ansible_facts['env']['HOME'] }}/.local/opener/bin"

@@ -1,0 +1,71 @@
+---
+
+- name: Opener (remote)
+  tags:
+    - setup-opener
+  block:
+    # The shims send URLs with `nc -U`; macOS's nc supports it out of the box.
+    - name: Install netcat with unix socket support
+      become: true
+      when: ansible_facts['os_family'] in opener_remote_netcat_packages
+      ansible.builtin.package:
+        name: "{{ opener_remote_netcat_packages[ansible_facts['os_family']] }}"
+        state: present
+      vars:
+        opener_remote_netcat_packages:
+          Debian: netcat-openbsd
+          Archlinux: openbsd-netcat
+          RedHat: nmap-ncat
+
+    - name: Ensure the opener shim directory exists
+      ansible.builtin.file:
+        path: "{{ opener_remote_shim_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Install the pinned open and xdg-open shims
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/superbrothers/opener/{{ opener_remote_version }}/bin/{{ item }}"
+        dest: "{{ opener_remote_shim_dir }}/{{ item }}"
+        mode: "0755"
+      loop:
+        - open
+        - xdg-open
+
+    - name: Check that sshd reads /etc/ssh/sshd_config.d
+      ansible.builtin.command: grep -qE '^Include /etc/ssh/sshd_config\.d/\*\.conf' /etc/ssh/sshd_config
+      register: opener_remote_sshd_include
+      changed_when: false
+      failed_when: false
+
+    - name: Require sshd to read /etc/ssh/sshd_config.d
+      ansible.builtin.assert:
+        that: opener_remote_sshd_include.rc == 0
+        fail_msg: >-
+          /etc/ssh/sshd_config has no `Include /etc/ssh/sshd_config.d/*.conf`, so the
+          opener sshd drop-in would be ignored. Add the Include, then re-run this playbook.
+
+    # Lets a reconnect replace the stale ~/.opener.sock left by a dropped session.
+    - name: Configure sshd to unlink stale forwarded sockets
+      become: true
+      ansible.builtin.copy:
+        content: "StreamLocalBindUnlink yes\n"
+        dest: /etc/ssh/sshd_config.d/opener.conf
+        owner: root
+        group: "{{ 'wheel' if ansible_facts['os_family'] == 'Darwin' else 'root' }}"
+        mode: "0644"
+      register: opener_remote_sshd_conf
+
+    # launchd starts sshd per connection on macOS, so only Linux needs a reload.
+    - name: Reload sshd
+      become: true
+      when:
+        - opener_remote_sshd_conf is changed
+        - ansible_facts['os_family'] != 'Darwin'
+      ansible.builtin.service:
+        name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+        state: reloaded
+
+    - name: Record opener remote as installed
+      ansible.builtin.set_fact:
+        opener_remote_installed: true

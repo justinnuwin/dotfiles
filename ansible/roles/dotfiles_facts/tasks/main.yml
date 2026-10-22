@@ -28,6 +28,12 @@
                         if (ansible_local.dotfiles is defined and ansible_local.dotfiles.starship is defined)
                         else 'false'))
              | bool }}
+        opener_remote_installed: >-
+          {{ opener_remote_installed
+             | default((ansible_local.dotfiles.opener_remote.installed
+                        if (ansible_local.dotfiles is defined and ansible_local.dotfiles.opener_remote is defined)
+                        else 'false'))
+             | bool }}
 
     # gid 0 is "wheel" on Darwin, "root" elsewhere. Use the right name per OS.
     - name: Ensure /etc/ansible/facts.d exists

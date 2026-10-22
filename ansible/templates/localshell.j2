@@ -11,3 +11,6 @@ JNSHELL_USE_NVM=true
 {% if starship_installed | default(false) | bool -%}
 JNSHELL_PROMPT=starship
 {% endif -%}
+{% if opener_remote_installed | default(false) | bool -%}
+JNSHELL_USE_OPENER=true
+{% endif -%}
