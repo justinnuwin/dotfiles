@@ -24,6 +24,7 @@ ansible/
 ├── templates/
 │   └── localshell.j2        # Shared Jinja2 template for ~/.localshell managed block
 └── roles/
+    ├── mac/                 # MacPorts from the official .pkg, GNU tar (Darwin only)
     ├── toolchain/           # Opt-in language toolchains (rust, nvm)
     ├── starship/            # Starship prompt (pre-built binary, no rust dep)
     ├── dotfiles_facts/      # Owns /etc/ansible/facts.d/dotfiles.fact
@@ -63,6 +64,12 @@ Or use the convenience script:
 ```
 
 > **Sudo**: This is the project's first sudo escalation — `dotfiles_facts` writes the consolidated fact file to `/etc/ansible/facts.d/dotfiles.fact`, which is root-owned. Use `--ask-become-pass`, or set `ansible_become_pass` per-host, or rely on NOPASSWD sudo.
+
+## macOS packages
+
+On Darwin the `mac` role installs MacPorts (`macports_version` in `roles/mac/defaults/main.yml`) from the official .pkg and GNU tar for `ansible.builtin.unarchive`, then other roles install packages through MacPorts. Prerequisite: Xcode Command Line Tools (`xcode-select --install`); the play fails fast without them.
+
+Pinned tools (neovim, Universal Ctags, tmux) follow the same rule as Debian: install the package when its version is at least the pin, otherwise build the pinned release from source.
 
 ## Toolchains and prompt
 
@@ -200,7 +207,7 @@ molecule test
 
 The Molecule configuration (`molecule/default/molecule.yml`) uses:
 - **Driver:** Docker
-- **Platform:** Ubuntu 22.04 (image from ECR Public; see `molecule.yml`)
+- **Platforms:** Ubuntu 20.04, 22.04, 24.04, and Arch Linux (images from ECR Public; see `molecule.yml`)
 - **Provisioner:** Ansible (`prepare.yml` bootstraps the container, then `converge.yml` imports `first_time_setup.yml`)
 - **Verifier:** Ansible (runs `verify.yml` to check deployment)
 

@@ -26,7 +26,7 @@ shell/justinShell.sh             (common entry point)
         |--- shell/path_utils.sh
         |--- shell/bazel_utils.sh
         |--- aliases, git helpers
-        |--- shell/macos_gnu.sh   (only on Darwin)
+        |--- shell/modules/macports.sh  (only on Darwin)
         |--- ~/.localshell        (per-host overrides, OPTIONAL)
         |--- shell/modules/common_aliases.sh  (DEFAULT ON)
         |--- shell/modules/git_aliases.sh     (DEFAULT ON)

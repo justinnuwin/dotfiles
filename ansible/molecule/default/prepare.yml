@@ -1,21 +1,26 @@
 ---
-# Bootstrap python3-apt with raw, then use ansible native apt for the rest.
-- name: Bootstrap python for apt module
+# Ansible modules require python, which the base images lack, so bootstrap it with raw.
+- name: Bootstrap python for ansible modules
   hosts: all
   gather_facts: false
   tasks:
-    - name: Ensure python3 and python3-apt
-      ansible.builtin.raw: apt-get update -qq && apt-get install -y -qq python3 python3-apt
+    - name: Ensure python3
+      ansible.builtin.raw: >-
+        if command -v apt-get >/dev/null; then
+          apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 python3-apt;
+        else
+          pacman -Syu --noconfirm --needed python;
+        fi
       changed_when: false
 
 - name: Install OS packages needed by the playbook
   hosts: all
   tasks:
-    - name: Install git, unzip, and CA certificates
-      ansible.builtin.apt:
+    - name: Install git, curl, unzip, and CA certificates
+      ansible.builtin.package:
         name:
           - git
+          - curl
           - ca-certificates
           - unzip
         state: present
-        update_cache: true

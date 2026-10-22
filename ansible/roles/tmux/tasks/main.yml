@@ -3,6 +3,58 @@
 - name: Setup tmux
   block:
 
+  - name: Query candidate tmux package version (Debian)
+    when: ansible_facts['os_family'] == 'Debian'
+    ansible.builtin.command: apt-cache policy tmux
+    register: tmux_apt_policy
+    changed_when: false
+
+  - name: Parse candidate tmux version (Debian)
+    when: ansible_facts['os_family'] == 'Debian'
+    ansible.builtin.set_fact:
+      tmux_candidate_version: >-
+        {{ (tmux_apt_policy.stdout
+            | regex_search('Candidate:\s+(?:[0-9]+:)?([0-9][0-9.]*[a-z]?)', '\1')
+            | default(['0.0.0'], true) | first) }}
+
+  - name: Query candidate tmux port version (Darwin)
+    when: ansible_facts['os_family'] == 'Darwin'
+    ansible.builtin.command: /opt/local/bin/port info --version tmux
+    register: tmux_port_info
+    changed_when: false
+
+  - name: Parse candidate tmux version (Darwin)
+    when: ansible_facts['os_family'] == 'Darwin'
+    ansible.builtin.set_fact:
+      tmux_candidate_version: >-
+        {{ (tmux_port_info.stdout
+            | regex_search('version:\s+([0-9][0-9.]*[a-z]?)', '\1')
+            | default(['0.0.0'], true) | first) }}
+
+  - name: Install tmux (Linux)
+    become: true
+    when:
+      - ansible_facts['os_family'] in tmux_linux_os_families
+      - (ansible_facts['os_family'] != 'Debian') or (tmux_candidate_version is version(tmux_version, '>='))
+    ansible.builtin.package:
+      name: tmux
+      state: present
+
+  - name: Install tmux (Darwin)
+    become: true
+    when:
+      - ansible_facts['os_family'] == 'Darwin'
+      - tmux_candidate_version is version(tmux_version, '>=')
+    community.general.macports:
+      name: tmux
+      state: present
+
+  - name: Build tmux from source when the packaged version is too old
+    ansible.builtin.include_tasks: build_tmux_source.yml
+    when:
+      - ansible_facts['os_family'] in ['Debian', 'Darwin']
+      - tmux_candidate_version is version(tmux_version, '<')
+
   - name: Install tmux plugin manager
     block:
       - name: Check if tmux plugin manager installed

@@ -2,8 +2,17 @@
 driver:
   name: docker
 platforms:
-  - name: dotfiles-molecule
+  - name: dotfiles-molecule-ubuntu-20.04
+    image: public.ecr.aws/ubuntu/ubuntu:20.04
+    pre_build_image: true
+  - name: dotfiles-molecule-ubuntu-22.04
     image: public.ecr.aws/ubuntu/ubuntu:22.04
+    pre_build_image: true
+  - name: dotfiles-molecule-ubuntu-24.04
+    image: public.ecr.aws/ubuntu/ubuntu:24.04
+    pre_build_image: true
+  - name: dotfiles-molecule-archlinux
+    image: public.ecr.aws/docker/library/archlinux:latest
     pre_build_image: true
 scenario:
   name: default
@@ -22,8 +31,8 @@ ansible:
 provisioner:
   name: ansible
   inventory:
-    host_vars:
-      dotfiles-molecule:
+    group_vars:
+      all:
         ansible_python_interpreter: /usr/bin/python3
         ansible_user: root
 verifier:

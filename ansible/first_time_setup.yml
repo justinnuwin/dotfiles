@@ -3,10 +3,22 @@
 - name: Deploy dotfiles and related utilities
   hosts: all
   gather_facts: true   # required so ansible_local.dotfiles is loaded for the gating roles
+  vars:
+    # PATH for tasks that run tools installed by MacPorts (only present on Darwin).
+    path_with_macports: "{{ ('/opt/local/bin:' if ansible_facts['os_family'] == 'Darwin' else '') ~ ansible_facts['env']['PATH'] }}"
   pre_tasks:
     - name: Ensure dotfiles repository is available
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/ensure_repository.yml"
+
+    # Roles download installers and releases with curl; macOS ships it.
+    - name: Ensure curl is installed
+      become: true
+      when: ansible_facts['os_family'] != 'Darwin'
+      ansible.builtin.package:
+        name: curl
+        state: present
   roles:
+    - mac
     - toolchain
     - starship
     # Roles are ordered around this role. Roles contributing facts to dotfiles

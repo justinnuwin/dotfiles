@@ -1,11 +1,12 @@
 ---
 
-# Reached only on Debian/Ubuntu whose available Neovim is older than
-# neovim_version (see main.yml). Build the pinned tag from source into ~/neovim
+# Reached only on Debian/Ubuntu or macOS whose available Neovim package is older
+# than neovim_version (see main.yml). Build the pinned tag from source into ~/neovim
 # and prepend it to PATH so it wins over anything on the system.
 
-- name: Install Neovim build prerequisites
+- name: Install Neovim build prerequisites (Debian)
   become: true
+  when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.apt:
     name:
       - ninja-build
@@ -16,6 +17,16 @@
       - git
     state: present
     update_cache: true
+
+- name: Install Neovim build prerequisites (Darwin)
+  become: true
+  when: ansible_facts['os_family'] == 'Darwin'
+  community.general.macports:
+    name:
+      - ninja
+      - gettext
+      - cmake
+    state: present
 
 - name: Check out the pinned Neovim source
   ansible.builtin.git:
@@ -28,6 +39,8 @@
 # target order-depends on the build target, so this configures, builds, and
 # installs into the prefix. creates: guards re-runs.
 - name: Build and install Neovim
+  environment:
+    PATH: "{{ path_with_macports }}"
   ansible.builtin.command:
     cmd: make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX={{ ansible_facts['env']['HOME'] }}/neovim/local install
     chdir: "{{ ansible_facts['env']['HOME'] }}/neovim/neovim"

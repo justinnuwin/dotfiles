@@ -1,7 +1,8 @@
 ---
 
-- name: Install Universal Ctags build prerequisites
+- name: Install Universal Ctags build prerequisites (Debian)
   become: true
+  when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.apt:
     name:
       - gcc
@@ -18,6 +19,19 @@
     state: present
     update_cache: true
 
+- name: Install Universal Ctags build prerequisites (Darwin)
+  become: true
+  when: ansible_facts['os_family'] == 'Darwin'
+  community.general.macports:
+    name:
+      - autoconf
+      - automake
+      - pkgconfig
+      - jansson
+      - libyaml
+      - libxml2
+    state: present
+
 - name: Check out the pinned Universal Ctags source
   ansible.builtin.git:
     repo: https://github.com/universal-ctags/ctags.git
@@ -26,6 +40,8 @@
     depth: 1
 
 - name: Build and install Universal Ctags
+  environment:
+    PATH: "{{ path_with_macports }}"
   ansible.builtin.shell:
     cmd: >-
       ./autogen.sh &&

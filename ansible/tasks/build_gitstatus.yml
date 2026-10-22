@@ -16,7 +16,20 @@
     gitstatus_build_packages:
       Debian: [binutils, cmake, gcc, g++, git, make, wget]
       Archlinux: [binutils, cmake, gcc, git, make, wget]
+
+- name: Install gitstatusd build prerequisites (Darwin)
+  become: true
+  when: ansible_facts['os_family'] == 'Darwin'
+  community.general.macports:
+    name:
+      - libiconv
+      - cmake
+      - wget
+    state: present
+
 - name: Build gitstatusd (shell/gitstatus submodule)
+  environment:
+    PATH: "{{ path_with_macports }}"
   ansible.builtin.command:
     cmd: ./build -w
     chdir: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/gitstatus"

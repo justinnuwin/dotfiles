@@ -1,0 +1,12 @@
+---
+
+# Pinned MacPorts release (a macports-base release tag without the "v").
+macports_version: "2.12.7"
+
+# macOS major version -> the codename in the MacPorts .pkg filename.
+macports_macos_names:
+  "13": Ventura
+  "14": Sonoma
+  "15": Sequoia
+  "26": Tahoe
+  "27": GoldenGate

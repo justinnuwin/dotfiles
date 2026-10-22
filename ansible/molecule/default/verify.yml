@@ -77,3 +77,13 @@
         (ctags_version_out.stdout
          | regex_search('(?<=Universal Ctags )[0-9][0-9.]*')
          | default('0.0.0', true)) is version('6.0', '<')
+
+    - name: Verify tmux version >= 3.7b
+      ansible.builtin.shell:
+        cmd: PATH="/root/tmux/local/bin:$PATH" tmux -V
+      register: tmux_version_out
+      changed_when: false
+      failed_when: >-
+        (tmux_version_out.stdout
+         | regex_search('(?<=tmux )[0-9][0-9.]*[a-z]?')
+         | default('0.0.0', true)) is version('3.7b', '<')

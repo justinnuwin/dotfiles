@@ -1,3 +1,13 @@
 ---
 
 dotfiles_path: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
+
+# Pinned tmux release. The minimum acceptable packaged version, and the release
+# built from source when the package is older.
+tmux_version: "3.7b"
+
+# Linux OS families with a tmux package this role can install.
+tmux_linux_os_families:
+  - Debian
+  - Archlinux
+  - RedHat

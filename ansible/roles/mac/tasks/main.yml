@@ -1,0 +1,61 @@
+---
+
+- name: Mac
+  when: ansible_facts['os_family'] == 'Darwin'
+  tags:
+    - setup-mac
+  block:
+    - name: Check whether MacPorts is installed
+      ansible.builtin.stat:
+        path: /opt/local/bin/port
+      register: macports_port_stat
+
+    - name: Install MacPorts from the official .pkg
+      when: not macports_port_stat.stat.exists
+      block:
+        # MacPorts builds ports with the Xcode Command Line Tools; installing
+        # them pops a GUI dialog, so it can't be automated here.
+        - name: Check for the Xcode Command Line Tools
+          ansible.builtin.command: xcode-select -p
+          register: macports_xcode_select
+          changed_when: false
+          failed_when: false
+
+        - name: Require the Xcode Command Line Tools
+          ansible.builtin.assert:
+            that: macports_xcode_select.rc == 0
+            fail_msg: "MacPorts needs the Xcode Command Line Tools. Run `xcode-select --install`, then re-run this playbook."
+
+        - name: Require a macOS version with a MacPorts .pkg
+          ansible.builtin.assert:
+            that: ansible_facts['distribution_major_version'] in macports_macos_names
+            fail_msg: >-
+              No MacPorts .pkg mapping for macOS {{ ansible_facts['distribution_version'] }}.
+              Add its codename to macports_macos_names.
+
+        - name: Download the MacPorts .pkg
+          ansible.builtin.get_url:
+            url: "https://github.com/macports/macports-base/releases/download/v{{ macports_version }}/{{ macports_pkg }}"
+            dest: "/tmp/{{ macports_pkg }}"
+            mode: "0644"
+
+        - name: Run the MacPorts installer
+          become: true
+          ansible.builtin.command:
+            cmd: "installer -pkg /tmp/{{ macports_pkg }} -target /"
+            creates: /opt/local/bin/port
+
+        - name: Sync the MacPorts ports tree
+          become: true
+          community.general.macports:
+            selfupdate: true
+
+      vars:
+        macports_pkg: "MacPorts-{{ macports_version }}-{{ ansible_facts['distribution_major_version'] }}-{{ macports_macos_names[ansible_facts['distribution_major_version']] }}.pkg"
+
+    # ansible.builtin.unarchive requires GNU tar, which macOS doesn't ship.
+    - name: Install GNU tar
+      become: true
+      community.general.macports:
+        name: gnutar
+        state: present

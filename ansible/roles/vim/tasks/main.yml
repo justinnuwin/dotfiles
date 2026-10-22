@@ -51,6 +51,20 @@
               | regex_search('Candidate:\s+([0-9]+\.[0-9]+\.[0-9]+)', '\1')
               | default(['0.0.0'], true) | first) }}
 
+    - name: Query candidate neovim port version (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      ansible.builtin.command: /opt/local/bin/port info --version neovim
+      register: neovim_port_info
+      changed_when: false
+
+    - name: Parse candidate neovim version (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      ansible.builtin.set_fact:
+        neovim_candidate_version: >-
+          {{ (neovim_port_info.stdout
+              | regex_search('version:\s+([0-9][0-9.]*)', '\1')
+              | default(['0.0.0'], true) | first) }}
+
     - name: Install neovim (Linux)
       become: true
       when:
@@ -60,13 +74,21 @@
         name: neovim
         state: present
 
-    - name: Build neovim from source when the packaged version is too old (Debian)
+    - name: Install neovim (Darwin)
+      become: true
+      when:
+        - ansible_facts['os_family'] == 'Darwin'
+        - neovim_candidate_version is version(neovim_version, '>=')
+      community.general.macports:
+        name: neovim
+        state: present
+
+    - name: Build neovim from source when the packaged version is too old
       ansible.builtin.include_tasks: build_neovim_source.yml
       when:
-        - ansible_facts['os_family'] == 'Debian'
+        - ansible_facts['os_family'] in ['Debian', 'Darwin']
         - neovim_candidate_version is version(neovim_version, '<')
 
-    # TODO: Add a recipe for macos
     - name: Install Universal Ctags (Arch)
       become: true
       when: ansible_facts['os_family'] == 'Archlinux'
@@ -97,37 +119,34 @@
         name: universal-ctags
         state: present
 
-    - name: Build Universal Ctags from source when the packaged version is too old (Debian)
+    - name: Query candidate universal-ctags port version (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      ansible.builtin.command: /opt/local/bin/port info --version universal-ctags
+      register: ctags_port_info
+      changed_when: false
+
+    - name: Parse candidate universal-ctags version (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      ansible.builtin.set_fact:
+        ctags_candidate_version: >-
+          {{ (ctags_port_info.stdout
+              | regex_search('version:\s+([0-9][0-9.]*)', '\1')
+              | default(['0.0.0'], true) | first) }}
+
+    - name: Install Universal Ctags (Darwin)
+      become: true
+      when:
+        - ansible_facts['os_family'] == 'Darwin'
+        - ctags_candidate_version is version(ctags_min_version, '>=')
+      community.general.macports:
+        name: universal-ctags
+        state: present
+
+    - name: Build Universal Ctags from source when the packaged version is too old
       ansible.builtin.include_tasks: build_ctags_source.yml
       when:
-        - ansible_facts['os_family'] == 'Debian'
+        - ansible_facts['os_family'] in ['Debian', 'Darwin']
         - ctags_candidate_version is version(ctags_min_version, '<')
-
-    # Install the pinned GitHub release for macOS.
-    - name: Install neovim from the pinned GitHub release (macOS)
-      when: ansible_facts['os_family'] == 'Darwin'
-      block:
-        - name: Ensure ~/.local/bin and the versioned neovim prefix exist
-          ansible.builtin.file:
-            path: "{{ item }}"
-            state: directory
-            mode: "0755"
-          loop:
-            - "{{ ansible_facts['env']['HOME'] }}/.local/bin"
-            - "{{ ansible_facts['env']['HOME'] }}/.local/nvim"
-
-        # Note ansible.builtin.unarchive requires GNU tar which Mac doesn't ship with
-        - name: Download and extract pinned neovim
-          ansible.builtin.shell:
-            cmd: "curl -L https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ ansible_facts['architecture'] }}.tar.gz | tar -xzf - -C {{ ansible_facts['env']['HOME'] }}/.local/nvim --strip-components 1"
-            creates: "{{ ansible_facts['env']['HOME'] }}/.local/nvim-{{ neovim_version }}/bin/nvim"
-
-        - name: Link nvim onto PATH
-          ansible.builtin.file:
-            src: "{{ ansible_facts['env']['HOME'] }}/.local/nvim/bin/nvim"
-            dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nvim"
-            state: link
-            force: true
 
     # vim-plug: the vimrc only bootstraps plugins when plug.vim is present at
     # g:vimplugScript (~/.vim/autoload/plug.vim), so fetch it there. Kept under
@@ -186,7 +205,7 @@
     # Registration already happened, so the install still runs.
     - name: Install vim plugins with vim-plug
       environment:
-        PATH: "{{ ansible_facts['env']['HOME'] }}/neovim/local/bin:{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+        PATH: "{{ ansible_facts['env']['HOME'] }}/neovim/local/bin:{{ path_with_macports }}"
       ansible.builtin.command:
         argv:
           - nvim

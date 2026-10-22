@@ -31,8 +31,8 @@ GPG_TTY=$(tty)
 export GPG_TTY
 
 if [[ "$(uname)" = "Darwin" ]]; then
-  # shellcheck source=macos_gnu.sh
-  source "$dotfiles/shell/macos_gnu.sh"
+  # shellcheck source=modules/macports.sh
+  source "$dotfiles/shell/modules/macports.sh"
 fi
 
 # Per-host overrides (JNSHELL_* flags). Must precede every flag-gated section below.

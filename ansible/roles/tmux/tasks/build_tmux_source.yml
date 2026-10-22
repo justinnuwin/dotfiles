@@ -1,0 +1,73 @@
+---
+
+# Reached only on Debian/Ubuntu or macOS whose available tmux package is older
+# than tmux_version (see main.yml). Build the pinned release into ~/tmux and
+# prepend it to PATH so it wins over anything on the system.
+
+- name: Install tmux build prerequisites (Debian)
+  become: true
+  when: ansible_facts['os_family'] == 'Debian'
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - pkg-config
+      - bison
+      - libevent-dev
+      - libncurses-dev
+    state: present
+    update_cache: true
+
+- name: Install tmux build prerequisites (Darwin)
+  become: true
+  when: ansible_facts['os_family'] == 'Darwin'
+  community.general.macports:
+    name:
+      - pkgconfig
+      - bison
+      - libevent
+      - ncurses
+    state: present
+
+- name: Ensure the tmux source directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/tmux/tmux-{{ tmux_version }}"
+    state: directory
+    mode: "0755"
+
+- name: Download and extract the pinned tmux release
+  environment:
+    PATH: "{{ path_with_macports }}"
+  ansible.builtin.unarchive:
+    src: "https://github.com/tmux/tmux/releases/download/{{ tmux_version }}/tmux-{{ tmux_version }}.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/tmux/tmux-{{ tmux_version }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+    creates: "{{ ansible_facts['env']['HOME'] }}/tmux/tmux-{{ tmux_version }}/configure"
+  register: tmux_download_result
+  until: tmux_download_result is succeeded
+  retries: 4
+  delay: 15
+
+- name: Build and install tmux
+  environment:
+    PATH: "{{ path_with_macports }}"
+  ansible.builtin.shell:
+    cmd: >-
+      ./configure --prefix={{ ansible_facts['env']['HOME'] }}/tmux/local &&
+      make &&
+      make install
+    chdir: "{{ ansible_facts['env']['HOME'] }}/tmux/tmux-{{ tmux_version }}"
+    creates: "{{ ansible_facts['env']['HOME'] }}/tmux/local/bin/tmux"
+
+- name: Add the from-source tmux to PATH in ~/.localshell
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK (tmux)"
+    block: |
+      case ":$PATH:" in
+        *":$HOME/tmux/local/bin:"*) ;;
+        *) export PATH="$HOME/tmux/local/bin:$PATH" ;;
+      esac
