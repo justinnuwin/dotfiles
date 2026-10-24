@@ -137,5 +137,6 @@ true   # ensure success exit-status before the playbook invocation
 ansible-playbook first_time_setup.yml \
   --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 \
   --ask-become-pass \
+  -e ansible_python_interpreter=/usr/bin/python3 \
   "${extra_vars[@]+"${extra_vars[@]}"}" \
   "${forward_args[@]+"${forward_args[@]}"}"
