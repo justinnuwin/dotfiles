@@ -1,5 +1,7 @@
 #!/bin/bash
-# Host-specific configuration. Sourced by shell/justinShell.sh.
+# Host-specific configuration. Sourced by jnshell_env_setup in
+# shell/justinShell.sh for every shell, including non-interactive ones (scripts,
+# `ssh host cmd`), so keep it fast and free of output.
 # Copy this file to ~/.localshell and uncomment / edit the lines you want.
 #
 # Every flag below is opt-in (commented out by default). Each one's

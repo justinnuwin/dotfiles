@@ -1,0 +1,17 @@
+#            _
+#    _______| |__   ___ _ ____   __
+#   |_  / __| '_ \ / _ \ '_ \ \ / /
+#  _ / /\__ \ | | |  __/ | | \ V /
+# (_)___|___/_| |_|\___|_| |_|\_/
+#
+
+# Read by every zsh, including non-interactive ones (scripts, ssh),
+# so only environment setup belongs here.
+source "$HOME/.dotfiles/shell/justinShell.sh"
+
+# Login shells run jnshell_env_setup from ~/.zprofile instead, after
+# /etc/zprofile, so each zsh runs it exactly once. See the NOTE in
+# shell/zprofile for why it must run after /etc/zprofile on macOS.
+if [[ ! -o login ]]; then
+  jnshell_env_setup
+fi

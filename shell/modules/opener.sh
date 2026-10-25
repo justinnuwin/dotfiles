@@ -10,7 +10,4 @@ fi
 
 jnshell_require_cmd nc || return 0
 
-case ":$PATH:" in
-  *":$HOME/.local/opener/bin:"*) ;;
-  *) export PATH="$HOME/.local/opener/bin:$PATH" ;;
-esac
+jnshell_path_prepend "$HOME/.local/opener/bin"

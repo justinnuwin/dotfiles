@@ -1,7 +1,7 @@
 #!/bin/bash
 # Ensure fzf is on the PATH to source this
 
-local dotfile="$HOME/.dotfiles"
+dotfile="$HOME/.dotfiles"
 source "$dotfile/shell/path_utils.sh"
 
 which fzf > /dev/null
@@ -13,7 +13,7 @@ fi
 export FZF_DEFAULT_COMMAND="find . -type f \\( -path ./.git -o -name ./node_modules \\) -o -print"
 export FZF_DEFAULT_OPTS="--reverse --preview-window=right,60%"
 
-local DEBUG_FZF_ALIASES=false
+DEBUG_FZF_ALIASES=false
 
 # Select the correct mode (tmux/no tmux) to run fzf
 # Arg 1: Set to "tm", "tmux", "p", "pop", "popup", "f", "float" for a popup;

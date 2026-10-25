@@ -30,8 +30,8 @@ cd "$repo_root"
 # pre-existing files (shell/bazel_utils.sh, shell/fun.sh, shell/fzf_aliases.sh,
 # shell/path_utils.sh, shell/macos_gnu.sh, githooks/post-checkout) have
 # accumulated style debt and are excluded pending a follow-up cleanup pass.
-# shell/zshrc and shell/p10k.zsh are excluded permanently — shellcheck has no
-# zsh dialect mode.
+# shell/zshrc, shell/zshenv, shell/zprofile, and shell/p10k.zsh are excluded
+# permanently — shellcheck has no zsh dialect mode.
 shell_paths=(
   'shell/jnshell_utils.sh'
   'shell/justinShell.sh'
@@ -65,8 +65,8 @@ if [[ ${#files[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# All our files target bash (zshrc is excluded above, and the hook scripts /
-# bashrc are bash-compatible).
+# All our files target bash (zshrc/zshenv/zprofile are excluded above, and the
+# hook scripts / bashrc are bash-compatible).
 #   --rcfile  : pin the project shellcheck config (auto-discovery looks in the
 #               input file's directory, which would miss our utils/shellcheck/
 #               location).

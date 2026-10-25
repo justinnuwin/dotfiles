@@ -58,7 +58,4 @@
     mode: "0644"
     marker: "# {mark} ANSIBLE MANAGED BLOCK (ctags)"
     block: |
-      case ":$PATH:" in
-        *":$HOME/ctags/local/bin:"*) ;;
-        *) export PATH="$HOME/ctags/local/bin:$PATH" ;;
-      esac
+      jnshell_path_prepend "$HOME/ctags/local/bin"

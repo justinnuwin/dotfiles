@@ -16,7 +16,7 @@ based systems.
 | Path | Contents |
 |---|---|
 | `ansible/` | Playbooks, roles, molecule scenarios, Python deps |
-| `shell/` | `bashrc`, `zshrc`, plugins (managed as git submodules) |
+| `shell/` | `bashrc`, `zshenv`, `zprofile`, `zshrc`, plugins (managed as git submodules) |
 | `tmux/` | `tmux.conf` |
 | `vim/` | vim configuration (the ansible role is a stub) |
 | `terminals/` | Ghostty (`config.ghostty`) and iTerm2 (`iterm_profile.json`) configs |

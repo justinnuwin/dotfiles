@@ -3,7 +3,5 @@
 
 [[ -x /opt/local/bin/port ]] || return 0
 
-case ":$PATH:" in
-  *":/opt/local/bin:"*) ;;
-  *) export PATH="/opt/local/bin:/opt/local/sbin:$PATH" ;;
-esac
+jnshell_path_prepend /opt/local/sbin
+jnshell_path_prepend /opt/local/bin

@@ -67,7 +67,4 @@
     mode: "0644"
     marker: "# {mark} ANSIBLE MANAGED BLOCK (tmux)"
     block: |
-      case ":$PATH:" in
-        *":$HOME/tmux/local/bin:"*) ;;
-        *) export PATH="$HOME/tmux/local/bin:$PATH" ;;
-      esac
+      jnshell_path_prepend "$HOME/tmux/local/bin"

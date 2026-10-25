@@ -92,7 +92,7 @@ then
 fi
 
 # Prompt theme is selected by JNSHELL_PROMPT in ~/.localshell and loaded by
-# shell/modules/prompt.sh (sourced via justinShell.sh below).
+# shell/modules/prompt.sh (sourced via jnshell_interactive_setup below).
 
 # Enable fuzzy command history and file search
 fzf_zsh_path="$dotfiles/shell/zsh_plugins/fzf-zsh-plugin"
@@ -106,8 +106,8 @@ if [[ -f "$fzf_tab" ]]; then
     source "$fzf_tab"
 fi
 
-# Source common shell aliases and functions
-source "$dotfiles/shell/justinShell.sh"
+# Common shell aliases and functions (justinShell.sh is sourced by ~/.zshenv)
+jnshell_interactive_setup
 
 # Add some spice and delight to the shell
 source "$dotfiles/shell/fun.sh"

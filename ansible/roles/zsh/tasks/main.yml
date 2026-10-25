@@ -13,6 +13,20 @@
       state: link
       force: true
 
+  - name: Install .zshenv
+    ansible.builtin.file:
+      src: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/zshenv"
+      dest: "{{ ansible_facts['env']['HOME'] }}/.zshenv"
+      state: link
+      force: true
+
+  - name: Install .zprofile
+    ansible.builtin.file:
+      src: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/shell/zprofile"
+      dest: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
+      state: link
+      force: true
+
   # Renders an ansible-managed block of JNSHELL_* flags inside ~/.localshell.
   # Same task as in roles/bash; idempotent — second blockinfile write is a
   # no-op when the first ran. Hydration is upstream in dotfiles_facts.

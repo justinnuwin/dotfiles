@@ -5,9 +5,12 @@
 # (_)_.__/ \__,_|___/_| |_|_|  \___|
 #
 
-# If not running interactively, don't do anything
+# shellcheck source=justinShell.sh
+source ~/.dotfiles/shell/justinShell.sh
+jnshell_env_setup
+
+# If not running interactively, don't do anything else
 [[ $- != *i* ]] && return
 
 PS1='[\u@\h \W]\$ '
-# shellcheck source=justinShell.sh
-source ~/.dotfiles/shell/justinShell.sh
+jnshell_interactive_setup

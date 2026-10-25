@@ -35,9 +35,9 @@ utils/shellcheck/run.sh
 ```
 
 This lints every tracked shell file the runner knows about (see the
-`shell_paths` array in `run.sh`). `shell/zshrc` and `shell/p10k.zsh` are
-intentionally excluded — shellcheck has no `zsh` dialect mode and the false
-positives drown out real findings.
+`shell_paths` array in `run.sh`). `shell/zshrc`, `shell/zshenv`,
+`shell/zprofile`, and `shell/p10k.zsh` are intentionally excluded — shellcheck
+has no `zsh` dialect mode and the false positives drown out real findings.
 
 To lint only staged shell files (useful while iterating):
 

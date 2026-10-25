@@ -153,6 +153,18 @@ Mac-specific symlink targets (note paths under `/Users/admin/`, not
       register: zshrc_stat
       failed_when: not zshrc_stat.stat.islnk
 
+    - name: Verify .zshenv symlink exists
+      ansible.builtin.stat:
+        path: /Users/admin/.zshenv
+      register: zshenv_stat
+      failed_when: not zshenv_stat.stat.islnk
+
+    - name: Verify .zprofile symlink exists
+      ansible.builtin.stat:
+        path: /Users/admin/.zprofile
+      register: zprofile_stat
+      failed_when: not zprofile_stat.stat.islnk
+
     - name: Verify .tmux.conf symlink exists
       ansible.builtin.stat:
         path: /Users/admin/.tmux.conf

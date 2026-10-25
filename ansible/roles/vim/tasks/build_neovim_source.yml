@@ -48,7 +48,7 @@
 
 # Own a separate marked block in ~/.localshell (the bash/zsh roles own the
 # "(dotfiles)" block of JNSHELL_* flags). Prepend so the from-source nvim is
-# found first; the case guard keeps PATH clean if the file is sourced twice.
+# found first
 - name: Add the from-source Neovim to PATH in ~/.localshell
   ansible.builtin.blockinfile:
     path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
@@ -56,7 +56,4 @@
     mode: "0644"
     marker: "# {mark} ANSIBLE MANAGED BLOCK (neovim)"
     block: |
-      case ":$PATH:" in
-        *":$HOME/neovim/local/bin:"*) ;;
-        *) export PATH="$HOME/neovim/local/bin:$PATH" ;;
-      esac
+      jnshell_path_prepend "$HOME/neovim/local/bin"

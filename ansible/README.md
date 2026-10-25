@@ -121,10 +121,12 @@ Deploys bash shell configuration by creating a symlink from `~/.dotfiles/shell/b
 
 ### zsh
 
-Deploys zsh shell configuration by creating a symlink from `~/.dotfiles/shell/zshrc` to `~/.zshrc`.
+Deploys zsh shell configuration by creating symlinks.
 
 **Tasks:**
 - Symlinks `shell/zshrc` to `~/.zshrc`
+- Symlinks `shell/zshenv` to `~/.zshenv`
+- Symlinks `shell/zprofile` to `~/.zprofile`
 
 **Tag:** `setup-zsh`
 
@@ -225,6 +227,8 @@ The Molecule configuration (`molecule/default/molecule.yml`) uses:
 The verification playbook (`molecule/default/verify.yml`) checks:
 - `.bashrc` symlink exists and is valid
 - `.zshrc` symlink exists and is valid
+- `.zshenv` symlink exists and is valid
+- `.zprofile` symlink exists and is valid
 - `.tmux.conf` symlink exists and is valid
 - `~/.config/ghostty/config` symlink exists and is valid
 - Dotfiles repository exists at `~/.dotfiles`

@@ -1,0 +1,15 @@
+#                        __ _ _
+#    _____ __  _ __ ___ / _(_) | ___
+#   |_  / '_ \| '__/ _ \ |_| | |/ _ \
+#  _ / /| |_) | | | (_) |  _| | |  __/
+# (_)___| .__/|_|  \___/|_| |_|_|\___|
+#       |_|
+
+# Read by login shells only, after ~/.zshenv and /etc/zprofile.
+# ~/.zshenv always sources justinShell.sh and only calls jnshell_env_setup for
+# non-login shells.
+#
+# NOTE: On macOS, /etc/zprofile runs path_helper, which moves the system
+# directories (/usr/bin, ...) to the front of PATH. Running jnshell_env_setup
+# here, after path_helper, keeps our directories ahead of the system ones.
+jnshell_env_setup

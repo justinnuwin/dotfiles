@@ -9,7 +9,4 @@ if [[ ! -x "$CARGO_HOME/bin/cargo" ]]; then
   return 0
 fi
 
-case ":$PATH:" in
-  *":$CARGO_HOME/bin:"*) ;;
-  *) export PATH="$PATH:$CARGO_HOME/bin" ;;
-esac
+jnshell_path_append "$CARGO_HOME/bin"
