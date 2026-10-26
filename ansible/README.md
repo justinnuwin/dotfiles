@@ -27,8 +27,10 @@ ansible/
     ├── mac/                 # MacPorts from the official .pkg, GNU tar (Darwin only)
     ├── toolchain/           # Opt-in language toolchains (rust, nvm)
     ├── starship/            # Starship prompt (pre-built binary, no rust dep)
-    ├── opener_local/        # superbrothers/opener daemon (opener_role=local)
-    ├── opener_remote/       # opener open/xdg-open shims + sshd config (opener_role=remote)
+    ├── opener_local/        # superbrothers/opener daemon (long_lived_host_role=ssh_local)
+    ├── opener_remote/       # opener open/xdg-open shims + sshd config (long_lived_host_role=ssh_remote)
+    ├── ssh_to_long_lived_remote/ # ~/.ssh/config tmux RemoteCommand note (long_lived_host_role=ssh_local)
+    ├── long_lived_remote/   # ~/.ssh/rc ssh-agent socket refresh (long_lived_host_role=ssh_remote)
     ├── dotfiles_facts/      # Owns /etc/ansible/facts.d/dotfiles.fact
     ├── bash/                # Bash shell configuration + localshell render
     ├── zsh/                 # Zsh shell configuration + localshell render
@@ -75,10 +77,17 @@ Pinned tools (neovim, Universal Ctags, tmux) follow the same rule as Debian: ins
 
 ## opener (local vs remote)
 
-[superbrothers/opener](https://github.com/superbrothers/opener) opens URLs from an SSH remote in the local machine's browser. Set `opener_role` (the convenience script prompts for it) to pick a side; when unset, both roles are skipped.
+[superbrothers/opener](https://github.com/superbrothers/opener) opens URLs from an SSH remote in the local machine's browser. Set `long_lived_host_role` (the convenience script prompts for it) to pick a side; when unset, both roles are skipped.
 
-- **`local`** (`opener_local`): installs the pinned daemon release and runs it as a launchd agent (macOS) or systemd user unit (Linux). Forwarding the socket is manual: follow the comment the role adds at the top of `~/.ssh/config` to add a `RemoteForward` to each Host you want.
-- **`remote`** (`opener_remote`): installs `nc` and the pinned `open`/`xdg-open` shims into `~/.local/opener/bin`, sets `StreamLocalBindUnlink yes` for sshd, and enables `JNSHELL_USE_OPENER` so `shell/modules/opener.sh` puts the shims first on PATH.
+- **`ssh_local`** (`opener_local`): installs the pinned daemon release and runs it as a launchd agent (macOS) or systemd user unit (Linux). Forwarding the socket is manual: follow the comment the role adds at the top of `~/.ssh/config` to add a `RemoteForward` to each Host you want.
+- **`ssh_remote`** (`opener_remote`): installs `nc` and the pinned `open`/`xdg-open` shims into `~/.local/opener/bin`, sets `StreamLocalBindUnlink yes` for sshd, and enables `JNSHELL_USE_OPENER` so `shell/modules/opener.sh` puts the shims first on PATH.
+
+## Long-lived sessions (local vs remote)
+
+Long-lived tmux sessions on a remote keep using `~/.ssh/ssh_auth_sock`, which each new login re-points at its own ssh-agent socket. Like opener, the side is picked by `long_lived_host_role`.
+
+- **`ssh_local`** (`ssh_to_long_lived_remote`): adds a comment at the top of `~/.ssh/config` with the `RequestTTY` / `RemoteCommand` lines that attach to the remote's tmux session on connect. Add them to each Host you want.
+- **`ssh_remote`** (`long_lived_remote`): asserts sshd has `PermitUserRC yes`, adds an `ln -sf "$SSH_AUTH_SOCK" ~/.ssh/ssh_auth_sock` block to `~/.ssh/rc`, and enables `JNSHELL_LONG_LIVED_REMOTE` so `shell/modules/ssh_socket.sh` points `SSH_AUTH_SOCK` at the symlink. When `~/.ssh/rc` exists sshd no longer runs `xauth` for X11 forwarding itself.
 
 ## Toolchains and prompt
 
@@ -297,6 +306,9 @@ ansible-playbook first_time_setup.yml --tags setup-toolchain -e install_rust=tru
 
 # Run only the starship install
 ansible-playbook first_time_setup.yml --tags setup-starship
+
+# Run only the long-lived session setup (with -e long_lived_host_role=ssh_local or ssh_remote)
+ansible-playbook first_time_setup.yml --tags setup-long_lived -e long_lived_host_role=ssh_remote
 
 # Run only the fact-file refresh
 ansible-playbook first_time_setup.yml --tags setup-dotfiles_facts

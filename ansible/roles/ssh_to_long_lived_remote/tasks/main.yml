@@ -1,0 +1,24 @@
+---
+
+- name: SSH to long-lived remote
+  tags:
+    - setup-long_lived
+  block:
+    - name: Ensure ~/.ssh exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    - name: Document the tmux RemoteCommand in ~/.ssh/config
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+        create: true
+        mode: "0600"
+        insertbefore: BOF
+        marker: "# {mark} ANSIBLE MANAGED BLOCK (tmux RemoteCommand)"
+        block: |
+          # tmux: to attach to a long-lived tmux session on connect, add these
+          # lines under each Host entry you want it for:
+          #   RequestTTY yes
+          #   RemoteCommand tmux new -A -s Primary

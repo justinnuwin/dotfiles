@@ -1,0 +1,44 @@
+---
+
+- name: Long-lived session (remote)
+  tags:
+    - setup-long_lived
+  block:
+    # -C applies any Match blocks that would cover this user's logins.
+    - name: Read the effective sshd configuration
+      become: true
+      ansible.builtin.command: sshd -T -C user={{ ansible_facts['user_id'] }},host=localhost,addr=127.0.0.1
+      register: long_lived_remote_sshd_config
+      changed_when: false
+
+    - name: Require sshd to run ~/.ssh/rc
+      ansible.builtin.assert:
+        that: "'permituserrc yes' in long_lived_remote_sshd_config.stdout_lines"
+        fail_msg: >-
+          sshd has PermitUserRC disabled, so it would ignore ~/.ssh/rc and
+          ~/.ssh/ssh_auth_sock would keep pointing at a dead agent socket. Set
+          `PermitUserRC yes` in /etc/ssh/sshd_config, then re-run this playbook.
+
+    - name: Ensure ~/.ssh exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    # sshd runs ~/.ssh/rc with /bin/sh on every login, before the session's
+    # command. tmux.conf points SSH_AUTH_SOCK at ~/.ssh/ssh_auth_sock, so this
+    # hands long-lived tmux sessions the newest connection's agent.
+    - name: Refresh the ssh-agent socket symlink on login in ~/.ssh/rc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh/rc"
+        create: true
+        mode: "0600"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK (ssh_auth_sock)"
+        block: |
+          if [ -S "$SSH_AUTH_SOCK" ]; then
+            ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+          fi
+
+    - name: Record long-lived remote as installed
+      ansible.builtin.set_fact:
+        long_lived_remote_installed: true

@@ -43,8 +43,9 @@
 # JNSHELL_USE_FZF=true
 
 # --- Networking / sessions --------------------------------------------------
-# Symlink the SSH auth sock so long-lived terminals (e.g. tmux sessions) don't
-# end up with a stale env var pointing to a dead ssh-agent socket.
+# Point SSH_AUTH_SOCK at ~/.ssh/ssh_auth_sock, which ~/.ssh/rc re-points at
+# each new login's agent, so long-lived terminals (e.g. tmux sessions) don't end
+# up with a dead ssh-agent socket. Set by the ansible long_lived_remote role.
 # JNSHELL_LONG_LIVED_REMOTE=true
 
 # Put the superbrothers/opener open/xdg-open shims first on PATH so URLs opened

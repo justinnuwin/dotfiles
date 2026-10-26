@@ -22,9 +22,13 @@
     - toolchain
     - starship
     - role: opener_local
-      when: opener_role | default('') == 'local'
+      when: long_lived_host_role | default('') == 'ssh_local'
     - role: opener_remote
-      when: opener_role | default('') == 'remote'
+      when: long_lived_host_role | default('') == 'ssh_remote'
+    - role: ssh_to_long_lived_remote
+      when: long_lived_host_role | default('') == 'ssh_local'
+    - role: long_lived_remote
+      when: long_lived_host_role | default('') == 'ssh_remote'
     # Roles are ordered around this role. Roles contributing facts to dotfiles
     # must be before dotfiles_facts. Roles consuming these dotfile facts must
     # be after dotfiles_facts.

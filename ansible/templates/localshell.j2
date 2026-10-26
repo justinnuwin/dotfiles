@@ -14,3 +14,6 @@ JNSHELL_PROMPT=starship
 {% if opener_remote_installed | default(false) | bool -%}
 JNSHELL_USE_OPENER=true
 {% endif -%}
+{% if long_lived_remote_installed | default(false) | bool -%}
+JNSHELL_LONG_LIVED_REMOTE=true
+{% endif -%}
