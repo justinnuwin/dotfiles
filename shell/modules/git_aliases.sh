@@ -13,8 +13,14 @@ alias gcanoe="git commit --amend --no-edit"
 alias gcurb="git branch --show-current"
 alias grst="git reset"
 alias grsthrd="git reset --hard"
+gfocurb() {
+  git fetch origin "$(git branch --show-current)"
+}
 grsthrdocurb() {
   git reset --hard "origin/$(git branch --show-current)"
+}
+gforsthrdocurb() {
+  gfocurb && grsthrdocurb
 }
 alias grb="git rebase"
 alias gwt="git worktree"
