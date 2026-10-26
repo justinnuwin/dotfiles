@@ -155,7 +155,7 @@ endif
 autocmd Filetype json setlocal conceallevel=2
 
 " Color characters at column 81
-highlight ColorColumn ctermbg=gray
+highlight ColorColumn ctermbg=gray guibg=#a8a8a8
 call matchadd('ColorColumn', '\%81v', 100)
 
 " Search for ctags in the current file, working directory, and up
@@ -177,10 +177,10 @@ nnoremap <C-W><C-C> <ESC>
 nnoremap <C-W>q <ESC>
 
 " Higher-contrast colors for diffs
-highlight DiffAdd    cterm=bold ctermfg=none ctermbg=22 gui=none guifg=fg guibg=bg
-highlight DiffDelete cterm=none ctermfg=none ctermbg=52 gui=none guifg=fg guibg=bg
-highlight DiffChange cterm=none ctermfg=none ctermbg=17 gui=none guifg=fg guibg=bg
-highlight DiffText   cterm=bold,italic ctermfg=none ctermbg=18
+highlight DiffAdd    cterm=bold ctermfg=none ctermbg=22 gui=none guifg=fg guibg=#005f00
+highlight DiffDelete cterm=none ctermfg=none ctermbg=52 gui=none guifg=fg guibg=#5f0000
+highlight DiffChange cterm=none ctermfg=none ctermbg=17 gui=none guifg=fg guibg=#00005f
+highlight DiffText   cterm=bold,italic ctermfg=none ctermbg=18 gui=bold,italic guifg=fg guibg=#000087
 
 " Shortcut to enter paste mode
 nnoremap <leader>p :set paste!<CR>

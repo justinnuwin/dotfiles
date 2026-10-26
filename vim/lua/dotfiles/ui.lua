@@ -77,8 +77,8 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 local ibl = require('ibl')
 local ibl_hooks = require('ibl.hooks')
 ibl_hooks.register(ibl_hooks.type.HIGHLIGHT_SETUP, function()
-  vim.api.nvim_set_hl(0, 'IblIndentGray', { ctermfg = 239 })  -- character guide
-  vim.api.nvim_set_hl(0, 'IblIndentBg', { ctermbg = 238 })    -- background stripe (list mode)
+  vim.api.nvim_set_hl(0, 'IblIndentGray', { fg = '#4e4e4e', ctermfg = 239 })  -- character guide
+  vim.api.nvim_set_hl(0, 'IblIndentBg', { bg = '#444444', ctermbg = 238 })  -- background stripe (list mode)
 end)
 
 local function ibl_indent(list_on)
