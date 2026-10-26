@@ -27,7 +27,7 @@ cd "$repo_root"
 
 # Files we lint by default. The set is intentionally narrow: it covers the
 # files introduced or restructured by the modular shell refactor. Several
-# pre-existing files (shell/bazel_utils.sh, shell/fun.sh, shell/fzf_aliases.sh,
+# pre-existing files (shell/bazel_utils.sh, shell/fun.sh,
 # shell/path_utils.sh, shell/macos_gnu.sh, githooks/post-checkout) have
 # accumulated style debt and are excluded pending a follow-up cleanup pass.
 # shell/zshrc, shell/zshenv, shell/zprofile, and shell/p10k.zsh are excluded

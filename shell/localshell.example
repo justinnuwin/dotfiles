@@ -38,10 +38,6 @@
 # Requires nvm at $NVM_DIR/nvm.sh (https://github.com/nvm-sh/nvm#installing-and-updating).
 # JNSHELL_USE_NVM=true
 
-# Warn (instead of silently skipping) if fzf is not installed.
-# https://github.com/junegunn/fzf#installation
-# JNSHELL_USE_FZF=true
-
 # --- Networking / sessions --------------------------------------------------
 # Point SSH_AUTH_SOCK at ~/.ssh/ssh_auth_sock, which ~/.ssh/rc re-points at
 # each new login's agent, so long-lived terminals (e.g. tmux sessions) don't end

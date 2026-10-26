@@ -68,15 +68,6 @@ jnshell_interactive_setup() {
     source "$dotfiles/shell/modules/git_aliases.sh"
   fi
 
-  # fzf aliases — silent skip if fzf is missing, unless JNSHELL_USE_FZF=true
-  # (in which case warn with the install link).
-  if command -v fzf >/dev/null 2>&1; then
-    # shellcheck source=fzf_aliases.sh
-    source "$dotfiles/shell/fzf_aliases.sh"
-  elif jnshell_flag_enabled JNSHELL_USE_FZF; then
-    jnshell_require_cmd fzf "https://github.com/junegunn/fzf#installation" >/dev/null
-  fi
-
   # Optional feature modules. Each module verifies its own prerequisites and
   # emits a warning if anything required is missing.
   if jnshell_flag_enabled JNSHELL_LONG_LIVED_REMOTE; then

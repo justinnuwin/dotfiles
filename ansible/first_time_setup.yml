@@ -21,6 +21,7 @@
     - mac
     - toolchain
     - starship
+    - common_shell_tools
     - role: opener_local
       when: long_lived_host_role | default('') == 'ssh_local'
     - role: opener_remote

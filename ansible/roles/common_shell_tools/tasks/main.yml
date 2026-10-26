@@ -1,0 +1,83 @@
+---
+
+- name: Common shell tools
+  tags:
+    - setup-common_shell_tools
+  block:
+    - name: Install fzf and fd (Darwin)
+      become: true
+      when: ansible_facts['os_family'] == 'Darwin'
+      community.general.macports:
+        name:
+          - fzf
+          - fd
+        state: present
+
+    - name: Install the pinned fzf and fd releases (Linux)
+      when: ansible_facts['os_family'] != 'Darwin'
+      block:
+        - name: Ensure the fzf, fd, and bin directories exist
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            mode: "0755"
+          loop:
+            - "{{ fzf_dir }}"
+            - "{{ fd_dir }}"
+            - "{{ common_shell_tools_bin_dir }}"
+
+        - name: Download and extract the pinned fzf release
+          ansible.builtin.unarchive:
+            src: "{{ fzf_release_url }}"
+            dest: "{{ fzf_dir }}"
+            remote_src: true
+            creates: "{{ fzf_dir }}/fzf"
+          register: fzf_download_result
+          until: fzf_download_result is succeeded
+          retries: 4
+          delay: 15
+
+        - name: Download and extract the pinned fd release
+          ansible.builtin.unarchive:
+            src: "{{ fd_release_url }}"
+            dest: "{{ fd_dir }}"
+            remote_src: true
+            extra_opts:
+              - --strip-components=1
+            creates: "{{ fd_dir }}/fd"
+          register: fd_download_result
+          until: fd_download_result is succeeded
+          retries: 4
+          delay: 15
+
+        - name: Symlink fzf and fd into the bin directory
+          ansible.builtin.file:
+            src: "{{ item.src }}"
+            dest: "{{ common_shell_tools_bin_dir }}/{{ item.name }}"
+            state: link
+            force: true
+          loop:
+            - { name: fzf, src: "{{ fzf_dir }}/fzf" }
+            - { name: fd, src: "{{ fd_dir }}/fd" }
+
+    # fzf-zsh-plugin sources the shell integration from this checkout and runs
+    # its bin/fzf.
+    - name: Check out the pinned fzf repository for fzf-zsh-plugin
+      ansible.builtin.git:
+        repo: https://github.com/junegunn/fzf.git
+        dest: "{{ fzf_repo_dir }}"
+        version: "v{{ fzf_version }}"
+        depth: 1
+
+    - name: Ensure the fzf repository bin directory exists
+      ansible.builtin.file:
+        path: "{{ fzf_repo_dir }}/bin"
+        state: directory
+        mode: "0755"
+
+    - name: Symlink the installed fzf into the fzf repository
+      ansible.builtin.file:
+        src: "{{ fzf_bin }}"
+        dest: "{{ fzf_repo_dir }}/bin/fzf"
+        state: link
+        force: true

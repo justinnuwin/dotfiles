@@ -1,0 +1,20 @@
+---
+
+# Pinned junegunn/fzf release (without the leading "v") for Linux and the
+# ~/.fzf checkout. Darwin installs the current MacPorts fzf.
+fzf_version: "0.74.5"
+
+# Pinned sharkdp/fd release (without the leading "v") for Linux. Darwin
+# installs the current MacPorts fd.
+fd_version: "10.5.0"
+
+# Where the Linux fzf and fd symlinks are installed. shell/justinShell.sh adds
+# this to PATH.
+common_shell_tools_bin_dir: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+
+# Versioned so a version bump installs alongside and repoints the symlinks.
+fzf_dir: "{{ ansible_facts['env']['HOME'] }}/.local/fzf/{{ fzf_version }}"
+fd_dir: "{{ ansible_facts['env']['HOME'] }}/.local/fd/{{ fd_version }}"
+
+# fzf-zsh-plugin's FZF_PATH; it clones fzf here itself when the directory is missing.
+fzf_repo_dir: "{{ ansible_facts['env']['HOME'] }}/.fzf"

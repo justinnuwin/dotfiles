@@ -50,7 +50,6 @@ jnshell_interactive_setup
     |--- shell/path_utils.sh, shell/bazel_utils.sh
     |--- shell/modules/common_aliases.sh  (DEFAULT ON)
     |--- shell/modules/git_aliases.sh     (DEFAULT ON)
-    |--- shell/fzf_aliases.sh       (if fzf is installed)
     |--- shell/modules/ssh_socket.sh  (if JNSHELL_LONG_LIVED_REMOTE=true)
     |--- shell/modules/nvm.sh       (if JNSHELL_USE_NVM=true)
     '--- shell/modules/prompt.sh    (always; dispatches on JNSHELL_PROMPT)
