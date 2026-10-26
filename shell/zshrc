@@ -100,6 +100,9 @@ if [[ -d "$fzf_zsh_path" ]]; then
     source "$fzf_zsh_path/fzf-zsh-plugin.plugin.zsh"
 fi
 
+# Sourced after fzf-zsh-plugin to replace its completion functions
+source "$dotfiles/shell/fzf_completions.zsh"
+
 # Enable fuzzy tab completion
 fzf_tab="$dotfiles/shell/zsh_plugins/fzf-tab/fzf-tab.plugin.zsh"
 if [[ -f "$fzf_tab" ]]; then

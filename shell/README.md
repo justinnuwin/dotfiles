@@ -32,6 +32,7 @@ Ansible installs the `~/` symlinks below.
     '--- jnshell_env_setup
 
 ~/.zshrc -> shell/zshrc          (interactive zsh, after ~/.zprofile)
+    |--- source shell/fzf_completions.zsh
     '--- jnshell_interactive_setup
 
 ~/.bashrc -> shell/bashrc        (bash)
