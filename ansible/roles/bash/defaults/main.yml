@@ -1,0 +1,10 @@
+---
+
+# Minimum acceptable bash version.
+bash_min_version: "5.2"
+
+# Linux OS families with a bash package this role can install.
+bash_linux_os_families:
+  - Debian
+  - Archlinux
+  - RedHat

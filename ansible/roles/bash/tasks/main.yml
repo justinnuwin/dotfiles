@@ -3,6 +3,48 @@
 - name: Setup bash
   block:
 
+  - name: Query installed bash version
+    environment:
+      PATH: "{{ path_with_macports }}"
+    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"'
+    register: bash_version_before
+    changed_when: false
+    check_mode: false
+
+  - name: Install latest bash (Linux)  # noqa: package-latest
+    become: true
+    when:
+      - ansible_facts['os_family'] in bash_linux_os_families
+      - bash_version_before.stdout is version(bash_min_version, '<')
+    ansible.builtin.package:
+      name: bash
+      state: latest
+
+  - name: Install bash (Darwin)
+    become: true
+    when:
+      - ansible_facts['os_family'] == 'Darwin'
+      - bash_version_before.stdout is version(bash_min_version, '<')
+    community.general.macports:
+      name: bash
+      state: present
+
+  - name: Query bash version after install
+    environment:
+      PATH: "{{ path_with_macports }}"
+    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"'
+    register: bash_version_after
+    changed_when: false
+    check_mode: false
+
+  - name: Require bash >= {{ bash_min_version }}
+    ansible.builtin.assert:
+      that: bash_version_after.stdout is version(bash_min_version, '>=')
+      fail_msg: >-
+        bash {{ bash_version_after.stdout }} is older than {{ bash_min_version }}
+        and the package manager has no newer version. Building bash from source
+        is WIP and not yet complete.
+
   - name: Build gitstatusd
     ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/build_gitstatus.yml"
 
