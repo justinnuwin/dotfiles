@@ -1,0 +1,31 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  vars:
+    verify_home: "{{ ansible_facts['env']['HOME'] }}"
+    verify_user: "{{ ansible_facts['user_id'] }}"
+    # Commands run under this environment get their PATH only from the shell
+    # startup files under test.
+    verify_clean_env: >-
+      env -i HOME={{ verify_home }} USER={{ verify_user }} LOGNAME={{ verify_user }}
+      PATH=/usr/bin:/bin:/usr/sbin:/sbin TERM=xterm-256color
+  tasks:
+    - name: Find zsh
+      ansible.builtin.command: "{{ verify_clean_env }} sh -c 'command -v zsh'"
+      register: verify_zsh_out
+      changed_when: false
+
+    - name: Record the shells under test
+      ansible.builtin.set_fact:
+        verify_zsh: "{{ verify_zsh_out.stdout }}"
+        verify_bash: /bin/bash
+
+    - name: Verify installed files
+      ansible.builtin.include_tasks: verify_install.yml
+
+    - name: Verify the long-lived session and opener roles
+      ansible.builtin.include_tasks: verify_long_lived.yml
+
+    - name: Verify shell startup files run once per shell, directly, over ssh, and in tmux
+      ansible.builtin.include_tasks: verify_shell_startup.yml

@@ -1,19 +1,22 @@
 ---
 driver:
-  name: docker
+  name: podman
 platforms:
-  - name: dotfiles-molecule-ubuntu-20.04
-    image: public.ecr.aws/ubuntu/ubuntu:20.04
-    pre_build_image: true
-  - name: dotfiles-molecule-ubuntu-22.04
-    image: public.ecr.aws/ubuntu/ubuntu:22.04
-    pre_build_image: true
   - name: dotfiles-molecule-ubuntu-24.04
     image: public.ecr.aws/ubuntu/ubuntu:24.04
-    pre_build_image: true
+    dockerfile: Dockerfile.j2
+    command: /sbin/init
+    systemd: always
   - name: dotfiles-molecule-archlinux
     image: public.ecr.aws/docker/library/archlinux:latest
-    pre_build_image: true
+    dockerfile: Dockerfile.j2
+    command: /sbin/init
+    systemd: always
+  - name: dotfiles-molecule-ubuntu-24.04-ssh-local
+    image: public.ecr.aws/ubuntu/ubuntu:24.04
+    dockerfile: Dockerfile.j2
+    command: /sbin/init
+    systemd: always
 scenario:
   name: default
   test_sequence:
@@ -35,5 +38,9 @@ provisioner:
       all:
         ansible_python_interpreter: /usr/bin/python3
         ansible_user: root
+        long_lived_host_role: ssh_remote
+    host_vars:
+      dotfiles-molecule-ubuntu-24.04-ssh-local:
+        long_lived_host_role: ssh_local
 verifier:
   name: ansible

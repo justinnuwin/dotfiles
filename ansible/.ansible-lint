@@ -1,0 +1,6 @@
+---
+# molecule/shared holds task files included by the scenarios, which
+# ansible-lint would otherwise parse as playbooks.
+kinds:
+  - playbook: "**/molecule/shared/verify.yml"
+  - tasks: "**/molecule/shared/*.yml"

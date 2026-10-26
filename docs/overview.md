@@ -45,6 +45,6 @@ roles.
   tags, test commands, dependencies).
 - `ansible/first_time_setup.yml` — the playbook entry point.
 - `ansible/roles/<role>/tasks/main.yml` — what each role does.
-- `ansible/molecule/default/verify.yml` — what gets asserted in CI-style
+- `ansible/molecule/shared/verify.yml` — what gets asserted in CI-style
   tests.
 - `docs/plans/` — proposed work that hasn't shipped yet.

@@ -3,6 +3,27 @@
 - name: Setup zsh
   block:
 
+  # macOS Catalina (10.15) and later ships zsh as the default shell
+  - name: Install zsh (Linux)
+    become: true
+    when: ansible_facts['os_family'] != 'Darwin'
+    ansible.builtin.package:
+      name: zsh
+      state: present
+
+  - name: Query installed zsh version
+    environment:
+      PATH: "{{ path_with_macports }}"
+    ansible.builtin.command: zsh -c 'echo "$ZSH_VERSION"'
+    register: zsh_version
+    changed_when: false
+    check_mode: false
+
+  - name: Require zsh >= {{ zsh_min_version }}
+    ansible.builtin.assert:
+      that: zsh_version.stdout is version(zsh_min_version, '>=')
+      fail_msg: zsh {{ zsh_version.stdout }} is older than {{ zsh_min_version }}.
+
   - name: Build gitstatusd
     ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/build_gitstatus.yml"
 

@@ -1,0 +1,57 @@
+---
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    tart_vm: "{{ molecule_yml.platforms[0].name }}"
+    tart_image: "{{ molecule_yml.platforms[0].image }}"
+  tasks:
+    - name: Pull the base image
+      ansible.builtin.command: tart pull {{ tart_image }}
+      changed_when: false
+
+    - name: List Tart VMs
+      ansible.builtin.command: tart list
+      register: tart_list
+      changed_when: false
+
+    - name: Clone the VM from the base image
+      when: tart_vm not in tart_list.stdout.split()
+      ansible.builtin.command: tart clone {{ tart_image }} {{ tart_vm }}
+      changed_when: true
+
+    - name: Boot the VM headless
+      ansible.builtin.shell: nohup tart run --no-graphics {{ tart_vm }} >/dev/null 2>&1 &
+      changed_when: true
+
+    - name: Wait for the VM's IP address
+      ansible.builtin.command: tart ip {{ tart_vm }}
+      register: tart_ip
+      until: tart_ip.rc == 0 and tart_ip.stdout | length > 0
+      retries: 60
+      delay: 2
+      changed_when: false
+
+    - name: Wait for ssh
+      ansible.builtin.wait_for:
+        host: "{{ tart_ip.stdout }}"
+        port: 22
+        timeout: 120
+
+    # The base image's account is admin/admin; ansible's ssh password login
+    # needs sshpass on this host.
+    - name: Write the instance config
+      ansible.builtin.copy:
+        dest: "{{ molecule_instance_config }}"
+        mode: "0600"
+        content: |
+          {{ [{
+            'instance': tart_vm,
+            'address': tart_ip.stdout,
+            'user': 'admin',
+            'port': 22,
+            'password': 'admin',
+            'become_pass': 'admin',
+            'connection': 'ssh',
+          }] | to_nice_yaml }}

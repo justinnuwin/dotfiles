@@ -11,9 +11,10 @@
       register: long_lived_remote_sshd_config
       changed_when: false
 
+    # Newer OpenSSH releases print the keywords in mixed case.
     - name: Require sshd to run ~/.ssh/rc
       ansible.builtin.assert:
-        that: "'permituserrc yes' in long_lived_remote_sshd_config.stdout_lines"
+        that: "'permituserrc yes' in long_lived_remote_sshd_config.stdout_lines | map('lower')"
         fail_msg: >-
           sshd has PermitUserRC disabled, so it would ignore ~/.ssh/rc and
           ~/.ssh/ssh_auth_sock would keep pointing at a dead agent socket. Set

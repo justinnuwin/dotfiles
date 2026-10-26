@@ -1,0 +1,6 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Copy the local dotfiles working tree
+      ansible.builtin.import_tasks: ../shared/copy_working_tree.yml

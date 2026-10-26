@@ -1,0 +1,44 @@
+---
+# Copies the controller's dotfiles working tree, including uncommitted and
+# untracked (but not git-ignored) files, to ~/.dotfiles on the instance, so
+# converge tests local changes instead of cloning GitHub HEAD.
+
+- name: Archive the dotfiles working tree
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      {
+        git ls-files --recurse-submodules
+        git ls-files --others --exclude-standard
+        git submodule foreach --quiet --recursive \
+          'git ls-files --others --exclude-standard | sed "s|^|$displaypath/|"'
+      } | sort -u \
+        | while IFS= read -r f; do if [ -e "$f" ] || [ -L "$f" ]; then printf '%s\n' "$f"; fi; done \
+        | tar -czf "{{ molecule_ephemeral_directory }}/dotfiles.tar.gz" -T -
+    chdir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/.."
+    executable: /bin/bash
+  changed_when: true
+
+- name: Ensure ~/.dotfiles exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
+    state: directory
+    mode: "0755"
+
+- name: Unpack the working tree into ~/.dotfiles
+  ansible.builtin.unarchive:
+    src: "{{ molecule_ephemeral_directory }}/dotfiles.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
+    # The archive records the controller user's IDs, which a rootless
+    # container's user namespace may not map.
+    extra_opts: [--no-same-owner]
+
+# tasks/ensure_repository.yml clones only when ~/.dotfiles/.git is missing. The
+# empty repository registers no submodules, so its submodule update is a no-op.
+- name: Mark ~/.dotfiles as a git repository
+  ansible.builtin.command: git init -q  # noqa: command-instead-of-module
+  args:
+    chdir: "{{ ansible_facts['env']['HOME'] }}/.dotfiles"
+    creates: "{{ ansible_facts['env']['HOME'] }}/.dotfiles/.git"

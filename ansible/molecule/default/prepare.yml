@@ -1,26 +1,38 @@
 ---
-# Ansible modules require python, which the base images lack, so bootstrap it with raw.
-- name: Bootstrap python for ansible modules
+- name: Prepare
   hosts: all
-  gather_facts: false
   tasks:
-    - name: Ensure python3
-      ansible.builtin.raw: >-
-        if command -v apt-get >/dev/null; then
-          apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 python3-apt;
-        else
-          pacman -Syu --noconfirm --needed python;
-        fi
+    - name: Wait for systemd to finish booting
+      ansible.builtin.command: systemctl is-system-running --wait
+      register: prepare_system_state
       changed_when: false
+      failed_when: prepare_system_state.stdout not in ['running', 'degraded']
 
-- name: Install OS packages needed by the playbook
-  hosts: all
-  tasks:
-    - name: Install git, curl, unzip, and CA certificates
+    - name: Install packages the playbook and the tests expect
       ansible.builtin.package:
-        name:
-          - git
-          - curl
-          - ca-certificates
-          - unzip
+        name: "{{ prepare_packages[ansible_facts['os_family']] }}"
         state: present
+      vars:
+        prepare_packages:
+          Debian: [git, curl, ca-certificates, unzip, openssh-server, openssh-client]
+          Archlinux: [git, curl, ca-certificates, unzip, openssh]
+
+    - name: Start sshd
+      ansible.builtin.systemd_service:
+        name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+        enabled: true
+        state: started
+
+    # opener_local runs a systemd user unit, which needs the user's systemd
+    # manager; lingering starts it without a login session.
+    - name: Start the user's systemd manager
+      ansible.builtin.command: loginctl enable-linger {{ ansible_facts['user_id'] }}
+      args:
+        creates: /var/lib/systemd/linger/{{ ansible_facts['user_id'] }}
+
+    - name: Wait for the user's systemd manager
+      ansible.builtin.wait_for:
+        path: /run/user/{{ ansible_facts['user_uid'] }}/bus
+
+    - name: Copy the local dotfiles working tree
+      ansible.builtin.import_tasks: ../shared/copy_working_tree.yml

@@ -1,0 +1,33 @@
+---
+driver:
+  name: default
+  options:
+    managed: true
+platforms:
+  - name: dotfiles-mac
+    image: ghcr.io/cirruslabs/macos-sequoia-base:latest
+scenario:
+  name: macos
+  test_sequence:
+    - destroy
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+ansible:
+  playbooks:
+    create: create.yml
+    destroy: destroy.yml
+    prepare: prepare.yml
+    converge: converge.yml
+    verify: verify.yml
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      dotfiles-mac:
+        ansible_python_interpreter: /usr/bin/python3
+        long_lived_host_role: ssh_local
+verifier:
+  name: ansible

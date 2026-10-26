@@ -1,0 +1,72 @@
+---
+- name: Verify the dotfile symlinks exist
+  ansible.builtin.stat:
+    path: "{{ verify_home }}/{{ item }}"
+  register: verify_symlink_stat
+  failed_when: not verify_symlink_stat.stat.islnk
+  loop:
+    - .bashrc
+    - .zshrc
+    - .zshenv
+    - .zprofile
+    - .tmux.conf
+    - .config/ghostty/config
+
+- name: Verify dotfiles repository is a git repository
+  ansible.builtin.stat:
+    path: "{{ verify_home }}/.dotfiles/.git"
+  register: verify_dotfiles_git_stat
+  failed_when: not verify_dotfiles_git_stat.stat.exists
+
+# -A reads the directory directly; some ncurses builds ignore $TERMINFO for root.
+- name: Verify xterm-256color-italic terminfo entry installed
+  ansible.builtin.command: infocmp -A {{ verify_home }}/.terminfo xterm-256color-italic
+  changed_when: false
+
+- name: Verify consolidated dotfiles fact file exists
+  ansible.builtin.stat:
+    path: /etc/ansible/facts.d/dotfiles.fact
+  register: verify_dotfiles_fact_stat
+  failed_when: not verify_dotfiles_fact_stat.stat.exists
+
+- name: Verify ~/.localshell contains the ansible-managed block markers
+  ansible.builtin.command: grep -q "ANSIBLE MANAGED BLOCK (dotfiles)" {{ verify_home }}/.localshell
+  changed_when: false
+
+- name: Verify starship binary exists (installed unconditionally by the role)
+  ansible.builtin.stat:
+    path: "{{ verify_home }}/.local/bin/starship"
+  register: verify_starship_stat
+  failed_when: not verify_starship_stat.stat.exists
+
+# The tools below are found through the PATH that ~/.zshenv sets up.
+- name: Verify neovim is installed and runnable
+  ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'nvim --version'"
+  changed_when: false
+
+- name: Verify zsh version >= 5.9
+  ansible.builtin.command: "{{ verify_zsh }} -c 'echo $ZSH_VERSION'"
+  register: verify_zsh_version
+  changed_when: false
+  failed_when: verify_zsh_version.stdout is version('5.9', '<')
+
+- name: Verify Universal ctags version >= 6.0
+  ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'ctags --version'"
+  register: verify_ctags_out
+  changed_when: false
+  # The regex only matches a "Universal Ctags <ver>" banner, so anything else
+  # (e.g. Exuberant Ctags) yields no match, defaults to 0.0.0, and fails the
+  # threshold -- no separate "is it Universal" check needed.
+  failed_when: >-
+    (verify_ctags_out.stdout
+     | regex_search('(?<=Universal Ctags )[0-9][0-9.]*')
+     | default('0.0.0', true)) is version('6.0', '<')
+
+- name: Verify tmux version >= 3.7b
+  ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'tmux -V'"
+  register: verify_tmux_out
+  changed_when: false
+  failed_when: >-
+    (verify_tmux_out.stdout
+     | regex_search('(?<=tmux )[0-9][0-9.]*[a-z]?')
+     | default('0.0.0', true)) is version('3.7b', '<')

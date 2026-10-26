@@ -1,0 +1,57 @@
+---
+# Runs each case in trace_cases against a fresh trace log, then checks the
+# per-process counts. A case with `expect` must match it exactly (one entry per
+# shell process, in start order); a case without it must run nothing twice.
+# A case's cmd may call `trace_wait <event>` to wait for a background shell to
+# log <event> and snapshot the log before tearing that shell down.
+
+- name: Run the shell startup cases
+  ansible.builtin.shell:
+    cmd: |
+      trace_wait() {
+        i=0
+        until grep -q " $1\$" {{ trace_log }} || [ "$i" -ge 60 ]; do sleep 1; i=$((i + 1)); done
+        sleep 2
+        cp {{ trace_log }} {{ trace_snapshot }}
+      }
+      : > {{ trace_log }}
+      rm -f {{ trace_snapshot }}
+      ( {{ item.cmd }} ) </dev/null >/dev/null 2>&1 || true
+      [ -f {{ trace_snapshot }} ] || cp {{ trace_log }} {{ trace_snapshot }}
+      awk '
+        !($1 in seen) { seen[$1] = 1; order[++n] = $1 }
+        { count[$1 " " $2]++; events[$2] = 1 }
+        END {
+          printf "["
+          for (i = 1; i <= n; i++) {
+            printf "%s{", (i > 1 ? ", " : "")
+            sep = ""
+            for (e in events) if ((order[i] " " e) in count) {
+              printf "%s\"%s\": %d", sep, e, count[order[i] " " e]
+              sep = ", "
+            }
+            printf "}"
+          }
+          print "]"
+        }' {{ trace_snapshot }}
+  register: trace_case_results
+  changed_when: false
+  loop: "{{ trace_cases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Verify each shell ran its startup files once
+  ansible.builtin.assert:
+    that: >-
+      (item.item.expect is defined and trace_actual == item.item.expect)
+      or (item.item.expect is not defined
+          and trace_actual | map('dict2items') | flatten | map(attribute='value') | select('gt', 1) | list | length == 0)
+    fail_msg: >-
+      {{ item.item.name }}: expected {{ item.item.expect | default('nothing to run twice') }},
+      got {{ trace_actual }}
+    quiet: true
+  vars:
+    trace_actual: "{{ item.stdout | from_json }}"
+  loop: "{{ trace_case_results.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

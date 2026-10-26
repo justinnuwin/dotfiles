@@ -1,6 +1,6 @@
 # Ansible Dotfiles Deployment
 
-This directory contains Ansible playbooks and roles for deploying dotfiles to target machines. The setup uses Docker-based testing with Molecule to ensure reliable deployments.
+This directory contains Ansible playbooks and roles for deploying dotfiles to target machines. The setup uses Molecule to test deployments in Podman containers (Linux) and Tart VMs (macOS).
 
 ## Overview
 
@@ -16,11 +16,20 @@ ansible/
 ├── tasks/
 │   └── ensure_repository.yml # Common task: ensure dotfiles repo exists
 ├── molecule/
-│   └── default/             # Molecule test configuration
-│       ├── molecule.yml      # Molecule configuration
-│       ├── prepare.yml       # Container bootstrap (packages for the test image)
-│       ├── converge.yml      # Imports first_time_setup.yml
-│       └── verify.yml        # Verification tests
+│   ├── default/             # Linux scenario (Podman containers running systemd)
+│   │   ├── molecule.yml      # Molecule configuration
+│   │   ├── Dockerfile.j2     # Adds python3 and systemd to each base image
+│   │   ├── prepare.yml       # Packages, sshd, user systemd manager, working tree copy
+│   │   ├── converge.yml      # Imports first_time_setup.yml
+│   │   └── verify.yml        # Imports shared/verify.yml
+│   ├── macos/               # macOS scenario (Tart VM)
+│   │   ├── molecule.yml      # Molecule configuration
+│   │   ├── create.yml        # Clones and boots the VM, writes the instance config
+│   │   ├── destroy.yml       # Stops and deletes the VM
+│   │   ├── prepare.yml       # Working tree copy
+│   │   ├── converge.yml      # Imports first_time_setup.yml
+│   │   └── verify.yml        # Imports shared/verify.yml
+│   └── shared/              # Tasks and verification used by both scenarios
 ├── templates/
 │   └── localshell.j2        # Shared Jinja2 template for ~/.localshell managed block
 └── roles/
@@ -181,11 +190,11 @@ This task is automatically run as a pre-task in the main playbook, ensuring the 
 
 ## Testing with Molecule
 
-Molecule provides containerized testing for Ansible playbooks, allowing you to test deployments in isolated Docker containers before applying them to real systems.
+Molecule tests the playbook in throwaway instances before it touches a real system. `prepare` copies the local working tree (uncommitted and untracked files included, git-ignored files excluded) to `~/.dotfiles` on each instance, so converge tests local changes rather than GitHub HEAD.
 
 ### Prerequisites
 
-- Docker installed and running
+- Podman
 - Python 3.11+
 - Virtual environment (created automatically by test script)
 
@@ -226,25 +235,27 @@ molecule test
 ### Test Configuration
 
 The Molecule configuration (`molecule/default/molecule.yml`) uses:
-- **Driver:** Docker
-- **Platforms:** Ubuntu 20.04, 22.04, 24.04, and Arch Linux (images from ECR Public; see `molecule.yml`)
+- **Driver:** Podman, with each container booting systemd so sshd, sshd reloads, and the opener systemd user unit behave as on a real host
+- **Platforms:** Ubuntu 24.04 and Arch Linux converged with `long_lived_host_role=ssh_remote`, plus a second Ubuntu 24.04 converged with `long_lived_host_role=ssh_local` (images from ECR Public; see `molecule.yml`)
 - **Provisioner:** Ansible (`prepare.yml` bootstraps the container, then `converge.yml` imports `first_time_setup.yml`)
-- **Verifier:** Ansible (runs `verify.yml` to check deployment)
+- **Verifier:** Ansible (`verify.yml` imports `molecule/shared/verify.yml`)
+
+### macOS scenario
+
+`molecule -s macos test` runs the same playbook and verification in a Tart VM converged with `long_lived_host_role=ssh_local`. It needs an Apple Silicon Mac with:
+- `brew install cirruslabs/cli/tart`
+- `sshpass`, for ansible's password login to the VM's `admin`/`admin` account
+- Room for the `ghcr.io/cirruslabs/macos-sequoia-base:latest` image (~50 GB, pulled by `create.yml`)
 
 ### Verification Tests
 
-The verification playbook (`molecule/default/verify.yml`) checks:
-- `.bashrc` symlink exists and is valid
-- `.zshrc` symlink exists and is valid
-- `.zshenv` symlink exists and is valid
-- `.zprofile` symlink exists and is valid
-- `.tmux.conf` symlink exists and is valid
-- `~/.config/ghostty/config` symlink exists and is valid
-- Dotfiles repository exists at `~/.dotfiles`
-- Dotfiles repository is a valid git repository
-- `/etc/ansible/facts.d/dotfiles.fact` exists (consolidated fact file)
-- `~/.localshell` contains the ansible-managed block markers
-- `~/.local/bin/starship` exists (starship is in the bootstrap roles list, so it always installs)
+The verification playbook (`molecule/shared/verify.yml`) checks, on every platform:
+- The `.bashrc`, `.zshrc`, `.zshenv`, `.zprofile`, `.tmux.conf`, and `~/.config/ghostty/config` symlinks
+- `~/.dotfiles` is a git repository, `/etc/ansible/facts.d/dotfiles.fact` exists, and `~/.localshell` has its managed block
+- zsh >= 5.9, the terminfo entry, starship, and neovim, Universal Ctags >= 6.0, and tmux >= 3.7b found through the PATH `~/.zshenv` sets up
+- Each shell process runs each startup file, `jnshell_env_setup`, and `jnshell_interactive_setup` exactly as often as expected (`verify_shell_startup.yml`): zsh and bash login/non-login and interactive/non-interactive, nested zsh, a tmux pane, ssh with a command, an interactive ssh login, and ssh with the recommended `tmux new -A -s Primary` RemoteCommand. tmux `run-shell` must also find the same tmux, as tpm needs
+- `long_lived_host_role=ssh_remote`: `~/.ssh/rc`, the opener shims first on PATH, and the running sshd's `PermitUserRC`/`StreamLocalBindUnlink`; a tmux pane started over one ssh connection reaches the agent forwarded by a later one through `~/.ssh/ssh_auth_sock`
+- `long_lived_host_role=ssh_local`: the `~/.ssh/config` notes, and the opener daemon running and listening on `~/.opener.sock`
 
 ## Dependencies
 
@@ -253,8 +264,7 @@ All dependencies are listed in `requirements.txt`:
 - `ansible==12.2.0` - Ansible package
 - `ansible-core==2.19.4` - Core Ansible functionality
 - `molecule>=6.0.0` - Testing framework
-- `molecule-plugins[docker]>=2.0.0` - Docker driver for Molecule
-- `docker>=7.0.0` - Docker Python SDK
+- `molecule-plugins[podman]` - Podman driver for Molecule
 
 Install dependencies:
 ```bash

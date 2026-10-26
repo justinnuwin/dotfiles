@@ -1,0 +1,228 @@
+---
+# Counts, per shell process, how often each startup file and setup function
+# runs. The home-dir dotfile symlinks are swapped for wrappers that log and then
+# source the real file, and a block appended to ~/.localshell (sourced once per
+# jnshell_env_setup) logs env setup and wraps jnshell_interactive_setup to log
+# it too. Everything is restored afterwards.
+
+- name: Set the shell startup trace settings
+  ansible.builtin.set_fact:
+    trace_log: /tmp/jnshell_trace.log
+    trace_snapshot: /tmp/jnshell_trace.snapshot
+    trace_runshell_out: /tmp/jnshell_trace_runshell.out
+    trace_dotfiles: [zshenv, zprofile, zshrc, bashrc]
+    trace_ssh_key: "{{ verify_home }}/.ssh/molecule_trace_key"
+    trace_ssh: >-
+      TERM=xterm-256color ssh -F /dev/null -i {{ verify_home }}/.ssh/molecule_trace_key
+      -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR
+    trace_host: "{{ verify_user }}@localhost"
+
+- name: Find tmux through the PATH ~/.zshenv sets up
+  ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'command -v tmux'"
+  register: trace_tmux_out
+  changed_when: false
+
+- name: Record the tmux under test
+  ansible.builtin.set_fact:
+    verify_tmux: "{{ trace_tmux_out.stdout }}"
+
+- name: Ensure ~/.ssh exists
+  ansible.builtin.file:
+    path: "{{ verify_home }}/.ssh"
+    state: directory
+    mode: "0700"
+
+- name: Create an ssh key for logging in to localhost
+  ansible.builtin.command: ssh-keygen -q -t ed25519 -N '' -C molecule-trace -f {{ trace_ssh_key }}
+  args:
+    creates: "{{ trace_ssh_key }}"
+
+- name: Read the ssh public key
+  ansible.builtin.slurp:
+    src: "{{ trace_ssh_key }}.pub"
+  register: trace_ssh_pubkey
+
+- name: Authorize the ssh key
+  ansible.builtin.lineinfile:
+    path: "{{ verify_home }}/.ssh/authorized_keys"
+    line: "{{ trace_ssh_pubkey.content | b64decode | trim }}"
+    create: true
+    mode: "0600"
+
+- name: Wait for sshd
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 22
+    timeout: 60
+
+- name: Trace shell startup
+  block:
+    - name: Remove the dotfile symlinks
+      ansible.builtin.file:
+        path: "{{ verify_home }}/.{{ item }}"
+        state: absent
+      loop: "{{ trace_dotfiles }}"
+
+    - name: Install tracing wrappers in their place
+      ansible.builtin.copy:
+        dest: "{{ verify_home }}/.{{ item }}"
+        mode: "0644"
+        content: |
+          printf '%s {{ item }}\n' "$$" >> {{ trace_log }}
+          source {{ verify_home }}/.dotfiles/shell/{{ item }}
+      loop: "{{ trace_dotfiles }}"
+
+    - name: Trace jnshell_env_setup and jnshell_interactive_setup from ~/.localshell
+      ansible.builtin.blockinfile:
+        path: "{{ verify_home }}/.localshell"
+        marker: "# {mark} MOLECULE SHELL STARTUP TRACE"
+        insertafter: EOF
+        block: |
+          printf '%s env_setup\n' "$$" >> {{ trace_log }}
+          if [ -n "$ZSH_VERSION" ]; then
+            if [[ $functions[jnshell_interactive_setup] != *_jnshell_trace_* ]]; then
+              functions[_jnshell_trace_interactive_setup]=$functions[jnshell_interactive_setup]
+              jnshell_interactive_setup() {
+                printf '%s interactive_setup\n' "$$" >> {{ trace_log }}
+                _jnshell_trace_interactive_setup "$@"
+              }
+            fi
+          elif ! declare -f jnshell_interactive_setup | grep -q _jnshell_trace_; then
+            eval "$(declare -f jnshell_interactive_setup | sed '1s/jnshell_interactive_setup/_jnshell_trace_interactive_setup/')"
+            jnshell_interactive_setup() {
+              printf '%s interactive_setup\n' "$$" >> {{ trace_log }}
+              _jnshell_trace_interactive_setup "$@"
+            }
+          fi
+
+    - name: Trace shells started directly and by tmux
+      ansible.builtin.include_tasks: shell_startup_cases.yml
+      vars:
+        trace_zsh_login_interactive: &zsh_login_interactive
+          {zshenv: 1, zprofile: 1, zshrc: 1, env_setup: 1, interactive_setup: 1}
+        trace_zsh_interactive: &zsh_interactive
+          {zshenv: 1, zshrc: 1, env_setup: 1, interactive_setup: 1}
+        trace_cases:
+          - name: zsh, non-login, non-interactive
+            cmd: "{{ verify_clean_env }} {{ verify_zsh }} -c true"
+            expect: [{zshenv: 1, env_setup: 1}]
+          - name: zsh, login, non-interactive
+            cmd: "{{ verify_clean_env }} {{ verify_zsh }} -l -c true"
+            expect: [{zshenv: 1, zprofile: 1, env_setup: 1}]
+          - name: zsh, non-login, interactive
+            cmd: "{{ verify_clean_env }} {{ verify_zsh }} -i -c true"
+            expect: [*zsh_interactive]
+          - name: zsh, login, interactive
+            cmd: "{{ verify_clean_env }} {{ verify_zsh }} -l -i -c true"
+            expect: [*zsh_login_interactive]
+          # The trailing `; true` stops the outer zsh from exec'ing the inner one.
+          - name: zsh, interactive, nested in another
+            cmd: "{{ verify_clean_env }} {{ verify_zsh }} -i -c '{{ verify_zsh }} -i -c true; true'"
+            expect: [*zsh_interactive, *zsh_interactive]
+          - name: bash, non-login, non-interactive
+            cmd: "{{ verify_clean_env }} {{ verify_bash }} -c true"
+            expect: []
+          - name: bash, non-login, interactive
+            cmd: "{{ verify_clean_env }} {{ verify_bash }} -i -c true"
+            expect: [{bashrc: 1, env_setup: 1, interactive_setup: 1}]
+          # Login bash reads ~/.bash_profile or ~/.profile, which this repo
+          # does not manage, so whether it reaches ~/.bashrc varies by OS.
+          - name: bash, login, non-interactive
+            cmd: "{{ verify_clean_env }} {{ verify_bash }} -l -c true"
+          - name: bash, login, interactive
+            cmd: "{{ verify_clean_env }} {{ verify_bash }} -l -i -c true"
+          # tmux starts every pane as a login shell.
+          - name: tmux pane
+            cmd: |
+              {{ verify_clean_env }} SHELL={{ verify_zsh }} {{ verify_tmux }} -L molecule new -d -s trace
+              trace_wait interactive_setup
+              {{ verify_tmux }} -L molecule kill-server
+            expect: [*zsh_login_interactive]
+
+    - name: Log in with zsh
+      become: true
+      ansible.builtin.user:
+        name: "{{ verify_user }}"
+        shell: "{{ verify_zsh }}"
+
+    # sshd runs ~/.ssh/rc (installed on ssh_remote hosts) through the login
+    # shell as `$SHELL -c '/bin/sh ~/.ssh/rc'`, a non-login zsh of its own.
+    - name: Trace zsh logins over ssh
+      ansible.builtin.include_tasks: shell_startup_cases.yml
+      vars:
+        trace_zsh_login_interactive: *zsh_login_interactive
+        trace_ssh_rc: "{{ [{'zshenv': 1, 'env_setup': 1}] if long_lived_host_role | default('') == 'ssh_remote' else [] }}"
+        trace_cases:
+          - name: ssh host cmd (zsh)
+            cmd: "{{ trace_ssh }} {{ trace_host }} true"
+            expect: "{{ trace_ssh_rc + [{'zshenv': 1, 'env_setup': 1}] }}"  # noqa: jinja[invalid]
+          - name: ssh host (zsh)
+            cmd: "printf 'exit\\n' | {{ trace_ssh }} -tt {{ trace_host }}"
+            expect: "{{ trace_ssh_rc + [trace_zsh_login_interactive] }}"  # noqa: jinja[invalid]
+          # The recommended RemoteCommand: sshd's `zsh -c` must find tmux, and
+          # the tmux server it starts must give run-shell (and so tpm) that PATH.
+          - name: ssh with RemoteCommand tmux new -A -s Primary (zsh)
+            cmd: |
+              ( sleep 90 </dev/null 2>/dev/null | {{ trace_ssh }} -tt -o RemoteCommand='tmux new -A -s Primary' {{ trace_host }} >/dev/null 2>&1 & )
+              trace_wait interactive_setup
+              rm -f {{ trace_runshell_out }}
+              {{ verify_tmux }} run-shell 'command -v tmux > {{ trace_runshell_out }}'
+              {{ verify_tmux }} kill-server
+            expect: "{{ trace_ssh_rc + [{'zshenv': 1, 'env_setup': 1}, trace_zsh_login_interactive] }}"  # noqa: jinja[invalid]
+
+    - name: Read the tmux run-shell result
+      ansible.builtin.slurp:
+        src: "{{ trace_runshell_out }}"
+      register: trace_runshell
+
+    - name: Verify tmux run-shell finds the same tmux
+      ansible.builtin.assert:
+        that: (trace_runshell.content | b64decode | trim) == verify_tmux
+        fail_msg: "run-shell found {{ trace_runshell.content | b64decode | trim }}, expected {{ verify_tmux }}"
+
+    - name: Verify ssh logins refresh the agent socket symlink
+      when: long_lived_host_role | default('') == 'ssh_remote'
+      ansible.builtin.include_tasks: verify_agent_refresh.yml
+
+    - name: Log in with bash
+      become: true
+      ansible.builtin.user:
+        name: "{{ verify_user }}"
+        shell: "{{ verify_bash }}"
+
+    # Like login bash, whether a bash ssh session reaches ~/.bashrc depends on
+    # how the OS built bash, so these only check nothing runs twice.
+    - name: Trace bash logins over ssh
+      ansible.builtin.include_tasks: shell_startup_cases.yml
+      vars:
+        trace_cases:
+          - name: ssh host cmd (bash)
+            cmd: "{{ trace_ssh }} {{ trace_host }} true"
+          - name: ssh host (bash)
+            cmd: "printf 'exit\\n' | {{ trace_ssh }} -tt {{ trace_host }}"
+
+  always:
+    - name: Restore the login shell
+      become: true
+      ansible.builtin.user:
+        name: "{{ verify_user }}"
+        shell: "{{ ansible_facts['user_shell'] }}"
+
+    - name: Stop any tmux servers the cases left behind
+      ansible.builtin.shell: "{{ verify_tmux }} kill-server; {{ verify_tmux }} -L molecule kill-server"
+      changed_when: false
+      failed_when: false
+
+    - name: Restore the dotfile symlinks
+      ansible.builtin.file:
+        src: "{{ verify_home }}/.dotfiles/shell/{{ item }}"
+        dest: "{{ verify_home }}/.{{ item }}"
+        state: link
+        force: true
+      loop: "{{ trace_dotfiles }}"
+
+    - name: Remove the ~/.localshell trace block
+      ansible.builtin.blockinfile:
+        path: "{{ verify_home }}/.localshell"
+        marker: "# {mark} MOLECULE SHELL STARTUP TRACE"
+        state: absent

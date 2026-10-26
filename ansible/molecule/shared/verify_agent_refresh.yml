@@ -1,0 +1,63 @@
+---
+# Expects verify_shell_startup.yml's ssh key, trace settings, and a zsh login
+# shell. A long-lived tmux pane started over one ssh connection must reach the
+# agent forwarded by a later connection once the first one is gone.
+
+# The pipe only keeps the first ssh's stdin open; its status is not checked.
+- name: Reconnect ssh with a forwarded agent under a long-lived tmux session  # noqa: risky-shell-pipe
+  ansible.builtin.shell:
+    cmd: |
+      trace_wait() {
+        i=0
+        until grep -q " $1\$" {{ trace_log }} || [ "$i" -ge 60 ]; do sleep 1; i=$((i + 1)); done
+      }
+      wait_until() {
+        i=0
+        until eval "$1" || [ "$i" -ge 30 ]; do sleep 1; i=$((i + 1)); done
+      }
+      link={{ verify_home }}/.ssh/ssh_auth_sock
+      out=/tmp/jnshell_trace_pane_agent.out
+      rm -f "$out" /tmp/jnshell-molecule-agent.sock
+      eval "$(ssh-agent -s -a /tmp/jnshell-molecule-agent.sock)" >/dev/null
+      ssh-add -q {{ trace_ssh_key }}
+      : > {{ trace_log }}
+
+      ( sleep 120 </dev/null 2>/dev/null | {{ trace_ssh }} -A -tt -o RemoteCommand='tmux new -A -s Primary' {{ trace_host }} >/dev/null 2>&1 & )
+      trace_wait interactive_setup
+      first=$(readlink "$link")
+      {{ verify_tmux }} detach-client -s Primary
+      wait_until '[ ! -S "$first" ]'
+
+      {{ trace_ssh }} -A {{ trace_host }} 'sleep 60' </dev/null >/dev/null 2>&1 &
+      second_ssh=$!
+      wait_until '[ "$(readlink "$link")" != "$first" ] && [ -S "$link" ]'
+      second=$(readlink "$link")
+
+      {{ verify_tmux }} send-keys -t Primary \
+        'ssh-add -l > /tmp/jnshell_trace_pane_agent.out 2>&1; echo "rc=$? sock=$SSH_AUTH_SOCK" >> /tmp/jnshell_trace_pane_agent.out' Enter
+      wait_until 'grep -q "^rc=" "$out" 2>/dev/null'
+
+      {{ verify_tmux }} kill-server
+      kill "$second_ssh"
+      ssh-agent -k >/dev/null
+      echo "first=$first"
+      echo "first_alive=$([ -S "$first" ] && echo yes || echo no)"
+      echo "second=$second"
+      cat "$out"
+  register: trace_agent_refresh
+  changed_when: false
+
+- name: Verify the symlink followed the newest connection's agent
+  ansible.builtin.assert:
+    that:
+      - trace_agent_first | length > 0
+      - trace_agent_second | length > 0
+      - trace_agent_first != trace_agent_second
+      - "'first_alive=no' in trace_agent_refresh.stdout_lines"
+      - "('sock=' ~ verify_home ~ '/.ssh/ssh_auth_sock') in trace_agent_refresh.stdout"
+      - "'rc=0' in trace_agent_refresh.stdout"
+      - "'molecule-trace' in trace_agent_refresh.stdout"
+    fail_msg: "{{ trace_agent_refresh.stdout }}"
+  vars:
+    trace_agent_first: "{{ trace_agent_refresh.stdout_lines | select('match', '^first=') | first | regex_replace('^first=', '') }}"
+    trace_agent_second: "{{ trace_agent_refresh.stdout_lines | select('match', '^second=') | first | regex_replace('^second=', '') }}"

@@ -1,0 +1,99 @@
+---
+- name: Load the opener role defaults
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  loop:
+    - ../../roles/opener_local/defaults/main.yml
+    - ../../roles/opener_local/vars/main.yml
+    - ../../roles/opener_remote/defaults/main.yml
+
+- name: Verify the remote side (long_lived_remote, opener_remote)
+  when: long_lived_host_role | default('') == 'ssh_remote'
+  block:
+    - name: Read ~/.ssh/rc
+      ansible.builtin.stat:
+        path: "{{ verify_home }}/.ssh/rc"
+      register: verify_ssh_rc_stat
+      failed_when: not verify_ssh_rc_stat.stat.exists or verify_ssh_rc_stat.stat.mode != '0600'
+
+    - name: Verify ~/.ssh/rc refreshes the agent socket symlink
+      ansible.builtin.command:
+        cmd: grep -qF 'ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"' {{ verify_home }}/.ssh/rc
+        expand_argument_vars: false
+      changed_when: false
+
+    - name: Verify ~/.localshell enables the long-lived remote and opener modules
+      ansible.builtin.command: grep -qx {{ item }} {{ verify_home }}/.localshell
+      changed_when: false
+      loop:
+        - JNSHELL_LONG_LIVED_REMOTE=true
+        - JNSHELL_USE_OPENER=true
+
+    - name: Verify the opener shims are installed
+      ansible.builtin.stat:
+        path: "{{ opener_remote_shim_dir }}/{{ item }}"
+      register: verify_shim_stat
+      failed_when: not verify_shim_stat.stat.executable
+      loop:
+        - open
+        - xdg-open
+
+    - name: Verify zsh finds the opener shim first on PATH
+      ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'command -v xdg-open'"
+      register: verify_xdg_open_out
+      changed_when: false
+      failed_when: verify_xdg_open_out.stdout != opener_remote_shim_dir ~ '/xdg-open'
+
+    - name: Read the effective sshd configuration
+      become: true
+      ansible.builtin.command: sshd -T -C user={{ verify_user }},host=localhost,addr=127.0.0.1
+      register: verify_sshd_config
+      changed_when: false
+
+    - name: Verify the running sshd runs ~/.ssh/rc and unlinks stale forwarded sockets
+      ansible.builtin.assert:
+        that:
+          - "'permituserrc yes' in verify_sshd_config.stdout_lines | map('lower')"
+          - "'streamlocalbindunlink yes' in verify_sshd_config.stdout_lines | map('lower')"
+
+- name: Verify the local side (ssh_to_long_lived_remote, opener_local)
+  when: long_lived_host_role | default('') == 'ssh_local'
+  block:
+    - name: Read ~/.ssh/config
+      ansible.builtin.stat:
+        path: "{{ verify_home }}/.ssh/config"
+      register: verify_ssh_config_stat
+      failed_when: not verify_ssh_config_stat.stat.exists or verify_ssh_config_stat.stat.mode != '0600'
+
+    - name: Verify ~/.ssh/config documents the tmux RemoteCommand and opener RemoteForward
+      ansible.builtin.command: grep -qF -- '{{ item }}' {{ verify_home }}/.ssh/config
+      changed_when: false
+      loop:
+        - "#   RequestTTY yes"
+        - "#   RemoteCommand tmux new -A -s Primary"
+        - "#   RemoteForward <remote home>/.opener.sock {{ verify_home }}/.opener.sock"
+
+    - name: Verify the opener daemon is installed
+      ansible.builtin.stat:
+        path: "{{ opener_local_dir }}/opener"
+      register: verify_opener_stat
+      failed_when: not verify_opener_stat.stat.executable
+
+    - name: Verify the opener systemd user unit is running (Linux)
+      when: ansible_facts['os_family'] != 'Darwin'
+      ansible.builtin.command: systemctl --user is-active opener.service  # noqa: command-instead-of-module
+      environment:
+        XDG_RUNTIME_DIR: /run/user/{{ ansible_facts['user_uid'] }}
+      changed_when: false
+
+    - name: Verify the opener launchd agent is running (Darwin)
+      when: ansible_facts['os_family'] == 'Darwin'
+      ansible.builtin.command: launchctl print gui/{{ ansible_facts['user_uid'] }}/{{ opener_local_launchd_label }}
+      register: verify_opener_launchd
+      changed_when: false
+      failed_when: "'state = running' not in verify_opener_launchd.stdout"
+
+    - name: Verify the opener daemon listens on ~/.opener.sock
+      ansible.builtin.wait_for:
+        path: "{{ verify_home }}/.opener.sock"
+        timeout: 30

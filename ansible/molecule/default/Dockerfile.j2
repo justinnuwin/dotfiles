@@ -1,0 +1,20 @@
+# Molecule managed
+
+FROM {{ item.image }}
+
+# NOTE For Arch: dbus-broker, the default system bus, exits with ENOTCONN in a
+# rootless podman container. The classic dbus-daemon works.
+RUN . /etc/os-release \
+    && case "$ID" in \
+      ubuntu) \
+        apt-get update \
+        && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-apt systemd systemd-sysv dbus dbus-user-session ;; \
+      arch) \
+        pacman -Syu --noconfirm --needed python systemd systemd-sysvcompat \
+        && { pacman -Rdd --noconfirm dbus-broker-units || true; } \
+        && pacman -S --noconfirm --needed dbus-daemon-units \
+        && pacman -Scc --noconfirm ;; \
+      *) echo "unsupported distro: $ID" >&2; exit 1 ;; \
+    esac
+
+STOPSIGNAL SIGRTMIN+3

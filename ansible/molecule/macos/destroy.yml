@@ -1,0 +1,23 @@
+---
+- name: Destroy
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    tart_vm: "{{ molecule_yml.platforms[0].name }}"
+  tasks:
+    - name: Stop the VM
+      ansible.builtin.command: tart stop {{ tart_vm }}
+      changed_when: true
+      failed_when: false
+
+    - name: Delete the VM
+      ansible.builtin.command: tart delete {{ tart_vm }}
+      changed_when: true
+      failed_when: false
+
+    - name: Clear the instance config
+      ansible.builtin.copy:
+        dest: "{{ molecule_instance_config }}"
+        mode: "0600"
+        content: "[]\n"
