@@ -17,7 +17,7 @@ $cmd_duration\
 [](fg:color_aqua bg:color_green)\
 $jobs\
 [](fg:color_bg bg:color_aqua)\
-$time\
+${env_var.jnshell_starship_time}\
 [](fg:color_bg)\
 $line_break\
 [╰─](242)$character"""
@@ -292,11 +292,10 @@ symbol    = ""
 style     = "fg:color_text bold bg:color_aqua"
 format    = "[$symbol $number]($style)"
 
-[time]
-style       = "fg:color_text_dark bg:color_bg"
-format      = "[ $time]($style)"
-time_format = "%H:%M:%S"
-disabled = false
+[env_var.jnshell_starship_time]
+variable = "JNSHELL_STARSHIP_TIME"
+style    = "fg:color_text_dark bg:color_bg"
+format   = "[ $env_value]($style)"
 
 [fill]
 symbol = "·"
