@@ -1,11 +1,14 @@
 #!/bin/sh
 # Run gitstatusd and export raw VCS state as GSD_* env vars for starship
-# custom modules to consume. Starship handles all rendering. Shared by both
+# custom modules to consume. Starship handles all rendering. Queries are
+# asynchronous under zsh and blocking under bash. Shared by both
 # bash and zsh; the underlying gitstatus.plugin.{sh,zsh} bindings differ (zsh
 # supports named daemon instances, bash only a single one), so gitstatusd_instance
 # is empty under bash and passed as an argument under zsh.
 # The original source for this is the following gist:
 # https://gist.github.com/junosuarez/400a66bcb90d8a9238303fb072a1ae98
+
+export GSD_READY=1
 
 gitstatus_dir="$dotfiles/shell/gitstatus"
 if [[ ! -x "$gitstatus_dir/usrbin/gitstatusd" ]]; then
@@ -26,14 +29,15 @@ else
   return 0
 fi
 
-function __gitstatus_prompt_update_impl() {
-  unset GSD_NOT_REPO GSD_ON GSD_REPO GSD_REMOTE_URL GSD_ACTION
+function __gsd_export() {
+  unset GSD_LOADING GSD_NOT_REPO GSD_ON GSD_REPO GSD_REMOTE_URL GSD_ACTION
   unset GSD_AHEAD GSD_BEHIND
   unset GSD_STAGED GSD_UNSTAGED GSD_UNTRACKED GSD_CONFLICTED GSD_DELETED GSD_STASHES
+  unset GSD_STALE_ON GSD_STALE_ACTION GSD_STALE_AHEAD GSD_STALE_BEHIND
+  unset GSD_STALE_STAGED GSD_STALE_UNSTAGED GSD_STALE_UNTRACKED GSD_STALE_CONFLICTED GSD_STALE_DELETED GSD_STALE_STASHES
+  export GSD_READY=1
 
-  # shellcheck disable=SC2086  # intentional word-split: empty under bash, 'GSD' under zsh
-  gitstatus_query $gitstatusd_instance || return 1
-  [[ "$VCS_STATUS_RESULT" == 'ok-sync' ]] || {
+  [[ "$VCS_STATUS_RESULT" == ok-* ]] || {
     export GSD_NOT_REPO=1
     return 0
   }
@@ -72,6 +76,42 @@ function __gsd_maybe_refresh() {
     git config --local --replace-all gsd.refresh "$now"
     (&>/dev/null nohup grep -q .biz /etc/resolv.conf && git remote | grep -q origin && git fetch origin "$MAIN_BRANCH" --quiet &)
   fi
+}
+
+# Moves each rendered GSD_* value to GSD_STALE_* so starship draws the git
+# section grayed out until the pending query completes. zsh only.
+function __gsd_mark_loading() {
+  local name fresh
+  for name in ON ACTION AHEAD BEHIND STAGED UNSTAGED UNTRACKED CONFLICTED DELETED STASHES; do
+    fresh="GSD_$name"
+    # shellcheck disable=SC2296  # zsh indirect expansion; never called under bash
+    [[ -n "${(P)fresh}" ]] || continue
+    # shellcheck disable=SC2296
+    export "GSD_STALE_$name=${(P)fresh}"
+    unset "$fresh"
+  done
+  unset GSD_READY
+  export GSD_LOADING=1
+}
+
+function __gsd_on_async_result() {
+  __gsd_export
+  zle && zle .reset-prompt
+}
+
+# On zsh, waits briefly for gitstatusd and otherwise shows the previous values
+# as stale until __gsd_on_async_result redraws the prompt.
+function __gitstatus_prompt_update_impl() {
+  if jnshell_is_zsh; then
+    gitstatus_query -t 0.01 -c __gsd_on_async_result GSD || return 1
+    if [[ "$VCS_STATUS_RESULT" == 'tout' ]]; then
+      __gsd_mark_loading
+      return 0
+    fi
+  else
+    gitstatus_query || return 1
+  fi
+  __gsd_export
 }
 
 function gitstatusd_up() {

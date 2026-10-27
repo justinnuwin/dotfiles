@@ -8,9 +8,7 @@ format = """
 $username$hostname${env_var.jnshell_starship_show_hostname}$sudo\
 [](bg:color_yellow fg:color_orange)\
 $directory\
-[](fg:color_yellow bg:color_aqua)\
 $env_var\
-[](fg:color_aqua)\
 $fill\
 [](fg:color_python_blue)\
 $python$netns\
@@ -137,6 +135,15 @@ ignore_branches   = []
 # Prompt setting: $env (this renders all env_var's in declaration order)
 # ----------------------------------------------------------------------
 
+[env_var.gsd_head]
+variable = "GSD_READY"
+format   = "[](fg:color_yellow bg:color_aqua)"
+
+[env_var.gsd_loading]
+variable = "GSD_LOADING"
+style    = "fg:color_text bg:242"
+format   = "[](fg:color_yellow bg:242)[ 󰔟 git status loading]($style)"
+
 [env_var.gsd_on]
 variable = "GSD_ON"
 style    = "fg:color_text bold bg:color_aqua"
@@ -186,6 +193,64 @@ format   = "[  $env_value]($style)"
 variable = "GSD_STASHES"
 style    = "fg:color_text bold bg:color_aqua"
 format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_on]
+variable = "GSD_STALE_ON"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_action]
+variable = "GSD_STALE_ACTION"
+style    = "fg:red bold bg:242"
+format   = "[ $env_value]($style)"
+
+[env_var.gsd_stale_ahead]
+variable = "GSD_STALE_AHEAD"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_behind]
+variable = "GSD_STALE_BEHIND"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_staged]
+variable = "GSD_STALE_STAGED"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_unstaged]
+variable = "GSD_STALE_UNSTAGED"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_untracked]
+variable = "GSD_STALE_UNTRACKED"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_conflicted]
+variable = "GSD_STALE_CONFLICTED"
+style    = "fg:red bold bg:242"
+format   = "[ 󱡝 $env_value]($style)"
+
+[env_var.gsd_stale_deleted]
+variable = "GSD_STALE_DELETED"
+style    = "fg:color_text bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_stale_stashes]
+variable = "GSD_STALE_STASHES"
+style    = "fg:color_text bold bg:242"
+format   = "[  $env_value]($style)"
+
+[env_var.gsd_tail]
+variable = "GSD_READY"
+format   = "[](fg:color_aqua)"
+
+[env_var.gsd_tail_loading]
+variable = "GSD_LOADING"
+format   = "[](fg:242)"
 
 ################################################################################
 # Git related settings - END
