@@ -32,14 +32,41 @@ fi
 
 # Configure shell history
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=1000
+HISTSIZE=70000
 SAVEHIST=50000
 
-# Set zsh options
-setopt appendhistory extendedglob notify
-unsetopt autocd beep nomatch
-bindkey -v # Vim mode
-bindkey '^R' history-incremental-search-backward # Bash-like reverse search
+# History options
+setopt APPEND_HISTORY          # Append to history file rather than replace it
+setopt INC_APPEND_HISTORY      # Write to the history file immediately, not when logging out
+                               # Do NOT dynamically read in the history
+setopt HIST_IGNORE_DUPS        # Do not record an event that is a duplicate of the previous one
+setopt HIST_EXPIRE_DUPS_FIRST  # After history is full, evict duplicates first
+setopt HIST_REDUCE_BLANKS      # Remove extra blanks from each command line before adding it
+setopt HIST_VERIFY             # Don't execute immediately when using history expansion (e.g. !!)
+setopt EXTENDED_HISTORY        # Save start times of commands in history
+setopt HIST_IGNORE_SPACE       # Do not record commands that start with a space
+setopt HIST_FIND_NO_DUPS       # Show each match only once when searching history
+
+# Additional options
+setopt EXTENDED_GLOB         # Enable ^, ~, # and (#flags) glob operators
+setopt GLOB_DOTS             # Match dotfiles without an explicit leading .
+setopt NUMERIC_GLOB_SORT     # Sort numbered glob matches numerically
+setopt NOTIFY                # Report background job status immediately
+setopt LONG_LIST_JOBS        # Show process IDs in job notifications
+setopt INTERACTIVE_COMMENTS  # Allow # comments at the interactive prompt
+setopt CORRECT               # Offer corrections for mistyped commands
+setopt COMPLETE_IN_WORD      # Complete from the cursor position within a word
+setopt ALWAYS_TO_END         # Move the cursor to the end of a word after completing it
+setopt NO_FLOW_CONTROL       # Free Ctrl-S and Ctrl-Q from pausing terminal output
+
+# Unset options
+unsetopt AUTO_CD BEEP NOMATCH
+
+# Vim mode
+bindkey -v
+
+# Bash-like reverse search
+bindkey '^R' history-incremental-search-backward
 
 # Set path to .dotfiles
 local dotfiles="$HOME/.dotfiles"
