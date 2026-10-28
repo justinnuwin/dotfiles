@@ -17,7 +17,7 @@ $cmd_duration\
 [](fg:color_aqua bg:color_green)\
 $jobs\
 [](fg:color_bg bg:color_aqua)\
-${env_var.jnshell_starship_time}\
+${env_var.jnshell_starship_time}${env_var.jnshell_starship_time_stale}\
 [](fg:color_bg)\
 $line_break\
 [╰─](242)$character"""
@@ -139,10 +139,14 @@ ignore_branches   = []
 variable = "GSD_READY"
 format   = "[](fg:color_yellow bg:color_aqua)"
 
+[env_var.gsd_head_stale]
+variable = "GSD_STALE"
+format   = "[](fg:color_yellow bg:242)"
+
 [env_var.gsd_loading]
 variable = "GSD_LOADING"
 style    = "fg:color_text bg:242"
-format   = "[](fg:color_yellow bg:242)[ 󰔟 git status loading]($style)"
+format   = "[ 󰔟 git status loading]($style)"
 
 [env_var.gsd_on]
 variable = "GSD_ON"
@@ -248,8 +252,8 @@ format   = "[  $env_value]($style)"
 variable = "GSD_READY"
 format   = "[](fg:color_aqua)"
 
-[env_var.gsd_tail_loading]
-variable = "GSD_LOADING"
+[env_var.gsd_tail_stale]
+variable = "GSD_STALE"
 format   = "[](fg:242)"
 
 ################################################################################
@@ -295,6 +299,11 @@ format    = "[$symbol $number]($style)"
 [env_var.jnshell_starship_time]
 variable = "JNSHELL_STARSHIP_TIME"
 style    = "fg:color_text_dark bg:color_bg"
+format   = "[ $env_value]($style)"
+
+[env_var.jnshell_starship_time_stale]
+variable = "JNSHELL_STARSHIP_TIME_STALE"
+style    = "fg:240 bg:color_bg"
 format   = "[ $env_value]($style)"
 
 [fill]

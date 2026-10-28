@@ -30,7 +30,7 @@ else
 fi
 
 function __gsd_export() {
-  unset GSD_LOADING GSD_NOT_REPO GSD_ON GSD_REPO GSD_REMOTE_URL GSD_ACTION
+  unset GSD_STALE GSD_LOADING GSD_NOT_REPO GSD_ON GSD_REPO GSD_REMOTE_URL GSD_ACTION
   unset GSD_AHEAD GSD_BEHIND
   unset GSD_STAGED GSD_UNSTAGED GSD_UNTRACKED GSD_CONFLICTED GSD_DELETED GSD_STASHES
   unset GSD_STALE_ON GSD_STALE_ACTION GSD_STALE_AHEAD GSD_STALE_BEHIND
@@ -79,8 +79,8 @@ function __gsd_maybe_refresh() {
 }
 
 # Moves each rendered GSD_* value to GSD_STALE_* so starship draws the git
-# section grayed out until the pending query completes. zsh only.
-function __gsd_mark_loading() {
+# section grayed out. zsh only.
+function __gsd_mark_stale() {
   local name fresh
   for name in ON ACTION AHEAD BEHIND STAGED UNSTAGED UNTRACKED CONFLICTED DELETED STASHES; do
     fresh="GSD_$name"
@@ -91,6 +91,12 @@ function __gsd_mark_loading() {
     unset "$fresh"
   done
   unset GSD_READY
+  export GSD_STALE=1
+}
+
+# Grays out the git section until the pending query completes. zsh only.
+function __gsd_mark_loading() {
+  __gsd_mark_stale
   export GSD_LOADING=1
 }
 
@@ -99,10 +105,26 @@ function __gsd_on_async_result() {
   zle && zle .reset-prompt
 }
 
-# On zsh, waits briefly for gitstatusd and otherwise shows the previous values
-# as stale until __gsd_on_async_result redraws the prompt.
+function gitstatusd_up() {
+  # shellcheck disable=SC2086  # intentional word-split: empty under bash, 'GSD' under zsh
+  gitstatus_stop $gitstatusd_instance && gitstatus_start -s -1 -u -1 -c -1 -d -1 $gitstatusd_instance
+}
+
+# Runs from TRAPALRM while zle is polling gitstatusd's response fd. Calling
+# gitstatus_stop here closes that fd under zle, which then spins on POLLNVAL,
+# so kill the daemon and let gitstatus's zle -F handler stop it on EOF.
+function __gsd_idle_stop() {
+  [[ "$GITSTATUS_DAEMON_PID_GSD" == <1-> ]] && kill -- -"$GITSTATUS_DAEMON_PID_GSD" 2>/dev/null
+  __gsd_mark_stale
+  unset GSD_LOADING
+}
+
+# On zsh, restarts gitstatusd if it was stopped for idleness, waits briefly
+# for it, and otherwise shows the previous values as stale until
+# __gsd_on_async_result redraws the prompt.
 function __gitstatus_prompt_update_impl() {
   if jnshell_is_zsh; then
+    gitstatus_check GSD || gitstatusd_up || return 1
     gitstatus_query -t 0.01 -c __gsd_on_async_result GSD || return 1
     if [[ "$VCS_STATUS_RESULT" == 'tout' ]]; then
       __gsd_mark_loading
@@ -114,14 +136,11 @@ function __gitstatus_prompt_update_impl() {
   __gsd_export
 }
 
-function gitstatusd_up() {
-  # shellcheck disable=SC2086  # intentional word-split: empty under bash, 'GSD' under zsh
-  gitstatus_stop $gitstatusd_instance && gitstatus_start -s -1 -u -1 -c -1 -d -1 $gitstatusd_instance
-}
-
 gitstatusd_up
 
 if jnshell_is_zsh; then
+  typeset -ga jnshell_idle_functions
+  jnshell_idle_functions+=(__gsd_idle_stop)
   autoload -Uz add-zsh-hook
   add-zsh-hook precmd __gitstatus_prompt_update_impl
 elif jnshell_is_bash; then
