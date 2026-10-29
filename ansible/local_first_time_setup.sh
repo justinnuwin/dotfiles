@@ -56,14 +56,53 @@ if [[ ! -t 0 ]]; then
 fi
 
 # --- Venv setup -------------------------------------------------------------
+# The playbook runs modules with the system python3 (see ansible_python_interpreter below).
+target_python=/usr/bin/python3
+
+# Prints the newest python3.N on PATH that can run an ansible-core supporting
+# both the playbook and $target_python, or nothing if there is none.
+pick_venv_python() {
+  # ansible-core 2.20+ (controller py3.12+) dropped py3.8 targets, and
+  # requirements.txt floors ansible-lint to core 2.20+ on py3.12+.
+  local max_minor=99
+  "$target_python" -c 'import sys; sys.exit(sys.version_info < (3, 9))' || max_minor=11
+  local candidate minor
+  for candidate in $(compgen -c python3. | grep -xE 'python3\.[0-9]+' | sort -u -t. -k2,2nr); do
+    minor="${candidate#python3.}"
+    if (( minor >= 9 && minor <= max_minor )); then
+      echo "$candidate"
+      return
+    fi
+  done
+}
+
 if [[ ! -d venv ]]; then
-  python -m venv venv
+  venv_python="$(pick_venv_python)"
+  if [[ -z "$venv_python" ]]; then
+    echo "error: no python3.N on PATH can run ansible-core >= 2.14 against $target_python" >&2
+    exit 1
+  fi
+  "$venv_python" -m venv venv
   # shellcheck source=/dev/null
   source venv/bin/activate
   pip install -r requirements.txt
 else
   # shellcheck source=/dev/null
   source venv/bin/activate
+fi
+
+# ansible.builtin.systemd_service needs ansible-core 2.14+, which needs Python 3.9+.
+if ! python - <<'EOF'
+import sys
+from ansible.release import __version__
+from packaging.version import Version
+if sys.version_info < (3, 9) or Version(__version__) < Version("2.14"):
+    sys.exit(f"error: venv has Python {sys.version.split()[0]} / ansible-core {__version__}; "
+             "the playbook needs Python >= 3.9 and ansible-core >= 2.14")
+EOF
+then
+  echo "Remove $PWD/venv and rerun to rebuild it." >&2
+  exit 1
 fi
 
 # --- Interactive prompts ----------------------------------------------------
@@ -137,6 +176,6 @@ true   # ensure success exit-status before the playbook invocation
 ansible-playbook first_time_setup.yml \
   --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 \
   --ask-become-pass \
-  -e ansible_python_interpreter=/usr/bin/python3 \
+  -e ansible_python_interpreter="$target_python" \
   "${extra_vars[@]+"${extra_vars[@]}"}" \
   "${forward_args[@]+"${forward_args[@]}"}"

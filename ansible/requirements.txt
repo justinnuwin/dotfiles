@@ -1,7 +1,8 @@
 # ansible/ansible-core need no markers -- pip's Requires-Python picks a
-# build for the active interpreter (ansible 6/core 2.13 on py3.8, 14/2.21 on py3.14).
-ansible>=6.0.0
-ansible-core>=2.12.0
+# build for the active interpreter (ansible 7/core 2.14 on py3.9, 14/2.21 on py3.14).
+# core 2.14 is the floor for ansible.builtin.systemd_service.
+ansible>=7.0.0
+ansible-core>=2.14.0
 
 # molecule/ansible-lint dropped py3.8 and need core >=2.20 (py3.12+), so gate the
 # modern floors to 3.12+ and let pip pick older compatible releases below that.
