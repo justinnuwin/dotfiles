@@ -1,0 +1,48 @@
+---
+
+# Reached only on Linux whose packaged bash is older than bash_min_version (see
+# main.yml). Build the pinned release into ~/bash and prepend it to PATH so it
+# wins over the system bash.
+
+- name: Install bash build prerequisites
+  become: true
+  ansible.builtin.package:
+    name: "{{ bash_build_packages[ansible_facts['os_family']] }}"
+    state: present
+
+- name: Ensure the bash source directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/bash/bash-{{ bash_min_version }}"
+    state: directory
+    mode: "0755"
+
+- name: Download and extract the pinned bash release
+  ansible.builtin.unarchive:
+    src: "https://ftp.gnu.org/gnu/bash/bash-{{ bash_min_version }}.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/bash/bash-{{ bash_min_version }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+    creates: "{{ ansible_facts['env']['HOME'] }}/bash/bash-{{ bash_min_version }}/configure"
+  register: bash_download_result
+  until: bash_download_result is succeeded
+  retries: 4
+  delay: 15
+
+- name: Build and install bash
+  ansible.builtin.shell:
+    cmd: >-
+      ./configure --prefix={{ bash_install_prefix }} &&
+      make &&
+      make install
+    chdir: "{{ ansible_facts['env']['HOME'] }}/bash/bash-{{ bash_min_version }}"
+    creates: "{{ bash_install_prefix }}/bin/bash"
+
+- name: Add the from-source bash to PATH in ~/.localshell
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.localshell"
+    create: true
+    mode: "0644"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK (bash)"
+    block: |
+      jnshell_path_prepend "$HOME/bash/local/bin"

@@ -1,0 +1,4 @@
+---
+
+bash_install_prefix: "{{ ansible_facts['env']['HOME'] }}/bash/local"
+bash_search_path: "{{ bash_install_prefix }}/bin:{{ path_with_macports }}"

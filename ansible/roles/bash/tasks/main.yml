@@ -5,8 +5,8 @@
 
   - name: Query installed bash version
     environment:
-      PATH: "{{ path_with_macports }}"
-    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"'
+      PATH: "{{ bash_search_path }}"
+    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}.${BASH_VERSINFO[2]}"'
     register: bash_version_before
     changed_when: false
     check_mode: false
@@ -29,10 +29,24 @@
       name: bash
       state: present
 
+  - name: Query bash version after package install
+    environment:
+      PATH: "{{ bash_search_path }}"
+    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}.${BASH_VERSINFO[2]}"'
+    register: bash_version_packaged
+    changed_when: false
+    check_mode: false
+
+  - name: Build bash from source when the packaged version is too old
+    ansible.builtin.include_tasks: build_bash_source.yml
+    when:
+      - ansible_facts['os_family'] in bash_build_packages
+      - bash_version_packaged.stdout is version(bash_min_version, '<')
+
   - name: Query bash version after install
     environment:
-      PATH: "{{ path_with_macports }}"
-    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"'
+      PATH: "{{ bash_search_path }}"
+    ansible.builtin.command: bash -c 'echo "${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}.${BASH_VERSINFO[2]}"'
     register: bash_version_after
     changed_when: false
     check_mode: false
@@ -42,8 +56,7 @@
       that: bash_version_after.stdout is version(bash_min_version, '>=')
       fail_msg: >-
         bash {{ bash_version_after.stdout }} is older than {{ bash_min_version }}
-        and the package manager has no newer version. Building bash from source
-        is WIP and not yet complete.
+        and could not be installed from a package or built from source.
 
   - name: Build gitstatusd
     ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/build_gitstatus.yml"
