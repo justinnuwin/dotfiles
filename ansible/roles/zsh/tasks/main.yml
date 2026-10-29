@@ -6,9 +6,24 @@
   # macOS Catalina (10.15) and later ships zsh as the default shell
   - name: Install zsh (Linux)
     become: true
-    when: ansible_facts['os_family'] != 'Darwin'
+    when: ansible_facts['system'] == 'Linux'
     ansible.builtin.package:
       name: zsh
+      state: present
+
+  - name: Install locales (Debian)
+    become: true
+    when: ansible_facts['os_family'] == 'Debian'
+    ansible.builtin.package:
+      name: locales
+      state: present
+
+  # .zshrc exports LANG=en_US.UTF-8; minimized images ship only C.UTF-8.
+  - name: Generate en_US.UTF-8 locale (Linux)
+    become: true
+    when: ansible_facts['system'] == 'Linux'
+    community.general.locale_gen:
+      name: en_US.UTF-8
       state: present
 
   - name: Query installed zsh version

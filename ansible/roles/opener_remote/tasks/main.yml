@@ -32,18 +32,14 @@
         - open
         - xdg-open
 
-    - name: Check that sshd reads /etc/ssh/sshd_config.d
-      ansible.builtin.command: grep -qE '^Include /etc/ssh/sshd_config\.d/\*\.conf' /etc/ssh/sshd_config
+    - name: Ensure sshd reads /etc/ssh/sshd_config.d
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        line: Include /etc/ssh/sshd_config.d/*.conf
+        insertafter: EOF
+        validate: /usr/sbin/sshd -t -f %s
       register: opener_remote_sshd_include
-      changed_when: false
-      failed_when: false
-
-    - name: Require sshd to read /etc/ssh/sshd_config.d
-      ansible.builtin.assert:
-        that: opener_remote_sshd_include.rc == 0
-        fail_msg: >-
-          /etc/ssh/sshd_config has no `Include /etc/ssh/sshd_config.d/*.conf`, so the
-          opener sshd drop-in would be ignored. Add the Include, then re-run this playbook.
 
     # Lets a reconnect replace the stale ~/.opener.sock left by a dropped session.
     - name: Configure sshd to unlink stale forwarded sockets
@@ -60,8 +56,8 @@
     - name: Reload sshd
       become: true
       when:
-        - opener_remote_sshd_conf is changed
-        - ansible_facts['os_family'] != 'Darwin'
+        - opener_remote_sshd_include is changed or opener_remote_sshd_conf is changed
+        - ansible_facts['system'] == 'Linux'
       ansible.builtin.service:
         name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
         state: reloaded

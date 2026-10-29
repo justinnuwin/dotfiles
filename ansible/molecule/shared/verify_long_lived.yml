@@ -80,7 +80,7 @@
       failed_when: not verify_opener_stat.stat.executable
 
     - name: Verify the opener systemd user unit is running (Linux)
-      when: ansible_facts['os_family'] != 'Darwin'
+      when: ansible_facts['system'] == 'Linux'
       ansible.builtin.command: systemctl --user is-active opener.service  # noqa: command-instead-of-module
       environment:
         XDG_RUNTIME_DIR: /run/user/{{ ansible_facts['user_uid'] }}

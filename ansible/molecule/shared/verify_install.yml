@@ -55,6 +55,12 @@
   changed_when: false
   failed_when: verify_zsh_version.stdout is version('5.9', '<')
 
+- name: Verify the locale zsh sets is installed
+  ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -ic 'perl -e 1'"
+  register: verify_locale_out
+  changed_when: false
+  failed_when: "'Setting locale failed' in verify_locale_out.stderr"
+
 - name: Verify Universal ctags version >= 6.0
   ansible.builtin.command: "{{ verify_clean_env }} {{ verify_zsh }} -c 'ctags --version'"
   register: verify_ctags_out

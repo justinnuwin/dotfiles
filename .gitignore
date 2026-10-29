@@ -6,8 +6,12 @@
 #   |___/         |___/                      
 #
 
+.ansible/
 backups/
 __pycache__/
 venv/
 
 .*.swp
+
+.claude/*
+!.claude/rules/

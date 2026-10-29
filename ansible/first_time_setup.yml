@@ -13,7 +13,7 @@
     # Roles download installers and releases with curl; macOS ships it.
     - name: Ensure curl is installed
       become: true
-      when: ansible_facts['os_family'] != 'Darwin'
+      when: ansible_facts['system'] == 'Linux'
       ansible.builtin.package:
         name: curl
         state: present
