@@ -36,6 +36,9 @@ case "${JNSHELL_PROMPT:-}" in
     fi
     source "$dotfiles/shell/modules/starship_gitstatus.sh"
     source "$dotfiles/shell/modules/starship_clock.sh"
+    if jnshell_flag_enabled JNSHELL_STARSHIP_SHOW_SYSSTATS; then
+      source "$dotfiles/shell/modules/starship_sysstats.sh"
+    fi
     if jnshell_is_zsh; then
       eval "$(starship init zsh)"
     else

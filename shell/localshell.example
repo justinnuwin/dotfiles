@@ -20,6 +20,10 @@
 # Show the hostname in the starship prompt. It is not shown by default
 # export JNSHELL_STARSHIP_SHOW_HOSTNAME=$(hostname)
 
+# Show CPU, memory, and disk usage in the starship prompt. Under zsh an idle
+# prompt refreshes CPU and memory every 5 seconds and disk every minute.
+# JNSHELL_STARSHIP_SHOW_SYSSTATS=true
+
 # --- Default-on alias bundles -----------------------------------------------
 # These are enabled by default. Set to "false" to opt out.
 

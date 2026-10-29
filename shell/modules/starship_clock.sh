@@ -8,19 +8,33 @@
 # jnshell_idle_functions runs, the prompt is redrawn once with the clock
 # grayed out as JNSHELL_STARSHIP_TIME_STALE, and the minute redraws stop until
 # the next prompt is drawn.
+#
+# Under zsh each function named in jnshell_tick_functions runs whenever the
+# clock is refreshed, before the redraw. Setting jnshell_tick_seconds redraws
+# an idle prompt at least that often.
 
 if jnshell_is_zsh; then
   zmodload zsh/datetime || return
   autoload -Uz add-zsh-hook add-zle-hook-widget
   typeset -ga jnshell_idle_functions
+  typeset -ga jnshell_tick_functions
+  typeset -gi jnshell_tick_seconds
   typeset -gi __jnshell_prompt_drawn_at
 
-  # Also re-arms the redraw timer for the next minute boundary.
+  # Also runs the tick functions and re-arms the redraw timer for the next
+  # minute boundary or tick, whichever comes first.
   function __jnshell_starship_time_idle() {
     unset JNSHELL_STARSHIP_TIME_STALE
     strftime -s JNSHELL_STARSHIP_TIME '%H:%M' "$EPOCHSECONDS"
     export JNSHELL_STARSHIP_TIME
+    local fn
+    for fn in "${jnshell_tick_functions[@]}"; do
+      "$fn"
+    done
     TMOUT=$(( 60 - EPOCHSECONDS % 60 ))
+    if (( jnshell_tick_seconds > 0 && jnshell_tick_seconds < TMOUT )); then
+      TMOUT=$jnshell_tick_seconds
+    fi
   }
 
   function __jnshell_starship_time_started() {

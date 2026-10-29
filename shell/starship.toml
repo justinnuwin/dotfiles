@@ -16,7 +16,8 @@ $python$netns\
 $cmd_duration\
 [](fg:color_aqua bg:color_green)\
 $jobs\
-[](fg:color_bg bg:color_aqua)\
+${env_var.jnshell_starship_clock_open}\
+${env_var.jnshell_starship_sysstats}${env_var.jnshell_starship_sysstats_stale}\
 ${env_var.jnshell_starship_time}${env_var.jnshell_starship_time_stale}\
 [](fg:color_bg)\
 $line_break\
@@ -295,6 +296,24 @@ threshold = 1
 symbol    = ""
 style     = "fg:color_text bold bg:color_aqua"
 format    = "[$symbol $number]($style)"
+
+[env_var.jnshell_starship_sysstats]
+variable = "JNSHELL_STARSHIP_SYSSTATS"
+style    = "fg:color_text bg:color_purple"
+format   = "[](fg:color_purple bg:color_aqua)[ $env_value ]($style)[](fg:color_bg bg:color_purple)"
+
+[env_var.jnshell_starship_sysstats_stale]
+variable = "JNSHELL_STARSHIP_SYSSTATS_STALE"
+style    = "fg:color_text bg:242"
+format   = "[](fg:242 bg:color_aqua)[ $env_value ]($style)[](fg:color_bg bg:242)"
+
+# Opens the clock block from the aqua block. A segment that draws its own
+# transition into the clock block sets JNSHELL_STARSHIP_CLOCK_OPEN to "" to
+# suppress this one.
+[env_var.jnshell_starship_clock_open]
+variable = "JNSHELL_STARSHIP_CLOCK_OPEN"
+default  = ""
+format   = "[$env_value](fg:color_bg bg:color_aqua)"
 
 [env_var.jnshell_starship_time]
 variable = "JNSHELL_STARSHIP_TIME"

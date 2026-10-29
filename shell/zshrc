@@ -74,6 +74,9 @@ local dotfiles="$HOME/.dotfiles"
 # Zsh completion
 zstyle :compinstall filename '/home/justin/.zshrc'
 bindkey '\t' menu-complete
+# Let slow completion functions (e.g. bazel's) cache their results
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.zsh/cache
 # Place completion cache in a directory rather than the default $HOME
 mkdir -p ~/.cache/zsh
 export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump"
