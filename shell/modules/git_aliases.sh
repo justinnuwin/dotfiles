@@ -13,8 +13,14 @@ alias gcanoe="git commit --amend --no-edit"
 alias gcurb="git branch --show-current"
 alias grst="git reset"
 alias grsthrd="git reset --hard"
+# Sometimes very large repos will have custom fetch refspecs to minimize on
+# number of branches/tags pulled. Fetch branch $1 into origin/$1 even when no
+# configured refspec covers it.
+gfo() {
+  git fetch --refmap="+refs/heads/${1}:refs/remotes/origin/${1}" origin "$1"
+}
 gfocurb() {
-  git fetch origin "$(git branch --show-current)"
+  gfo "$(git branch --show-current)"
 }
 grsthrdocurb() {
   git reset --hard "origin/$(git branch --show-current)"
@@ -52,10 +58,9 @@ alias gwtrmb="git_remove_worktree_delete_local_branch"
 alias gsw="git switch"
 alias cdgroot="cd \$(groot)"
 alias pushdgroot="pushd \$(groot)"
-# Sometimes very large repos will have custom fetch refspecs to minimize on
-# number of branches/tags pulled. Manually fetch before switching to the branch
+# Manually fetch before switching to the branch
 gfsw() {
-  git fetch --force --refmap="+$1:refs/remotes/origin/$1" origin "$1"
+  gfo "$1"
   if git rev-parse --quiet --verify "$1"; then
     git switch "$1"
   else
