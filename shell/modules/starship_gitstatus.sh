@@ -81,14 +81,13 @@ function __gsd_maybe_refresh() {
 # Moves each rendered GSD_* value to GSD_STALE_* so starship draws the git
 # section grayed out. zsh only.
 function __gsd_mark_stale() {
-  local name fresh
+  local name val
   for name in ON ACTION AHEAD BEHIND STAGED UNSTAGED UNTRACKED CONFLICTED DELETED STASHES; do
-    fresh="GSD_$name"
-    # shellcheck disable=SC2296  # zsh indirect expansion; never called under bash
-    [[ -n "${(P)fresh}" ]] || continue
-    # shellcheck disable=SC2296
-    export "GSD_STALE_$name=${(P)fresh}"
-    unset "$fresh"
+    # 'eval' for indirect expansion because bash uses ${!var} and zsh uses ${(P)var}.
+    eval "val=\${GSD_$name:-}"
+    [[ -n "$val" ]] || continue
+    export "GSD_STALE_$name=$val"
+    unset "GSD_$name"
   done
   unset GSD_READY
   export GSD_STALE=1
@@ -114,7 +113,7 @@ function gitstatusd_up() {
 # gitstatus_stop here closes that fd under zle, which then spins on POLLNVAL,
 # so kill the daemon and let gitstatus's zle -F handler stop it on EOF.
 function __gsd_idle_stop() {
-  [[ "$GITSTATUS_DAEMON_PID_GSD" == <1-> ]] && kill -- -"$GITSTATUS_DAEMON_PID_GSD" 2>/dev/null
+  [[ "$GITSTATUS_DAEMON_PID_GSD" -gt 0 ]] && kill -- -"$GITSTATUS_DAEMON_PID_GSD" 2>/dev/null
   __gsd_mark_stale
   unset GSD_LOADING
 }
