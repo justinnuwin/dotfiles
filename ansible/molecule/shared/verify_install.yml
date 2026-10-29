@@ -39,10 +39,10 @@
   register: verify_starship_stat
   failed_when: not verify_starship_stat.stat.exists
 
-- name: Verify fzf and fd are runnable from bash and zsh
+- name: Verify fzf, fd, and ripgrep are runnable from bash and zsh
   ansible.builtin.command: "{{ verify_clean_env }} {{ item.0 }} -ic '{{ item.1 }} --version'"
   changed_when: false
-  loop: "{{ [verify_bash, verify_zsh] | product(['fzf', 'fd']) | list }}"
+  loop: "{{ [verify_bash, verify_zsh] | product(['fzf', 'fd', 'rg']) | list }}"
 
 # The tools below are found through the PATH that ~/.zshenv sets up.
 - name: Verify neovim is installed and runnable

@@ -4,18 +4,25 @@
   tags:
     - setup-common_shell_tools
   block:
-    - name: Install fzf and fd (Darwin)
+    - name: Install packages (Darwin)
       become: true
       when: ansible_facts['os_family'] == 'Darwin'
       community.general.macports:
         name:
           - fzf
           - fd
+          - ripgrep
         state: present
 
-    - name: Install the pinned fzf and fd releases (Linux)
-      when: ansible_facts['os_family'] != 'Darwin'
+    - name: Install packages (Linux)
+      when: ansible_facts['system'] == 'Linux'
       block:
+        - name: Install ripgrep
+          become: true
+          ansible.builtin.package:
+            name: ripgrep
+            state: present
+
         - name: Ensure the fzf, fd, and bin directories exist
           ansible.builtin.file:
             path: "{{ item }}"

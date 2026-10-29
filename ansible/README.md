@@ -36,7 +36,7 @@ ansible/
     ├── mac/                 # MacPorts from the official .pkg, GNU tar (Darwin only)
     ├── toolchain/           # Opt-in language toolchains (rust, nvm)
     ├── starship/            # Starship prompt (pre-built binary, no rust dep)
-    ├── common_shell_tools/  # fzf and fd (MacPorts on Darwin, pinned releases on Linux), ~/.fzf for fzf-zsh-plugin
+    ├── common_shell_tools/  # fzf and fd (MacPorts on Darwin, pinned releases on Linux), ripgrep (package manager), ~/.fzf for fzf-zsh-plugin
     ├── opener_local/        # superbrothers/opener daemon (long_lived_host_role=ssh_local)
     ├── opener_remote/       # opener open/xdg-open shims + sshd config (long_lived_host_role=ssh_remote)
     ├── ssh_to_long_lived_remote/ # ~/.ssh/config tmux RemoteCommand note (long_lived_host_role=ssh_local)
@@ -58,7 +58,7 @@ The main playbook that orchestrates the deployment of all dotfiles. It:
 2. **Roles**: Applies the following roles in order:
    - `toolchain` - Opt-in language toolchain installs (rust, nvm)
    - `starship` - Starship prompt install (pre-built binary, no rust dep)
-   - `common_shell_tools` - fzf and fd for every shell
+   - `common_shell_tools` - fzf, fd, and ripgrep for every shell
    - `dotfiles_facts` - Hydrates and persists `/etc/ansible/facts.d/dotfiles.fact` for next-run gating
    - `bash` - Sets up bash configuration + renders ansible-managed block in `~/.localshell`
    - `zsh` - Sets up zsh configuration + renders ansible-managed block in `~/.localshell`
@@ -152,10 +152,11 @@ Deploys zsh shell configuration by creating symlinks.
 
 ### common_shell_tools
 
-Installs fzf and fd so both are on PATH in bash and zsh.
+Installs fzf, fd, and ripgrep so all three are on PATH in bash and zsh.
 
 **Tasks:**
-- Darwin: installs the `fzf` and `fd` ports
+- Darwin: installs the `fzf`, `fd`, and `ripgrep` ports
+- Linux: installs the `ripgrep` package with the system package manager
 - Linux: extracts the pinned releases (`fzf_version`, `fd_version` in `roles/common_shell_tools/defaults/main.yml`) into `~/.local/fzf/<version>` and `~/.local/fd/<version>`, then symlinks the binaries into `~/.local/bin`
 - Checks out `junegunn/fzf` at `fzf_version` into `~/.fzf` and links the installed binary to `~/.fzf/bin/fzf`, so fzf-zsh-plugin uses it instead of cloning fzf HEAD on first zsh start
 
